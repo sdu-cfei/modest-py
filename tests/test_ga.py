@@ -44,7 +44,7 @@ class TestGA(unittest.TestCase):
                      self.est, self.ideal, generations=self.gen,
                      pop_size=self.pop, trm_size=self.trm)
         self.estimates = self.ga.estimate()
-        self.ga.plot_pop_evo(file="tests\\workdir\\pop_evo.png")
+        self.ga.plot_pop_evo(file=os.path.join('tests', 'workdir', 'popevo.png'))
 
         # Make sure errors do not increase
         errors = self.ga.get_errors()
