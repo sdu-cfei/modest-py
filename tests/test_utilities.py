@@ -9,7 +9,7 @@ See LICENSE file in the project root for license terms.
 import unittest
 import tempfile
 import os
-from utilities.delete_logs import delete_logs
+from modestpy.utilities.delete_logs import delete_logs
 
 
 class TestDeleteLogs(unittest.TestCase):

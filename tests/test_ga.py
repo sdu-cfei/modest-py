@@ -7,10 +7,9 @@ See LICENSE file in the project root for license terms.
 """
 
 import unittest
-from estim.ga.ga import GA
+from modestpy.estim.ga.ga import GA
 import pandas as pd
 import json
-from rootpath import rootpath
 import os
 
 class TestGA(unittest.TestCase):

@@ -10,7 +10,7 @@ import unittest
 import json
 import os
 import pandas as pd
-from estim.ps.ps import PS
+from modestpy.estim.ps.ps import PS
 
 class TestPS(unittest.TestCase):
 

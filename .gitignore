@@ -3,5 +3,8 @@
 *.pyc
 *log.txt
 *.log
+*.png
+*.jpg
+*.jpeg
 tests/workdir/
 

@@ -10,7 +10,7 @@ import unittest
 import os
 import json
 import pandas as pd
-from estim.learnman import LearnMan
+from modestpy.estim.learnman import LearnMan
 
 class TestLM(unittest.TestCase):
 
@@ -32,13 +32,13 @@ class TestLM(unittest.TestCase):
         with open(known_path) as f:
             self.known = json.load(f)
 
-        # LM settings                # Pick these for fast test:
-        LearnMan.GA_GENERATIONS = 15  # 5
-        LearnMan.GA_POP_SIZE = 15     # 5
-        LearnMan.PS_MAX_ITER = 50     # 2
-        self.lp_n = 3                # 3
+        # LM settings
+        LearnMan.GA_GENERATIONS = 5
+        LearnMan.GA_POP_SIZE = 8
+        LearnMan.PS_MAX_ITER = 5
+        self.lp_n = 3
         self.lp_bounds = (0., 215940.)
-        self.lp_length = 215940.
+        self.lp_length = 215940. / 3.
         self.vp = (0., 215940.)
         # self.sensors = {'TInitial': 'T',
         #                 'CO2PpmInitial': 'CO2'}
