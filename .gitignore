@@ -1,0 +1,7 @@
+.idea/
+*.ipynb
+*.pyc
+*log.txt
+*.log
+tests/workdir/
+
