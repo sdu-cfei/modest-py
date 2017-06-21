@@ -1,0 +1,197 @@
+<!--
+File name: ma.xml
+
+Manual version: 22.01.2016
+Manual author: Krzysztof Arendt
+
+This file is used to describe model inputs, outputs and parameters. 
+The file has to be created manually, because an FMU does not contain 
+enough information to be used directly by Controleum (e.g. variable type).
+
+This file has to be placed in the same folder as the FMU.
+
+
+Description of attributes:
+==========================================
+MM description  - description of the model
+variable name   - name used by the model FMU
+variable alias  - name used by the Model Manager and by the Controleum
+                  (alias is used to be not dependent on the FMU naming conventions)
+variable type   - inputWeather, inputControleum, inputSensor, parameter, output or NIY
+variable unit   - unit associated with the variable
+variable description - short description including the unit
+-->
+
+<!-- ZoneStp_02.fmu -->
+<MM
+description="Zone model with a setpoint wrapper. Adjusted to the virtual building.">
+    <variables>
+    <!-- Input weather -->
+        <variable
+            name="solRad"
+            alias="solRad"
+            type="inputWeather"
+            unit="[W]"
+            description="Solar radiation"/>
+        <variable
+            name="TAmb"
+            alias="TAmb"
+            type="inputWeather"
+            unit="[degC]"
+            description="Ambient temperature"/>
+    <!-- Input Controleum -->
+        <variable
+            name="TStp"
+            alias="TStp"
+            type="inputControleum"
+            unit="[degC]"
+            description="Temperature setpoint for heating system"/>
+        <variable
+            name="CO2Stp"
+            alias="CO2Stp"
+            type="inputControleum"
+            unit="[ppm]"
+            description="CO2 setpoint for ventilation system"/>
+        <variable
+            name="occ"
+            alias="occ"
+            type="inputControleum"
+            unit="[-]"
+            description="Predicted occupant count"/>
+    <!-- Sensor data -->
+        <variable
+            name="CO2PpmInitial"
+            alias="CO2PpmInitial"
+            type="inputSensor"
+            unit="[ppm]"
+            description="CO2 initial"/>
+        <variable
+            name="TInitial"
+            alias="TInitial"
+            type="inputSensor"
+            unit="[C]"
+            description="Initial zone temperature"/>
+    <!-- Parameters -->
+        <variable
+            name="TVeStp"
+            alias="TVeStp"
+            type="parameter"
+            unit="[degC]"
+            description="Ventilation air temperature setpoint"/>
+        <variable
+            name="CO2Neutral"
+            alias="CO2Neutral"
+            type="parameter"
+            unit="[ppm]"
+            description="Fresh air CO2 level"/>
+        <variable
+            name="CO2PerPerson"
+            alias="CO2PerPerson"
+            type="parameter"
+            unit="[m3/h]"
+            description="CO2 generation per person. Usually between 0.02-0.2 m3/h"/>
+        <variable
+            name="occH"
+            alias="occH"
+            type="parameter"
+            unit="[-]"
+            description="Occupant heat generation multiplier, used to adjust the ideal curve to the actual occupants."/>
+        <variable
+            name="shgc"
+            alias="shgc"
+            type="parameter"
+            unit="[-]"
+            description="Effective solar heat gain coefficient"/>
+        <variable
+            name="VInf"
+            alias="VInf"
+            type="parameter"
+            unit="[m3/h]"
+            description="Interzonal infiltration thermal resistance"/>
+        <variable
+            name="Vi"
+            alias="Vi"
+            type="parameter"
+            unit="[m3]"
+            description="Indoor air volume"/>
+        <variable
+            name="AExt"
+            alias="AExt"
+            type="parameter"
+            unit="[K/W]"
+            description="Surface area of external partitions [m2]"/>
+        <variable
+            name="CExt"
+            alias="CExt"
+            type="parameter"
+            unit="[J/(K m2)]"
+            description="External wall thermal capacitance (outer layer)"/>
+        <variable
+            name="CExtIn"
+            alias="CExtIn"
+            type="parameter"
+            unit="[J/(K m2)]"
+            description="External wall thermal capacitance (inner layer)"/>
+        <variable
+            name="RExt"
+            alias="RExt"
+            type="parameter"
+            unit="[(K m2)/W]"
+            description="External wall thermal resistance (outer surface)"/>
+        <variable
+            name="RMid"
+            alias="RMid"
+            type="parameter"
+            unit="[(K m2)/W]"
+            description="External wall thermal resistance (mid surface)"/>
+        <variable
+            name="heatCapacity"
+            alias="heatCapacity"
+            type="parameter"
+            unit="[W]"
+            description="Radiator power"/>
+        <variable
+            name="ventCapacity"
+            alias="ventCapacity"
+            type="parameter"
+            unit="[m3/h]"
+            description="Total ventilation capacity for the zone"/>
+        <variable
+            name="kT"
+            alias="kT"
+            type="parameter"
+            unit="[-]"
+            description="Gain of temperature controller"/>
+        <variable
+            name="kCO2"
+            alias="kCO2"
+            type="parameter"
+            unit="[-]"
+            description="Gain of CO2 controller"/>
+    <!-- Outputs -->
+        <variable
+            name="T"
+            alias="T"
+            type="output"
+            unit="[degC]"
+            description="Indoor temperature"/>
+        <variable
+            name="CO2"
+            alias="CO2"
+            type="output"
+            unit="[ppm]"
+            description="Indoor CO2 concentration"/>
+        <variable
+            name="qheat"
+            alias="qheat"
+            type="output"
+            unit="[W]"
+            description="Heat supplied to the zone by heaters"/>
+        <variable
+            name="Ve"
+            alias="Ve"
+            type="output"
+            unit="[m3/h]"
+            description="Ventilation air supply to the zone"/>
+    </variables>
+</MM>
