@@ -478,9 +478,6 @@ class LearnMan:
             filepath = join(self.workdir, name + '.png')
             fig.savefig(filepath, dpi=LearnMan.DPI)
 
-            # # Clear axes
-            # plt.cla()
-        
         # Close all plots (release instances for garbage collecting)
         plt.close('all')
 

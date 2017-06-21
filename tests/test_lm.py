@@ -7,6 +7,8 @@ See LICENSE file in the project root for license terms.
 """
 
 import unittest
+import tempfile
+import shutil
 import os
 import json
 import pandas as pd
@@ -16,13 +18,16 @@ class TestLM(unittest.TestCase):
 
     def setUp(self):
 
+        # Temp directory
+        self.tmpdir = tempfile.mkdtemp()
+
         # Resources
         self.fmu_path = os.path.join('tests', 'resources', 'simple2R1C', 'Simple2R1C.fmu')
         inp_path = os.path.join('tests', 'resources', 'simple2R1C', 'inputs.csv')
         ideal_path = os.path.join('tests', 'resources', 'simple2R1C', 'result.csv')
         est_path = os.path.join('tests', 'resources', 'simple2R1C', 'est.json')
         known_path = os.path.join('tests', 'resources', 'simple2R1C', 'known.json')
-        self.workdir = os.path.join('tests', 'workdir')
+        self.workdir = self.tmpdir
 
         self.inp = pd.read_csv(inp_path).set_index('time')
         self.ideal = pd.read_csv(ideal_path).set_index('time')
@@ -44,19 +49,22 @@ class TestLM(unittest.TestCase):
         #                 'CO2PpmInitial': 'CO2'}
 
     def tearDown(self):
-        pass
+        shutil.rmtree(self.tmpdir)
 
     def test_lm(self):
         self.lm = LearnMan(self.workdir, self.fmu_path, self.inp, self.known,
                            self.est, self.ideal)
 
+        # Estimation
         # self.lm.ic_from_sensors(self.sensors)
         self.lm.select_learning_periods(self.lp_n, self.lp_length, self.lp_bounds)
         self.estimates = self.lm.estimate()
 
+        # Validation
         self.lm.select_validation_period(location=(self.vp[0], self.vp[1]))
         self.lm.validate(self.lm.get_wavg_est())
 
+        # Results
         wavg = self.lm.get_wavg_est()
         best = self.lm.get_best_est()
 
@@ -66,7 +74,11 @@ class TestLM(unittest.TestCase):
         self.lm.save_best_est('best.csv', incl_known=True)
         self.lm.save_wavg_est('wavg.csv', incl_known=True)
 
+        self.assertTrue(os.path.exists(os.path.join(self.tmpdir, 'best.csv')))
+        self.assertTrue(os.path.exists(os.path.join(self.tmpdir, 'wavg.csv')))
+
         self.lm.save_plots()
+        # TODO: Check if all plots are saved
 
 if __name__ == '__main__':
     unittest.main()
