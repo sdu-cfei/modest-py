@@ -7,6 +7,8 @@ See LICENSE file in the project root for license terms.
 """
 
 import unittest
+import tempfile
+import shutil
 from modestpy.estim.ga.ga import GA
 import pandas as pd
 import json
@@ -15,6 +17,9 @@ import os
 class TestGA(unittest.TestCase):
 
     def setUp(self):
+
+        # Temp directory
+        self.tmpdir = tempfile.mkdtemp()
 
         # Resources
         self.fmu_path = os.path.join('tests', 'resources', 'simple2R1C', 'Simple2R1C.fmu')
@@ -32,19 +37,25 @@ class TestGA(unittest.TestCase):
             self.known = json.load(f)
 
         # GA settings
-        self.gen = 20
-        self.pop = 12
+        self.gen = 6
+        self.pop = 9
         self.trm = 4
 
     def tearDown(self):
-        pass
+        shutil.rmtree(self.tmpdir)
 
     def test_ga(self):
         self.ga = GA(self.fmu_path, self.inp, self.known,
                      self.est, self.ideal, generations=self.gen,
                      pop_size=self.pop, trm_size=self.trm)
         self.estimates = self.ga.estimate()
-        self.ga.plot_pop_evo(file=os.path.join('tests', 'workdir', 'popevo.png'))
+
+        # Generate plot
+        plot_path = file=os.path.join(self.tmpdir, 'popevo.png')
+        self.ga.plot_pop_evo(plot_path)
+
+        # Make sure plot is created
+        self.assertTrue(os.path.exists(plot_path))
 
         # Make sure errors do not increase
         errors = self.ga.get_errors()
