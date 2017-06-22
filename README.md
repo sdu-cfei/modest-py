@@ -1,4 +1,4 @@
-# MODel ESTimation
+# FMI-compliant Model Estimation in Python
 
 ![modestpy](/docs/img/modest-logo.png)
 
