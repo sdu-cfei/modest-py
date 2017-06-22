@@ -1,7 +1,5 @@
-# MODEST-py: FMI-compliant model estimation
+# MODel ESTimation
 
-## 1. Introduction
+![modestpy](/docs/img/modest-logo.png)
 
-This project is aimed to facilitate parameter estimation 
-and prediction in building models exported to FMUs for 
-Model Predictive Control (MPC). 
+**modestpy** facilitates parameter estimation in models compliant with [Functional Mock-up Interface](https://fmi-standard.org/).
