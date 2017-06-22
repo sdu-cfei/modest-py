@@ -29,6 +29,9 @@ if __name__ == "__main__":
 
     # Working directory
     workdir = os.path.join('examples', 'simple', 'workdir')
+    if not os.path.exists(workdir):
+        os.mkdir(workdir)
+        assert os.path.exists(workdir), "Work directory does not exist"
 
     # Load inputs
     inp = pd.read_csv(inp_path).set_index('time')
