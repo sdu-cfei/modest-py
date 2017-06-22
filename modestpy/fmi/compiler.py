@@ -4,6 +4,8 @@ All rights reserved.
 
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
+
+Author: Krzysztof Arendt
 """
 
 import os
@@ -32,9 +34,10 @@ def compile(model_name, mo_path, fmu_path=None):
         return fmu_path
     return std_fmu_path
 
+
 # Example
 if __name__ == "__main__":
-    mo_path = '/home/krza/github/modest/tests/resources/simple2R1C/Simple2R1C.mo'
+    mo_path = './examples/simple/resources/Simple2R1C.mo'
     model_name = "Simple2R1C"
-    fmu_path = '/home/krza/github/modest/tests/resources/simple2R1C/Simple2R1C.fmu'
+    fmu_path = './examples/simple/resources/Simple2R1C.fmu'
     compile(model_name, mo_path, fmu_path)

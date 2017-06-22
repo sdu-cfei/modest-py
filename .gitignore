@@ -6,5 +6,5 @@
 *.png
 *.jpg
 *.jpeg
-tests/workdir/
+**/workdir/**
 

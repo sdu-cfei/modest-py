@@ -1,17 +1,20 @@
 """
-This script can be used to simulate an FMU, 
-e.g. to produce results from a model 
-with known inputs and parameters.
-"""
-import pandas as pd
-"""
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
 
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
+
+Author: Krzysztof Arendt
+
+Description
+===========
+This script can be used to simulate an FMU, 
+e.g. to produce results from a model 
+with known inputs and parameters.
 """
 
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from fmi.model import Model
