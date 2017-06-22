@@ -403,10 +403,9 @@ class LearnMan:
         # Update known with sensor data
         known = copy.deepcopy(self.known)
         if self.is_sensor_ic:
-            for par in self.known:
-                if self.known[par] is None:
-                    var_name = self.sensor_map[par]
-                    known[par] = ideal_slice[var_name].iloc[0]
+            for par in self.sensor_map:
+                var_name = self.sensor_map[par]
+                known[par] = ideal_slice[var_name].iloc[0]
 
         # Initialize model
         model = LearnMan._get_model_instance(self.fmu_path,
