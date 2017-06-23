@@ -151,13 +151,59 @@ class Estimation:
                     lo_limit = self.est[p][1]
                     hi_limit = self.est[p][2]
                     self.est[p] = (new_value, lo_limit, hi_limit)
-
                 except KeyError as e:
                     LOGGER.error('Key not found: {}\n'.format(p))
                     raise e
 
+            # GA errors
+            ga_errors = ga.get_errors()
+
+            # Initialize PS
+            ps = PS(self.fmu_path, inp_slice, self.known, self.est, \
+                    ideal_slice, max_iter=self.PS_MAX_ITER)
+
+            # Run PS
+            ps_estimates = ps.estimate()
+
+            # PS errors
+            ps_errors = ps.get_errors()
+
+            # Generate error evolution envelope (eee)
+            eee_n = self._get_eee(ga_errors, ps_errors, n)
+
+            # Merge eee_n (this run) with previous
+            if n == 0:
+                self.eee = eee_n
+            else:
+                self.eee = self.eee.merge(eee_n, on='iter', how='outer')
+
+            # Increase learning period counter
+            n += 1
+        
+        print self.eee
+        self.eee[[x for x in self.eee.columns if 'err' in x]].plot()
+        plt.show()
+
+
 
     # PRIVATE METHODS ====================================================
+
+    def _get_eee(self, ga_errors, ps_errors, lp_count):
+        eee_ga = pd.DataFrame({
+            'iter': [x for x in range(len(ga_errors))],
+            'err' + str(lp_count): ga_errors,
+            'method' + str(lp_count): ['GA' for x in range(len(ga_errors))]
+        })
+
+        eee_ps = pd.DataFrame({
+            'iter': [x for x in range(len(ga_errors), len(ga_errors) + len(ps_errors))],
+            'err' + str(lp_count): ps_errors,
+            'method' + str(lp_count): ['PS' for x in range(len(ps_errors))]
+        })
+
+        eee = eee_ga.append(eee_ps)
+
+        return eee
 
     def _select_lp(self, lp_n=None, lp_len=None, lp_frame=None):
         """
@@ -267,5 +313,5 @@ if __name__ == "__main__":
     ideal = pd.read_csv("./tests/resources/simple2R1C/result.csv").set_index('time')
 
     session = Estimation(workdir, fmu_path, inp, known, est, ideal,
-                         lp_n=5, lp_len=100, lp_frame=None)
+                         lp_n=3, lp_len=36000, lp_frame=None)
     estimates = session.estimate()
