@@ -13,16 +13,21 @@ import json
 import os
 import pandas as pd
 from modestpy.estim.ps.ps import PS
+from modestpy.utilities.sysarch import get_sys_arch
+
 
 class TestPS(unittest.TestCase):
 
     def setUp(self):
 
+        # Platform (win32, win64, linux32, linix64)
+        platform = get_sys_arch()
+
         # Temp directory
         self.tmpdir = tempfile.mkdtemp()
 
         # Resources
-        self.fmu_path = os.path.join('tests', 'resources', 'simple2R1C', 'Simple2R1C.fmu')
+        self.fmu_path = os.path.join('tests', 'resources', 'simple2R1C', 'Simple2R1C_{}.fmu'.format(platform))
         inp_path = os.path.join('tests', 'resources', 'simple2R1C', 'inputs.csv')
         ideal_path = os.path.join('tests', 'resources', 'simple2R1C', 'result.csv')
         est_path = os.path.join('tests', 'resources', 'simple2R1C', 'est.json')
