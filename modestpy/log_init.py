@@ -30,7 +30,11 @@ class LogInit:
     def __init__(self, name):
         """
         Initializes new logging.Logger 
-        :param name: string
+
+        Parameters
+        ----------
+        name: str
+            Module name
         """
         if LogInit.ROOT_ADDED is False:
             logger = logging.getLogger('modest')

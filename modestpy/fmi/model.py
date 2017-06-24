@@ -58,13 +58,20 @@ class Model:
     def inputs_from_df(self, df, exclude=list()):
         """
         Reads inputs from dataframe.
-        It is assumed that index is named 'time' and given in seconds.
+
+        Index must be named 'time' and given in seconds.
+        The index name assertion check is implemented to avoid
+        situations in which a user read DataFrame from csv
+        and forgot to use ``DataFrame.set_index(column_name)``
+        (it happens quite often...).
+
         :param df: DataFrame
         :param exclude: list of strings, names of columns to be omitted
         :return:
         """
-        assert df.index.name == 'time', 'Index name different than time! ' \
-                                        'Are you sure you assigned index correctly?'
+        assert df.index.name == 'time', "Index name ('{}') different than 'time'! " \
+                                        "Are you sure you assigned index " \
+                                        "correctly?".format(df.index.name)
         self.timeline = df.index.values
         self.start = self.timeline[0]
         self.end = self.timeline[-1]

@@ -143,10 +143,7 @@ class GA:
             gen_count += 1
 
         # Print summary
-        self.logger.info('FITTEST SOLUTION:')
-        self.logger.info(self.get_sim_res())
-        self.logger.info('FITTEST PARAMETERS:')
-        self.logger.info(self.get_estimates())
+        self.logger.info('FITTEST PARAMETERS:\n{}'.format(self.get_estimates()))
 
         # Return
         return self.pop.get_fittest()

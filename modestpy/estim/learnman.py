@@ -75,7 +75,7 @@ class LearnMan:
         # Learning periods
         self.lp = []     # List of tuples (start, stop) (int, int)
         self.n = None    # Number of learning periods (int)
-        self.all = None  # Final stimates and errors from all runs (DataFrame)
+        self.all = None  # Final estimates and errors from all runs (DataFrame)
         self.eee = None  # Error evolution envelope (DataFrame). Columns:
                          # iter, method1, method2, method3, ..., err1, err2, err3, ...
 
