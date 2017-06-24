@@ -16,11 +16,12 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.ticker
 import pandas as pd
+from pyfmi.fmi import FMUException
 from pandas.plotting import scatter_matrix
 from modestpy.estim.ga.ga import GA
 from modestpy.estim.ps.ps import PS
 from modestpy.estim.model import Model
-from modestpy.estim.error import calc_err
+import modestpy.estim.error
 from modestpy.estim.plots import plot_comparison
 
 class Estimation:
@@ -59,9 +60,10 @@ class Estimation:
     --------
     >>> from modestpy import Estimation
     >>> session = Estimation(workdir, fmu_path, inp, known, est, ideal,
-                             lp_n=3, lp_len=3600, lp_frame=None,
-                             ga_iter=30, ps_iter=30)
+                             lp_n=3, lp_len=3600, lp_frame=None, vp=None,
+                             ic_pars={'Tstart': 'T'}, ga_iter=30, ps_iter=30)
     >>> estimates = session.estimate()
+    >>> err, res = session.validate()
     """
 
     # Number of attempts to find nonzero learning data set
@@ -169,7 +171,10 @@ class Estimation:
         Average parameters are calculated as arithmetic average
         from all learning periods. Best parameters are those which
         resulted in the lowest error during respective learning period.
-        It is advised to rely on 'avg', as 'best' can be overfitted.
+        Estimates obtained with 'avg' may be suboptimal, but there is
+        higher chance to avoid overfitting. Estimates obtained with 'best'
+        sometimes perform better (especially when the error function is 
+        convex), and sometimes can be overfitted.
 
         The chosen type of estimates ('avg' or 'best') is saved
         in a csv file ``final_estimates.csv`` in the working directory.
@@ -294,7 +299,7 @@ class Estimation:
         # Return
         return final_estimates.to_dict('records')[0]
 
-    def validate(use_type='avg'):
+    def validate(self, use_type='avg'):
         """
         Performs a simulation with estimated parameters (average or best) 
         for the previously selected validation period.
@@ -309,7 +314,7 @@ class Estimation:
         float
             Validation error
         pandas.DataFrame
-            Validation result (model outputs)
+            Simulation result
         """
         # Get estimates
         all_est = pd.read_csv(os.path.join(self.workdir, 'all_estimates.csv'))
@@ -326,11 +331,35 @@ class Estimation:
             for par in self.ic_pars:
                 ic = ideal_slice[self.ic_pars[par]].iloc[0] 
                 self.known[par] = ic
-        
+
         # Initialize model
-        pass
+        model = Model(self.fmu_path)
+        model.set_input(inp_slice)
+        model.set_param(est)
+        model.set_param(self.known)
+        model.set_outputs(list(self.ideal.columns))
 
+        # Simulate and get error
+        com_points = len(ideal_slice) - 1
+        try:
+            result = model.simulate(com_points=com_points)
+        except FMUException as e:
+            msg = 'Problem found inside FMU. Did you set all parameters? Log:\n'
+            msg += model.model.model.print_log()
+            LOGGER.error(msg)
+            raise FMUException(e)
 
+        err = modestpy.estim.error.calc_err(result, ideal_slice)
+
+        # Create validation plot
+        plots = dict()
+        plots['validation_'+use_type] = plot_comparison(result, ideal_slice, f=None)
+
+        # Save plot
+        self._save_plots(plots)
+
+        # Return
+        return err, result
 
     # PRIVATE METHODS ====================================================
 
@@ -342,9 +371,14 @@ class Estimation:
         ----------
         all_estimates: pandas.DataFrame
             Estimates and errors from all learning periods
+        
+        Returns
+        -------
+        pandas.DataFrame
         """
         best = all_estimates.loc[all_estimates['error'] == all_estimates['error'].min()]
         best = best.drop('error', axis=1)
+        best.index = [0]
         return best
 
     def _get_avg_estimates(self, all_estimates):
@@ -355,6 +389,10 @@ class Estimation:
         ----------
         all_estimates: pandas.DataFrame
             Estimates and errors from all learning periods
+        
+        Returns
+        -------
+        pandas.DataFrame
         """
         avg = all_estimates.mean().to_frame().T
         avg = avg.drop('error', axis=1)
@@ -542,12 +580,6 @@ class Estimation:
 
         return lp
 
-    def _validate(self):
-        """
-        Validation simulation
-        """
-        pass
-
     def _all_columns_nonzero(self, df):
         """
         Checks whether all columns in DataFrame are nonzero.
@@ -574,14 +606,15 @@ if __name__ == "__main__":
     import json
 
     workdir = "/home/krza/Desktop/temp"
-    fmu_path = "./tests/resources/simple2R1C/Simple2R1C.fmu"
-    inp = pd.read_csv("./tests/resources/simple2R1C/inputs.csv").set_index('time')
-    known = json.load(open("./tests/resources/simple2R1C/known.json"))
-    est = json.load(open("./tests/resources/simple2R1C/est.json"))
-    ideal = pd.read_csv("./tests/resources/simple2R1C/result.csv").set_index('time')
+    fmu_path = "./examples/simple/resources/Simple2R1C.fmu"
+    inp = pd.read_csv("./examples/simple/resources/inputs.csv").set_index('time')
+    known = json.load(open("./examples/simple/resources/known.json"))
+    est = json.load(open("./examples/simple/resources/est.json"))
+    ideal = pd.read_csv("./examples/simple/resources/result.csv").set_index('time')
 
     session = Estimation(workdir, fmu_path, inp, known, est, ideal,
-                         lp_n=20, lp_len=86400, lp_frame=None,
-                         ga_iter=30, ps_iter=30)
+                         lp_n=3, lp_len=3600, lp_frame=None, vp=(3600, 20000),
+                         ic_pars={'Tstart': 'T'}, ga_iter=3, ps_iter=3)
     estimates = session.estimate()
-    print estimates
+    err, res = session.validate('avg')
+    err, res = session.validate('best')
