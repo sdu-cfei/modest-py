@@ -9,6 +9,12 @@ def get_sys_arch():
     Modestpy supports only windows and linux at the moment,
     so other platforms are not recognized.
 
+    .. warning:: It relies on the ``platform.architecture`` function
+                 which on Windows 64bit with 32bit Python interpereter
+                 returns 32bit. However since JModelica on Windows
+                 works by default as 32bit and requires Python 32bit,
+                 for the time being this solution is accepted.
+
     Returns
     -------
     str or None
