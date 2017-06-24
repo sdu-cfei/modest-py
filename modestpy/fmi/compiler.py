@@ -11,6 +11,7 @@ Author: Krzysztof Arendt
 import os
 import shutil
 from pymodelica import compile_fmu
+from modestpy.utilities.sysarch import get_sys_arch
 
 
 def compile(model_name, mo_path, fmu_path=None):
@@ -37,7 +38,18 @@ def compile(model_name, mo_path, fmu_path=None):
 
 # Example
 if __name__ == "__main__":
-    mo_path = './examples/simple/resources/Simple2R1C.mo'
+
+    platform = get_sys_arch()
+
+    ## FMU from examples
+    # mo_path = os.path.join('.', 'examples', 'simple', 'resources', 'Simple2R1C.mo')
+    # fmu_path = os.path.join('.', 'examples', 'simple', 'resources', 'Simple2R1C_{}.fmu'.format(platform))
+    # model_name = "Simple2R1C"
+
+    ## FMU from tests
+    mo_path = os.path.join('.', 'tests', 'resources', 'simple2R1C', 'Simple2R1C.mo')
+    fmu_path = os.path.join('.', 'tests', 'resources', 'simple2R1C', 'Simple2R1C_{}.fmu'.format(platform))
     model_name = "Simple2R1C"
-    fmu_path = './examples/simple/resources/Simple2R1C.fmu'
+    
+    # Compilation
     compile(model_name, mo_path, fmu_path)

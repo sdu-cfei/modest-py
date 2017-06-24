@@ -12,6 +12,7 @@ import pandas as pd
 import os
 import json
 from modestpy.estim.learnman import LearnMan
+from modestpy.utilities.sysarch import get_sys_arch
 
 
 if __name__ == "__main__":
@@ -21,7 +22,11 @@ if __name__ == "__main__":
     """
     # DATA PREPARATION ==============================================
     # Resources
-    fmu_path = os.path.join('examples', 'simple', 'resources', 'Simple2R1C.fmu')
+    platform = get_sys_arch()
+    assert platform, 'Unsupported platform type!'
+    fmu_file = 'Simple2R1C_' + platform + '.fmu'
+
+    fmu_path = os.path.join('examples', 'simple', 'resources', fmu_file)
     inp_path = os.path.join('examples', 'simple', 'resources', 'inputs.csv')
     ideal_path = os.path.join('examples', 'simple', 'resources', 'result.csv')
     est_path = os.path.join('examples', 'simple', 'resources', 'est.json')
