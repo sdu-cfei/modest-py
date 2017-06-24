@@ -22,6 +22,7 @@ class TestGA(unittest.TestCase):
 
         # Platform (win32, win64, linux32, linix64)
         platform = get_sys_arch()
+        assert platform, 'Unsupported platform type!'
 
         # Temp directory
         self.tmpdir = tempfile.mkdtemp()

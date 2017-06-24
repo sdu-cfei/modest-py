@@ -11,27 +11,29 @@ def get_sys_arch():
 
     Returns
     -------
-    str
+    str or None
     """
-    arch = platform.architecture()
-    bits = None
+    sys_type = platform.system()
+    bit_arch = platform.architecture()[0]
+    
     sys = None
+    bits = None
 
-    if '32' in arch[0]:
-        bits = '32'
-    elif '64' in arch[0]:
-        bits = '64'
-
-    if ('win' in arch[1]) or ('Win' in arch[1]) or ('WIN' in arch[1]):
+    if ('win' in sys_type) or ('Win' in sys_type) or ('WIN' in sys_type):
         sys = 'win'
-    elif ('linux' in arch[1]) or ('Linux' in arch[1]) or ('LINUX' in arch[1]):
+    elif ('linux' in sys_type) or ('Linux' in sys_type) or ('LINUX' in sys_type):
         sys = 'linux'
+    
+    if '32' in bit_arch:
+        bits = '32'
+    elif '64' in bit_arch:
+        bits = '64'
     
     if (sys and bits):
         sys_bits = sys + bits
     else:
-        sys_bits = 'not supported'
-    
+        sys_bits = None
+
     return sys_bits
 
 

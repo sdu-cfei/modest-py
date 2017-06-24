@@ -23,7 +23,7 @@ if __name__ == "__main__":
     # DATA PREPARATION ==============================================
     # Resources
     platform = get_sys_arch()
-    assert platform != 'unknown', 'Unsupported platform type!'
+    assert platform, 'Unsupported platform type!'
     fmu_file = 'Simple2R1C_' + platform + '.fmu'
 
     fmu_path = os.path.join('examples', 'simple', 'resources', fmu_file)
