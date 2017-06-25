@@ -72,5 +72,13 @@ class TestPS(unittest.TestCase):
             next_err = errors[i]
             self.assertGreaterEqual(prev_err, next_err)
 
+
+def suite():
+    suite = unittest.TestSuite()
+    suite.addTest(TestPS('test_ps'))
+
+    return suite
+
+
 if __name__ == '__main__':
     unittest.main()

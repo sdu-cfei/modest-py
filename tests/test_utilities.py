@@ -12,7 +12,7 @@ import os
 from modestpy.utilities.delete_logs import delete_logs
 
 
-class TestDeleteLogs(unittest.TestCase):
+class TestUtilities(unittest.TestCase):
     def setUp(self):
         # Temp directory
         self.temp_dir = tempfile.mkdtemp()
@@ -24,7 +24,7 @@ class TestDeleteLogs(unittest.TestCase):
     def tearDown(self):
         try:
             os.remove(self.log_path)
-        except WindowsError as e:
+        except OSError as e:
             pass # File already removed
         os.rmdir(self.temp_dir)
 
@@ -32,6 +32,13 @@ class TestDeleteLogs(unittest.TestCase):
         delete_logs(self.temp_dir)
         content = os.listdir(self.temp_dir)
         self.assertEqual(len(content), 0)
+
+
+def suite():
+    suite = unittest.TestSuite()
+    suite.addTest(TestUtilities('test_delete_logs'))
+
+    return suite
 
 
 if __name__ == "__main__":
