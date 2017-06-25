@@ -18,7 +18,7 @@ git clone https://github.com/sdu-cfei/modest-py modestpy
 
 ## Usage
 
-Users are supposed to call only the high level API included in ``modestpy.Estimation``. The API is fully discussed in [this wiki page](https://github.com/sdu-cfei/modest-py/wiki/modestpy-API). You can also check out this [simple example](/examples/simple). The basic usage is as follows:
+Users are supposed to call only the high level API included in ``modestpy.Estimation``. The API is fully discussed in [this wiki](https://github.com/sdu-cfei/modest-py/wiki/modestpy-API). You can also check out this [simple example](/examples/simple). The basic usage is as follows:
 
 ```python
 >>> from modestpy import Estimation
