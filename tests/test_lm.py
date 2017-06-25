@@ -86,5 +86,13 @@ class TestLM(unittest.TestCase):
         self.lm.save_plots()
         # TODO: Check if all plots are saved
 
+
+def suite():
+    suite = unittest.TestSuite()
+    suite.addTest(TestLM('test_lm'))
+
+    return suite
+
+
 if __name__ == '__main__':
     unittest.main()
