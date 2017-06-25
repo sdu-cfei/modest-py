@@ -5,7 +5,7 @@
 
 ## Description
 
-**modestpy** facilitates parameter estimation in models compliant with [Functional Mock-up Interface](https://fmi-standard.org/). The estimation can be performed on a single or multiple random learning periods (to avoid overfitting). Currently the estimation is based on [genetic algorithm](https://en.wikipedia.org/wiki/Genetic_algorithm) (GA) and [pattern search](https://en.wikipedia.org/wiki/Pattern_search_(optimization)) (PS) methods. The user is free to choose whether to use GA, PS or combined GA+PS. Both methods can deal with non-differentiable models.
+**modestpy** facilitates parameter estimation in models compliant with [Functional Mock-up Interface](https://fmi-standard.org/). The estimation can be performed on a single or multiple random learning periods (to avoid overfitting). Currently the estimation is based on [genetic algorithm](https://en.wikipedia.org/wiki/Genetic_algorithm) (GA) and [pattern search](https://en.wikipedia.org/wiki/Pattern_search_(optimization)) (PS) methods. The user is free to choose whether to use GA, PS or combined GA+PS. Both methods can deal with non-continuous and non-differentiable models.
 
 ## Installation
 
