@@ -4,6 +4,8 @@ All rights reserved.
 
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
+
+Author: Krzysztof Arendt
 """
 
 import unittest
@@ -20,7 +22,7 @@ class TestGA(unittest.TestCase):
 
     def setUp(self):
 
-        # Platform (win32, win64, linux32, linix64)
+        # Platform (win32, win64, linux32, linux64)
         platform = get_sys_arch()
         assert platform, 'Unsupported platform type!'
 
