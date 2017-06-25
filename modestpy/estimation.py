@@ -61,7 +61,7 @@ class Estimation:
     >>> from modestpy import Estimation
     >>> session = Estimation(workdir, fmu_path, inp, known, est, ideal,
                              lp_n=3, lp_len=3600, lp_frame=None, vp=None,
-                             ic_pars={'Tstart': 'T'}, ga_iter=30, ps_iter=30)
+                             ic_param={'Tstart': 'T'}, ga_iter=30, ps_iter=30)
     >>> estimates = session.estimate()
     >>> err, res = session.validate()
     """
@@ -73,9 +73,9 @@ class Estimation:
     FIG_DPI = 150
     FIG_SIZE = (10, 6)
 
-    def __init__(self, workdir, fmu_path, inp, known, est, ideal, \
-                 lp_n=None, lp_len=None, lp_frame=None, vp=None, \
-                 ic_pars=None, ga_iter=None, ps_iter=None):
+    def __init__(self, workdir, fmu_path, inp, known, est, ideal,
+                 lp_n=None, lp_len=None, lp_frame=None, vp=None,
+                 ic_param=None, ga_iter=None, ps_iter=None):
         """
         Constructor.
 
@@ -113,7 +113,7 @@ class Estimation:
             Learning period time frame, entire data set if ``None``
         vp: tuple(float, float) or None
             Validation period, entire data set if ``None``
-        ic_pars: dict(str, str) or None
+        ic_param: dict(str, str) or None
             Mapping between model parameters used for IC and variables from ``ideal``
         ga_iter: int or None
             Maximum number of GA iterations (generations). If 0, GA is switched off. Default: 50.
@@ -159,7 +159,7 @@ class Estimation:
             self.vp = (ideal.index[0], ideal.index[-1])
 
         # Initial condition parameters
-        self.ic_pars = ic_pars  # dict (par_name: ideal_column_name)
+        self.ic_param = ic_param  # dict (par_name: ideal_column_name)
 
     # PUBLIC METHODS =====================================================
 
@@ -211,9 +211,9 @@ class Estimation:
             ideal_slice = self.ideal.loc[start:stop]
 
             # Get data for IC parameters and add to known parameters
-            if self.ic_pars:
-                for par in self.ic_pars:
-                    ic = ideal_slice[self.ic_pars[par]].iloc[0] 
+            if self.ic_param:
+                for par in self.ic_param:
+                    ic = ideal_slice[self.ic_param[par]].iloc[0] 
                     self.known[par] = ic
 
             # Genetic algorithm
@@ -327,9 +327,9 @@ class Estimation:
         ideal_slice = self.ideal.loc[start:stop]
 
         # Initialize IC parameters and add to known
-        if self.ic_pars:
-            for par in self.ic_pars:
-                ic = ideal_slice[self.ic_pars[par]].iloc[0] 
+        if self.ic_param:
+            for par in self.ic_param:
+                ic = ideal_slice[self.ic_param[par]].iloc[0] 
                 self.known[par] = ic
 
         # Initialize model
@@ -606,7 +606,7 @@ if __name__ == "__main__":
     import json
 
     workdir = "/home/krza/Desktop/temp"
-    fmu_path = "./examples/simple/resources/Simple2R1C.fmu"
+    fmu_path = "./examples/simple/resources/Simple2R1C_ic_linux64.fmu"
     inp = pd.read_csv("./examples/simple/resources/inputs.csv").set_index('time')
     known = json.load(open("./examples/simple/resources/known.json"))
     est = json.load(open("./examples/simple/resources/est.json"))
@@ -614,7 +614,7 @@ if __name__ == "__main__":
 
     session = Estimation(workdir, fmu_path, inp, known, est, ideal,
                          lp_n=3, lp_len=3600, lp_frame=None, vp=(3600, 20000),
-                         ic_pars={'Tstart': 'T'}, ga_iter=3, ps_iter=3)
+                         ic_param={'Tstart': 'T'}, ga_iter=3, ps_iter=3)
     estimates = session.estimate()
     err, res = session.validate('avg')
     err, res = session.validate('best')
