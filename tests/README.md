@@ -2,7 +2,9 @@
 
 To run all tests simply run the following command from the root directory:
 
-```python
->>> python tests/run.py
 ```
+python tests/run.py
+```
+
+Replace ``/`` with backslash ``\`` on Windows.
 
