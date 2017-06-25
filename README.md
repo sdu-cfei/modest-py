@@ -14,7 +14,7 @@ This package is still in its early phase of development. Currently the only way 
 git clone https://github.com/sdu-cfei/modest-py modestpy
 ```
 
-**modestpy** relies [PyFMI](https://pypi.python.org/pypi/PyFMI) for FMU simulation, which is advised to be installed as part of [JModelica](http://jmodelica.org/) (current version 2.0). Other dependencies are included in [requirements.txt](/requirements.txt).
+**modestpy** relies on [PyFMI](https://pypi.python.org/pypi/PyFMI) for FMU simulation, which is advised to be installed as part of [JModelica](http://jmodelica.org/) (current version 2.0). Other dependencies are included in [requirements.txt](/requirements.txt).
 
 ## Usage
 
