@@ -32,7 +32,7 @@ The package can be installed from PyPI:
     pip install modestpy
 
 To get the latest development version as well as get access to test resources
-download directly from this repository:
+download directly from GitHub repository:
 
 ::
 
@@ -52,7 +52,7 @@ To run tests (if the development version was downloaded):
     >>> from modestpy.test import run
     >>> run.tests()
 
-or from command line (assuming that you are in the project root directory):
+From command line (assuming that you are in the project root directory):
 
 .. code::
 

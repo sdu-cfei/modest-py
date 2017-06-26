@@ -1,13 +1,14 @@
 from setuptools import setup
 
 setup(name='modestpy',
-      version='0.1dev',
+      version='0.0.1',
       description='FMI-compliant model identification package',
       url='https://github.com/sdu-cfei/modest-py',
-      keywords='fmi, fmu, optimization, model, identification, estimation',
+      keywords='fmi fmu optimization model identification estimation',
       author='Krzysztof Arendt',
       author_email='krzysztof.arendt@gmail.com',
       license='BSD',
+      platforms=['Windows', 'Linux'],
       packages=[
           'modestpy',
           'modestpy.estim',
@@ -16,6 +17,7 @@ setup(name='modestpy',
           'modestpy.fmi',
           'modestpy.utilities',
           'modestpy.test'],
+      package_files={'modestpy': ['LICENSE']},
       install_requires=[
           'pandas>=0.17.1',
           'matplotlib',
@@ -24,4 +26,4 @@ setup(name='modestpy',
       classifiers = [
           'Programming Language :: Python :: 2.7',
       ]
-      zip_safe=True)
+      )
