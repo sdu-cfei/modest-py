@@ -17,7 +17,10 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker
 import pandas as pd
 from pyfmi.fmi import FMUException
-from pandas.plotting import scatter_matrix
+try:
+    from pandas.plotting import scatter_matrix
+except ImportError:
+    from pandas.tools.plotting import scatter_matrix
 from modestpy.estim.ga.ga import GA
 from modestpy.estim.ps.ps import PS
 from modestpy.estim.model import Model

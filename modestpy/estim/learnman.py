@@ -25,7 +25,10 @@ from modestpy.estim.plots import plot_comparison
 from modestpy.estim.plots import plot_parameter_evo
 from pyfmi.fmi import FMUException
 from os.path import join
-from pandas.plotting import scatter_matrix
+try:
+    from pandas.plotting import scatter_matrix
+except ImportError:
+    from pandas.tools.plotting import scatter_matrix
 
 class LearnMan:
 
