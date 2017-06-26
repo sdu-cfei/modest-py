@@ -4,8 +4,6 @@ FMI-compliant Model Estimation in Python
 .. figure:: /docs/img/modest-logo.png
    :alt: modestpy
 
-   modestpy
-
 Description
 -----------
 
@@ -27,25 +25,38 @@ for Python 2.7.
 Installation
 ------------
 
-This package is still in its early phase of development. Currently the
-only way to install it is by cloning this repository and adding its
-directory to ``PYTHONPATH``:
+The package can be installed from PyPI:
+
+::
+
+    pip install modestpy
+
+To get the latest development version as well as get access to test resources
+download directly from this repository:
 
 ::
 
     git clone https://github.com/sdu-cfei/modest-py modestpy
+    cd modestpy
+    pip install .
 
 **modestpy** relies on `PyFMI <https://pypi.python.org/pypi/PyFMI>`__
 for FMU simulation, which is advised to be installed as part of
 `JModelica <http://jmodelica.org/>`__ (current version 2.0). Other
 dependencies are included in `requirements.txt </requirements.txt>`__.
 
-To check if the installation was successful run tests:
+To run tests (if the development version was downloaded):
 
 .. code:: python
 
     >>> from modestpy.test import run
     >>> run.tests()
+
+or from command line (assuming that you are in the project root directory):
+
+.. code::
+
+    python test/run.py
 
 Usage
 -----
