@@ -31,8 +31,7 @@ The package can be installed from PyPI:
 
     pip install modestpy
 
-To get the latest development version as well as get access to test resources
-download directly from GitHub repository:
+To get the latest development version download directly from GitHub repository:
 
 ::
 
@@ -45,14 +44,15 @@ for FMU simulation, which is advised to be installed as part of
 `JModelica <http://jmodelica.org/>`__ (current version 2.0). Other
 dependencies are included in `requirements.txt </requirements.txt>`__.
 
-To run tests (if the development version was downloaded):
+To run tests:
 
 .. code:: python
 
     >>> from modestpy.test import run
     >>> run.tests()
 
-From command line (assuming that you are in the project root directory):
+If the development version was downloaded, tests can be run also from 
+command line (from project root directory):
 
 .. code::
 
