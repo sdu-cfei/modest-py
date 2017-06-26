@@ -17,9 +17,7 @@ setup(name='modestpy',
           'modestpy.fmi',
           'modestpy.utilities',
           'modestpy.test'],
-      package_files={
-            'modestpy': ['LICENSE'],
-            'modestpy.test': ['resources/simple2R1C/*', 'resources/simple2R1C_ic/*']},
+      include_package_data=True,
       install_requires=[
           'pandas>=0.17.1',
           'matplotlib',
