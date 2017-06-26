@@ -1,0 +1,5 @@
+include README.rst
+include LICENSE
+recursive-include modestpy/test/resources/simple2R1C *
+recursive-include modestpy/test/resources/simple2R1C_ic *
+recursive-include docs *
