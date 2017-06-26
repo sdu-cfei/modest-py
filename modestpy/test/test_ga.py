@@ -30,11 +30,11 @@ class TestGA(unittest.TestCase):
         self.tmpdir = tempfile.mkdtemp()
 
         # Resources
-        self.fmu_path = os.path.join('test', 'resources', 'simple2R1C', 'Simple2R1C_{}.fmu'.format(platform))
-        inp_path = os.path.join('test', 'resources', 'simple2R1C', 'inputs.csv')
-        ideal_path = os.path.join('test', 'resources', 'simple2R1C', 'result.csv')
-        est_path = os.path.join('test', 'resources', 'simple2R1C', 'est.json')
-        known_path = os.path.join('test', 'resources', 'simple2R1C', 'known.json')
+        self.fmu_path = os.path.join('modestpy', 'test', 'resources', 'simple2R1C', 'Simple2R1C_{}.fmu'.format(platform))
+        inp_path = os.path.join('modestpy', 'test', 'resources', 'simple2R1C', 'inputs.csv')
+        ideal_path = os.path.join('modestpy', 'test', 'resources', 'simple2R1C', 'result.csv')
+        est_path = os.path.join('modestpy', 'test', 'resources', 'simple2R1C', 'est.json')
+        known_path = os.path.join('modestpy', 'test', 'resources', 'simple2R1C', 'known.json')
 
         self.inp = pd.read_csv(inp_path).set_index('time')
         self.ideal = pd.read_csv(ideal_path).set_index('time')

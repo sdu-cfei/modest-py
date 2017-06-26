@@ -7,6 +7,8 @@
 
 **modestpy** facilitates parameter estimation in models compliant with [Functional Mock-up Interface](https://fmi-standard.org/). The estimation can be performed on a single or multiple random learning periods (to avoid overfitting). Currently the estimation is based on [genetic algorithm](https://en.wikipedia.org/wiki/Genetic_algorithm) (GA) and [pattern search](https://en.wikipedia.org/wiki/Pattern_search_(optimization)) (PS) methods. The user is free to choose whether to use GA, PS or combined GA+PS. Both methods can deal with non-continuous and non-differentiable models.
 
+The project is compatible with 2.7, because it relies on [PyFMI](https://pypi.python.org/pypi/PyFMI) which is available only for Python 2.7.
+
 ## Installation
 
 This package is still in its early phase of development. Currently the only way to install it is by cloning this repository and adding its directory to ``PYTHONPATH``:
@@ -15,6 +17,13 @@ git clone https://github.com/sdu-cfei/modest-py modestpy
 ```
 
 **modestpy** relies on [PyFMI](https://pypi.python.org/pypi/PyFMI) for FMU simulation, which is advised to be installed as part of [JModelica](http://jmodelica.org/) (current version 2.0). Other dependencies are included in [requirements.txt](/requirements.txt).
+
+To check if the installation was successful run tests:
+
+```python
+>>> from modestpy.test import run
+>>> run.tests()
+```
 
 ## Usage
 

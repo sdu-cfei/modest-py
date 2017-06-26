@@ -29,7 +29,10 @@ def all_suites():
     all_suites = unittest.TestSuite(suites)
     return all_suites
 
-if __name__ == '__main__':
+def tests():
     runner = unittest.TextTestRunner()
     test_suite = all_suites()
     runner.run (test_suite)
+
+if __name__ == '__main__':
+    tests()
