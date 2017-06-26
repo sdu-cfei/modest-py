@@ -29,12 +29,15 @@ class TestEstimation(unittest.TestCase):
         # Temp directory
         self.tmpdir = tempfile.mkdtemp()
 
+        # Parent directory
+        parent = os.path.dirname(__file__)
+
         # Resources
-        self.fmu_path = os.path.join('modestpy', 'test', 'resources', 'simple2R1C_ic', 'Simple2R1C_ic_{}.fmu'.format(platform))
-        inp_path = os.path.join('modestpy', 'test', 'resources', 'simple2R1C_ic', 'inputs.csv')
-        ideal_path = os.path.join('modestpy', 'test', 'resources', 'simple2R1C_ic', 'result.csv')
-        est_path = os.path.join('modestpy', 'test', 'resources', 'simple2R1C_ic', 'est.json')
-        known_path = os.path.join('modestpy', 'test', 'resources', 'simple2R1C_ic', 'known.json')
+        self.fmu_path = os.path.join(parent, 'resources', 'simple2R1C_ic', 'Simple2R1C_ic_{}.fmu'.format(platform))
+        inp_path = os.path.join(parent, 'resources', 'simple2R1C_ic', 'inputs.csv')
+        ideal_path = os.path.join(parent, 'resources', 'simple2R1C_ic', 'result.csv')
+        est_path = os.path.join(parent, 'resources', 'simple2R1C_ic', 'est.json')
+        known_path = os.path.join(parent, 'resources', 'simple2R1C_ic', 'known.json')
 
         self.inp = pd.read_csv(inp_path).set_index('time')
         self.ideal = pd.read_csv(ideal_path).set_index('time')
