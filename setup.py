@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='modestpy',
-      version='0.0.1',
+      version='0.0.2',
       description='FMI-compliant model identification package',
       url='https://github.com/sdu-cfei/modest-py',
       keywords='fmi fmu optimization model identification estimation',

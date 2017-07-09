@@ -14,7 +14,7 @@ import shutil
 import json
 import os
 import pandas as pd
-from modestpy.estimation import Estimation
+from modestpy import Estimation
 from modestpy.utilities.sysarch import get_sys_arch
 
 

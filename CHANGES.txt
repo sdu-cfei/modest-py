@@ -1,0 +1,3 @@
+Changes in v. 0.0.2:
+
+1. Estimation class imported directly in __init__.py to allow imports like "from modestpy import Estimation".
