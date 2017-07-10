@@ -31,7 +31,7 @@ class PS:
     STEP_INC = 1.2  # Step is multiplied by this factor if solution improves
     STEP_DEC = 2.  # Step is divided by this factor if solution does not improve
 
-    def __init__(self, fmu_path, inp, known, est, ideal, rel_step=0.1, tolerance=0.001, try_lim=20, max_iter=300):
+    def __init__(self, fmu_path, inp, known, est, ideal, rel_step=0.05, tolerance=0.001, try_lim=30, max_iter=300):
         """
         :param fmu_path: string, absolute path to the FMU
         :param inp: DataFrame, columns with input timeseries, index in seconds
@@ -180,8 +180,8 @@ class PS:
                     if err < best_err:
                         self.res = result
                         best_err = err
-                        # best_estimates = PS._replace_par(best_estimates, new_par)
-                        best_estimates = PS._replace_par(current_estimates, new_par)
+                        # best_estimates = PS._replace_par(best_estimates, new_par)  # Shortest path search
+                        best_estimates = PS._replace_par(current_estimates, new_par)  # Orthogonal search
                         improved = True
 
                     # Reset model parameters

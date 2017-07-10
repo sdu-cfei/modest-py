@@ -149,12 +149,12 @@ class Estimation:
         self.ideal = ideal
 
         # Estimation parameters
-        self.GA_POP_SIZE = max((3 * len(est.keys()), 10))   # Default
+        self.GA_POP_SIZE = max((3 * len(est.keys()), 20))   # Default
         self.GA_GENERATIONS = 50                            # Default
         self.GA_LOOK_BACK = 10                              # Default
         self.GA_TOL = 0.001                                 # Default
         self.PS_MAX_ITER = 50                               # Dafault
-        self.PS_TOL = 0.0001                                # Default
+        self.PS_TOL = 1e-7                                  # Default
         if ga_iter is not None:
             self.GA_GENERATIONS = ga_iter
         if ps_iter is not None:
@@ -234,10 +234,15 @@ class Estimation:
             # Genetic algorithm
             if self.GA_GENERATIONS > 0:
                 # Initialize GA
-                ga = GA(self.fmu_path, inp_slice, self.known, self.est, \
-                        ideal_slice, generations=self.GA_GENERATIONS, \
-                        tolerance=self.GA_TOL, look_back=10, pop_size=self.GA_POP_SIZE, \
-                        uniformity=0.5, mut=0.2, mut_inc=0.3, trm_size=6)
+                ga = GA(self.fmu_path, inp_slice, self.known, self.est,
+                        ideal_slice, generations=self.GA_GENERATIONS,
+                        tolerance=self.GA_TOL,
+                        look_back=10,
+                        pop_size=self.GA_POP_SIZE,
+                        uniformity=0.5,
+                        mut=0.15,
+                        mut_inc=0.5,
+                        trm_size=self.GA_POP_SIZE/5)
                 # Run GA
                 ga_estimates = ga.estimate()
                 # Update self.est dictionary
@@ -268,6 +273,8 @@ class Estimation:
                 ps_estimates = ps.estimate()
                 # PS errors
                 ps_errors = ps.get_errors()
+                # PS parameter evolution
+                plots['ps_{}'.format(n)] = ps.plot_parameter_evo()
             else:
                 # PS not used, assign empty list
                 ps_errors = list()
@@ -283,7 +290,7 @@ class Estimation:
 
             # Current estimates
             current_estimates = ps_estimates if ps_estimates is not None else ga_estimates
-            current_estimates['error'] = ps_errors[-1] if ps_errors is not None else ga_errors
+            current_estimates['error'] = ps_errors[-1] if ps_errors is not None else ga_errors  # BUG if ps_iter = 0
 
             # Append all estimates
             all_estimates = all_estimates.append(current_estimates, ignore_index=True)
