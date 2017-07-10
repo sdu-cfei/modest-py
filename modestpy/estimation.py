@@ -78,7 +78,8 @@ class Estimation:
 
     def __init__(self, workdir, fmu_path, inp, known, est, ideal,
                  lp_n=None, lp_len=None, lp_frame=None, vp=None,
-                 ic_param=None, ga_iter=None, ps_iter=None):
+                 ic_param=None, ga_iter=None, ga_tol=None,
+                 ps_iter=None, ps_tol=None):
         """
         Constructor.
 
@@ -120,8 +121,12 @@ class Estimation:
             Mapping between model parameters used for IC and variables from ``ideal``
         ga_iter: int or None
             Maximum number of GA iterations (generations). If 0, GA is switched off. Default: 50.
+        ga_tol: float or None
+            GA tolerance (accepted error)
         ps_iter: int or None
             Maximum number of PS iterations. If 0, PS is switched off. Default: 50.
+        ps_tol: float or None
+            PS tolerance (accepted error)
         """
         # est tuple indices
         est_init = 0  # Initial value
@@ -146,11 +151,18 @@ class Estimation:
         # Estimation parameters
         self.GA_POP_SIZE = max((3 * len(est.keys()), 10))   # Default
         self.GA_GENERATIONS = 50                            # Default
+        self.GA_LOOK_BACK = 10                              # Default
+        self.GA_TOL = 0.001                                 # Default
         self.PS_MAX_ITER = 50                               # Dafault
+        self.PS_TOL = 0.0001                                # Default
         if ga_iter is not None:
             self.GA_GENERATIONS = ga_iter
         if ps_iter is not None:
             self.PS_MAX_ITER = ps_iter
+        if ga_tol is not None:
+            self.GA_TOL = ga_tol
+        if ps_tol is not None:
+            self.PS_TOL = ps_tol
 
         # Learning periods
         self.lp = self._select_lp(lp_n, lp_len, lp_frame)
@@ -224,7 +236,7 @@ class Estimation:
                 # Initialize GA
                 ga = GA(self.fmu_path, inp_slice, self.known, self.est, \
                         ideal_slice, generations=self.GA_GENERATIONS, \
-                        epsilon=0.001, look_back=10, pop_size=self.GA_POP_SIZE, \
+                        tolerance=self.GA_TOL, look_back=10, pop_size=self.GA_POP_SIZE, \
                         uniformity=0.5, mut=0.2, mut_inc=0.3, trm_size=6)
                 # Run GA
                 ga_estimates = ga.estimate()
@@ -251,7 +263,7 @@ class Estimation:
             if self.PS_MAX_ITER > 0:
                 # Initialize PS
                 ps = PS(self.fmu_path, inp_slice, self.known, self.est, \
-                        ideal_slice, max_iter=self.PS_MAX_ITER)
+                        ideal_slice, max_iter=self.PS_MAX_ITER, tolerance=self.PS_TOL)
                 # Run PS
                 ps_estimates = ps.estimate()
                 # PS errors

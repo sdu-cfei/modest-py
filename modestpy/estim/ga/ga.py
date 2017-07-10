@@ -30,7 +30,7 @@ class GA:
     This is the main class of the package, containing the high-level algorithm and some result plotting methods.
     """
     def __init__(self, fmu_path, inp, known, est, ideal,
-                 generations=100, epsilon=0.001, look_back=10,
+                 generations=100, tolerance=0.001, look_back=10,
                  pop_size=40, uniformity=0.5, mut=0.1, mut_inc=0.3, trm_size=6):
         """
         :param fmu_path: string, absolute path to the FMU
@@ -39,9 +39,9 @@ class GA:
         :param est: Dictionary, key=parameter_name, value=tuple (guess value, lo limit, hi limit), guess can be None
         :param ideal: DataFrame, ideal solution to be compared with model outputs (variable names must match)
         :param generations: int, maximum number of generations
-        :param epsilon: float, when error does not decrease by more than ``epsilon`` for the last ``lookback``
+        :param tolerance: float, when error does not decrease by more than ``tolerance`` for the last ``lookback``
                generations, simulation stops
-        :param look_back: int, number of past generations to track the error decrease (see ``epsilon``)
+        :param look_back: int, number of past generations to track the error decrease (see ``tolerance``)
         :param pop_size: int, size of the population
         :param uniformity: float (0.-1.), uniformity rate, affects gene exchange in the crossover operation
         :param mut: float (0.-1.), mutation rate, specifies how often genes are to be mutated to a random value,
@@ -61,7 +61,7 @@ class GA:
         algorithm.TOURNAMENT_SIZE = trm_size
 
         self.max_generations = generations
-        self.epsilon = epsilon
+        self.tolerance = tolerance
         self.look_back = look_back
 
         # Results
@@ -131,14 +131,14 @@ class GA:
                 err_past = self.fittest_errors[-self.look_back]
                 err_now = self.fittest_errors[-1]
                 err_decrease = err_past - err_now
-                if err_decrease < self.epsilon:
-                    self.logger.info('Error decrease smaller than epsilon: {0:.5f} < {1:.5f}'
-                              .format(err_decrease, self.epsilon))
+                if err_decrease < self.tolerance:
+                    self.logger.info('Error decrease smaller than tolerance: {0:.5f} < {1:.5f}'
+                              .format(err_decrease, self.tolerance))
                     self.logger.info('Stopping evolution...')
                     err_decreasing = False
                 else:
-                    self.logger.info("'Look back' error decrease = {0:.5f} > epsilon = {1:.5f}\n"
-                              .format(err_decrease, self.epsilon))
+                    self.logger.info("'Look back' error decrease = {0:.5f} > tolerance = {1:.5f}\n"
+                              .format(err_decrease, self.tolerance))
             # Increase generation count
             gen_count += 1
 

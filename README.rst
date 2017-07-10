@@ -31,6 +31,12 @@ The package can be installed from PyPI:
 
     pip install modestpy
 
+On Ubuntu 16.04 or newer, if you get a permission error, you might have to install in the user local directory:
+
+::
+
+    pip install --user modestpy
+
 To get the latest development version download directly from GitHub repository:
 
 ::

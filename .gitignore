@@ -5,6 +5,7 @@
 *.log
 **/workdir/**
 build/
+.vscode/
 
 # Setuptools distribution folder.
 dist/

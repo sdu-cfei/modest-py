@@ -31,7 +31,7 @@ class PS:
     STEP_INC = 1.2  # Step is multiplied by this factor if solution improves
     STEP_DEC = 2.  # Step is divided by this factor if solution does not improve
 
-    def __init__(self, fmu_path, inp, known, est, ideal, rel_step=0.1, stop_crit=0.001, try_lim=10, max_iter=300):
+    def __init__(self, fmu_path, inp, known, est, ideal, rel_step=0.1, tolerance=0.001, try_lim=20, max_iter=300):
         """
         :param fmu_path: string, absolute path to the FMU
         :param inp: DataFrame, columns with input timeseries, index in seconds
@@ -39,12 +39,12 @@ class PS:
         :param est: Dictionary, key=parameter_name, value=tuple (guess value, lo limit, hi limit), guess can be None
         :param ideal: DataFrame, ideal solution to be compared with model outputs (variable names must match)
         :param rel_step: float, initial relative step when modifying parameters
-        :param stop_crit: float, stopping criterion, when rel_step becomes smaller than stop_crit algorithm stops
+        :param tolerance: float, stopping criterion, when rel_step becomes smaller than tolerance algorithm stops
         :param try_lim: integer, maximum number of tries to decrease rel_step
         :param max_iter: integer, maximum number of iterations
         """
         assert inp.index.equals(ideal.index), 'inp and ideal indexes are not matching'
-        assert rel_step > stop_crit, 'Relative step must not be smaller than the stop criterion'
+        assert rel_step > tolerance, 'Relative step must not be smaller than the stop criterion'
 
         # Ideal solution
         self.ideal = ideal
@@ -80,8 +80,8 @@ class PS:
         # Initial value for relative parameter step (0-1)
         self.rel_step = rel_step
 
-        # Min. allowed relative parameter change (0-1) - PS stops when self.max_change < stop_crit
-        self.stop_crit = stop_crit
+        # Min. allowed relative parameter change (0-1) - PS stops when self.max_change < tolerance
+        self.tolerance = tolerance
 
         # Max. number of iterations without moving to a new point
         self.try_lim = try_lim
@@ -160,7 +160,7 @@ class PS:
         iteration = 0
 
         # Search loop
-        while (n_try < self.try_lim) and (iteration < self.max_iter) and (self.rel_step > self.stop_crit):
+        while (n_try < self.try_lim) and (iteration < self.max_iter) and (self.rel_step > self.tolerance):
             iteration += 1
             LOGGER.info('Iteration no. {} ========================='.format(iteration))
             improved = False
@@ -228,7 +228,7 @@ class PS:
             reason = 'Maximum number of tries to decrease the step reached'
         elif iteration >= self.max_iter:
             reason = 'Maximum number of iterations reached'
-        elif self.rel_step <= self.stop_crit:
+        elif self.rel_step <= self.tolerance:
             reason = 'Relative step smaller than the stoping criterion'
 
         LOGGER.info('Pattern search finished. Reason: {}'.format(reason))
