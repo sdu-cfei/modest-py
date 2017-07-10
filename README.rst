@@ -18,9 +18,8 @@ search <https://en.wikipedia.org/wiki/Pattern_search_(optimization)>`__
 combined GA+PS. Both methods can deal with non-continuous and
 non-differentiable models.
 
-The project is compatible with 2.7, because it relies on
-`PyFMI <https://pypi.python.org/pypi/PyFMI>`__ which is available only
-for Python 2.7.
+The package is compatible with Python 2.7 due to its reliance on
+`PyFMI <https://pypi.python.org/pypi/PyFMI>`__.
 
 Installation
 ------------
