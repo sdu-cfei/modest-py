@@ -1,3 +1,7 @@
-Changes in v. 0.0.2:
+Changes in v. 0.0.3:
+====================
+- Tolerance criteria for GA and PS exposed in the Estimation API.
 
-1. Estimation class imported directly in __init__.py to allow imports like "from modestpy import Estimation".
+Changes in v. 0.0.2:
+====================
+- Estimation class imported directly in __init__.py to allow imports like "from modestpy import Estimation".
