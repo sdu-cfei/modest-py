@@ -1,3 +1,8 @@
+Changes in v. 0.0.4:
+====================
+- New pattern search plot (parameter evolution) added to Estimation.py
+- GA/PS default parameters tuned
+
 Changes in v. 0.0.3:
 ====================
 - Tolerance criteria for GA and PS exposed in the Estimation API.
