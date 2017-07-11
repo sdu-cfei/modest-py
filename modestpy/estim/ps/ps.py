@@ -257,7 +257,7 @@ class PS:
         else:
             print 'Unrecognized sign ({})'.format(sign)
 
-        new_value = estpar.value + rel_step * estpar.value * sign_mltp
+        new_value = estpar.value * (1 + rel_step * sign_mltp)
 
         if new_value > estpar.hi:
             new_value = estpar.hi
