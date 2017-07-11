@@ -149,10 +149,10 @@ class Estimation:
         self.ideal = ideal
 
         # Estimation parameters
-        self.GA_POP_SIZE = max((3 * len(est.keys()), 20))   # Default
+        self.GA_POP_SIZE = max((4 * len(est.keys()), 20))   # Default
         self.GA_GENERATIONS = 50                            # Default
         self.GA_LOOK_BACK = 10                              # Default
-        self.GA_TOL = 0.001                                 # Default
+        self.GA_TOL = 1e-6                                  # Default
         self.PS_MAX_ITER = 50                               # Dafault
         self.PS_TOL = 1e-7                                  # Default
         if ga_iter is not None:
