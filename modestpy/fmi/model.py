@@ -133,6 +133,7 @@ class Model:
         opts['ncp'] = com_points
         opts['result_handling'] = 'memory'              # Prevents saving a result file
         opts['result_handler'] = 'ResultHandlerMemory'  # Prevents saving a result file
+        opts["CVode_options"]["atol"] = 1e-6
 
         # Simulation
         tries = 0
