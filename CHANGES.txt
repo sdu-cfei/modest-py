@@ -1,3 +1,7 @@
+Changes in v. 0.0.5:
+====================
+- Decreased tolerance of CVode solver in PyFMI
+
 Changes in v. 0.0.4:
 ====================
 - New pattern search plot (parameter evolution) added to Estimation.py
