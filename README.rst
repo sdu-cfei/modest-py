@@ -56,13 +56,6 @@ To run tests:
     >>> from modestpy.test import run
     >>> run.tests()
 
-If the development version was downloaded, tests can be run also from 
-command line (from project root directory):
-
-.. code::
-
-    python test/run.py
-
 Usage
 -----
 
