@@ -148,7 +148,7 @@ class Model:
                     for subkey in self.opts[k]:
                         # It works only for single nested sub-dictionaries
                         fmi_opts[k][subkey] = self.opts[k][subkey]
-                        LOGGER.debug("Setting FMI option: [{}][{}] = {}".format(k, subkey, self.opts[k]))
+                        LOGGER.debug("Setting FMI option: [{}][{}] = {}".format(k, subkey, self.opts[k][subkey]))
                 else:
                     raise TypeError("Wrong type of values in 'opts' dictionary")
 
