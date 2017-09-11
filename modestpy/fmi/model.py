@@ -155,10 +155,6 @@ class Model:
         # Save all options to log
         LOGGER.debug("All FMI options: {}".format(fmi_opts))
 
-        # Temporary solution...
-        # if 'CVode_options' in fmi_opts:
-        #     fmi_opts['CVode_options']['atol'] = 1e-6
-
         # Simulation
         tries = 0
         while tries < Model.TRIES:
