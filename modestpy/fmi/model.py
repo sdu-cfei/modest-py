@@ -145,7 +145,7 @@ class Model:
                     fmi_opts[k] = self.opts[k]
                     LOGGER.debug("Setting FMI option: [{}] = {}".format(k, self.opts[k]))
                 elif type(self.opts[k]) is dict:
-                    for subkey in self.opt[k]:
+                    for subkey in self.opts[k]:
                         # It works only for single nested sub-dictionaries
                         fmi_opts[k][subkey] = self.opts[k][subkey]
                         LOGGER.debug("Setting FMI option: [{}][{}] = {}".format(k, subkey, self.opts[k]))
