@@ -31,7 +31,7 @@ class PS:
     STEP_INC = 1.2  # Step is multiplied by this factor if solution improves
     STEP_DEC = 2.  # Step is divided by this factor if solution does not improve
 
-    def __init__(self, fmu_path, inp, known, est, ideal, rel_step=0.05, tolerance=0.001, try_lim=30, max_iter=300):
+    def __init__(self, fmu_path, inp, known, est, ideal, rel_step=0.05, tolerance=0.001, try_lim=30, max_iter=300, opts=None):
         """
         :param fmu_path: string, absolute path to the FMU
         :param inp: DataFrame, columns with input timeseries, index in seconds
@@ -42,6 +42,7 @@ class PS:
         :param tolerance: float, stopping criterion, when rel_step becomes smaller than tolerance algorithm stops
         :param try_lim: integer, maximum number of tries to decrease rel_step
         :param max_iter: integer, maximum number of iterations
+        :param dict opts: Additional FMI options to be passed to the simulator (consult FMI specification)
         """
         assert inp.index.equals(ideal.index), 'inp and ideal indexes are not matching'
         assert rel_step > tolerance, 'Relative step must not be smaller than the stop criterion'
@@ -75,7 +76,7 @@ class PS:
 
         # Model
         output_names = [var for var in ideal]
-        self.model = PS._get_model_instance(fmu_path, inp, known_df, est, output_names)
+        self.model = PS._get_model_instance(fmu_path, inp, known_df, est, output_names, opts)
 
         # Initial value for relative parameter step (0-1)
         self.rel_step = rel_step
@@ -267,8 +268,8 @@ class PS:
         return EstPar(estpar.name, estpar.lo, estpar.hi, new_value)
 
     @staticmethod
-    def _get_model_instance(fmu_path, inputs, known_pars, est, output_names):
-        model = Model(fmu_path)
+    def _get_model_instance(fmu_path, inputs, known_pars, est, output_names, opts=None):
+        model = Model(fmu_path, opts)
         model.set_input(inputs)
         model.set_param(known_pars)
         model.set_param(estpars_2_df(est))

@@ -26,11 +26,12 @@ class Model:
     # (sometimes the solver can't converge at first)
     TRIES = 3
 
-    def __init__(self, fmu_path):
+    def __init__(self, fmu_path, opts=None):
         self.model = load_fmu(fmu_path)
         self.start = None
         self.end = None
         self.timeline = None
+        self.opts = opts
 
         self.input_names = list()
         self.input_values = list()
@@ -104,9 +105,10 @@ class Model:
 
     def simulate(self, com_points=None, reset=True):
         """
-        Performs a simulation
-        :param com_points: int, number of communication points
-        :param reset: bool, if True, the model will be resetted after simulation (use False with E+ FMU)
+        Performs a simulation.
+        :param int com_points: number of communication points, if None, standard value is used (500)
+        :param bool reset: if True, the model will be resetted after simulation (use False with E+ FMU)
+        :param dict opts: Additional FMI options to be passed to the simulator (consult FMI specification)
         :return: Dataframe with results
         """
 
@@ -128,22 +130,44 @@ class Model:
         i = Model._merge_inputs(i)
         input_obj = [self.input_names, i]
 
-        # Options
-        opts = self.model.simulate_options()
-        opts['ncp'] = com_points
-        opts['result_handling'] = 'memory'              # Prevents saving a result file
-        opts['result_handler'] = 'ResultHandlerMemory'  # Prevents saving a result file
-        opts["CVode_options"]["atol"] = 1e-6
+        # Options (fixed)
+        fmi_opts = self.model.simulate_options()
+        fmi_opts['result_handling'] = 'memory'              # Prevents saving a result file
+        fmi_opts['result_handler'] = 'ResultHandlerMemory'  # Prevents saving a result file
+
+        # Options (provided by the user)
+        fmi_opts['ncp'] = com_points
+
+        if (self.opts is not None) and (type(self.opts) is dict):
+            LOGGER.debug('User-defined FMI options found: {}'.format(self.opts))
+            for k in self.opts:
+                if type(self.opts[k]) is not dict:
+                    fmi_opts[k] = self.opts[k]
+                    LOGGER.debug("Setting FMI option: [{}] = {}".format(k, self.opts[k]))
+                elif type(self.opts[k]) is dict:
+                    for subkey in self.opt[k]:
+                        # It works only for single nested sub-dictionaries
+                        fmi_opts[k][subkey] = self.opt[k][subkey]
+                        LOGGER.debug("Setting FMI option: [{}][{}] = {}".format(k, subkey, self.opts[k]))
+                else:
+                    raise TypeError("Wrong type of values in 'opts' dictionary")
+
+        # Save all options to log
+        LOGGER.debug("All FMI options: {}".format(fmi_opts))
+
+        # Temporary solution...
+        # if 'CVode_options' in fmi_opts:
+        #     fmi_opts['CVode_options']['atol'] = 1e-6
 
         # Simulation
         tries = 0
         while tries < Model.TRIES:
             try:
-                assert (self.start is not None) and (self.end is not None), 'start and stop cannot be None'
+                assert (self.start is not None) and (self.end is not None), 'start and stop cannot be None'  # Shouldn't it be OR?
                 self.res = self.model.simulate(start_time=self.start,
                                                final_time=self.end,
                                                input=input_obj,
-                                               options=opts)
+                                               options=fmi_opts)
                 break
             except FMUException as e:
                 tries += 1

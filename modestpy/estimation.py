@@ -79,7 +79,7 @@ class Estimation:
     def __init__(self, workdir, fmu_path, inp, known, est, ideal,
                  lp_n=None, lp_len=None, lp_frame=None, vp=None,
                  ic_param=None, ga_iter=None, ga_tol=None,
-                 ps_iter=None, ps_tol=None):
+                 ps_iter=None, ps_tol=None, opts=None):
         """
         Constructor.
 
@@ -127,6 +127,8 @@ class Estimation:
             Maximum number of PS iterations. If 0, PS is switched off. Default: 50.
         ps_tol: float or None
             PS tolerance (accepted error)
+        opts: dict or None
+            Additional options to be passed to the FMI model (e.g. solver tolerance)
         """
         # est tuple indices
         est_init = 0  # Initial value
@@ -163,6 +165,8 @@ class Estimation:
             self.GA_TOL = ga_tol
         if ps_tol is not None:
             self.PS_TOL = ps_tol
+
+        self.OPTS = opts  # It's fine if it's None
 
         # Learning periods
         self.lp = self._select_lp(lp_n, lp_len, lp_frame)
@@ -242,7 +246,8 @@ class Estimation:
                         uniformity=0.5,
                         mut=0.15,
                         mut_inc=0.5,
-                        trm_size=self.GA_POP_SIZE/5)
+                        trm_size=self.GA_POP_SIZE/5,
+                        opts=self.OPTS)
                 # Run GA
                 ga_estimates = ga.estimate()
                 # Update self.est dictionary
@@ -268,7 +273,8 @@ class Estimation:
             if self.PS_MAX_ITER > 0:
                 # Initialize PS
                 ps = PS(self.fmu_path, inp_slice, self.known, self.est, \
-                        ideal_slice, max_iter=self.PS_MAX_ITER, tolerance=self.PS_TOL)
+                        ideal_slice, max_iter=self.PS_MAX_ITER, tolerance=self.PS_TOL,
+                        opts=self.OPTS)
                 # Run PS
                 ps_estimates = ps.estimate()
                 # PS errors
