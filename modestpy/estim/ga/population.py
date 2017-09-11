@@ -18,7 +18,7 @@ import copy
 
 class Population:
 
-    def __init__(self, fmu_path, pop_size, inp, known, est, ideal, init=True):
+    def __init__(self, fmu_path, pop_size, inp, known, est, ideal, init=True, opts=None):
         """
         :param fmu_path: string
         :param pop_size: int
@@ -27,6 +27,7 @@ class Population:
         :param est: dict
         :param ideal: DataFrame
         :param init: bool
+        :param dict opts: Additional FMI options to be passed to the simulator (consult FMI specification)
         """
 
         # Initialize list of individuals
@@ -45,12 +46,12 @@ class Population:
         self.model = None
 
         if init:
-            self.instantiate_model()  # Must be done before initialization of individuals
+            self.instantiate_model(opts=opts)  # Must be done before initialization of individuals
             self._initialize()
             self.calculate()
 
-    def instantiate_model(self):
-        self.model = Model(self.fmu_path)
+    def instantiate_model(self, opts):
+        self.model = Model(self.fmu_path, opts=opts)
         self.model.set_input(self.inputs)
         self.model.set_param(self.known_pars)
         self.model.set_outputs(self.outputs)

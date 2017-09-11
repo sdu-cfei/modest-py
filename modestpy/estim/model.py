@@ -32,8 +32,8 @@ VERBOSE = True
 
 class Model:
     """ Model for static parameter estimation """
-    def __init__(self, fmu_path):
-        self.model = FmiModel(fmu_path)
+    def __init__(self, fmu_path, opts=None):
+        self.model = FmiModel(fmu_path, opts=opts)
 
         # Log level
         try:
@@ -70,11 +70,11 @@ class Model:
         """
         self.model.specify_outputs(outputs)
 
-    def simulate(self, com_points=500):
-        # TODO: com_points has to be adjusted to the number of samples
+    def simulate(self, com_points=None):
+        # TODO: com_points should be adjusted to the number of samples
         self.sim_count += 1
         self.info('Simulation count = ' + str(self.sim_count))
-        return self.model.simulate(com_points)
+        return self.model.simulate(com_points=com_points)
 
     def info(self, txt):
         class_name = self.__class__.__name__

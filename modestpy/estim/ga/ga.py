@@ -31,7 +31,7 @@ class GA:
     """
     def __init__(self, fmu_path, inp, known, est, ideal,
                  generations=100, tolerance=0.001, look_back=10,
-                 pop_size=40, uniformity=0.5, mut=0.1, mut_inc=0.3, trm_size=6):
+                 pop_size=40, uniformity=0.5, mut=0.1, mut_inc=0.3, trm_size=6, opts=None):
         """
         :param fmu_path: string, absolute path to the FMU
         :param inp: DataFrame, columns with input timeseries, index in seconds
@@ -49,6 +49,7 @@ class GA:
         :param mut_inc: float (0.-1.), increased mutation rate, specifies how often genes are to be mutated by a
                small amount, used when the population diversity is low, helps to reach a local optimum
         :param trm_size: int, size of the tournament
+        :param dict opts: Additional FMI options to be passed to the simulator (consult FMI specification)
         """
         self.logger = LOGGER
 
@@ -88,7 +89,8 @@ class GA:
                               known=known_df,
                               est=estpars,
                               ideal=ideal,
-                              init=True)
+                              init=True,
+                              opts=opts)
 
     def estimate(self):
         """

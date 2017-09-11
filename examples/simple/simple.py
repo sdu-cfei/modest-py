@@ -11,7 +11,7 @@ Author: Krzysztof Arendt
 import json
 import os
 import pandas as pd
-from modestpy.estimation import Estimation
+from modestpy import Estimation
 from modestpy.utilities.sysarch import get_sys_arch
 
 
@@ -57,7 +57,8 @@ if __name__ == "__main__":
     session = Estimation(workdir, fmu_path, inp, known, est, ideal,
                          lp_n=5, lp_len=25000, lp_frame=(0, 150000),
                          vp = (150000, 215940), ic_param={'Tstart': 'T'},
-                         ga_iter=20, ps_iter=30, ga_tol=0.001, ps_tol=0.0001)
+                         ga_iter=20, ps_iter=30, ga_tol=0.001, ps_tol=0.0001,
+                         opts={'ncp': 999})
 
     estimates = session.estimate()
     err, res = session.validate()
