@@ -79,7 +79,7 @@ class Estimation:
     def __init__(self, workdir, fmu_path, inp, known, est, ideal,
                  lp_n=None, lp_len=None, lp_frame=None, vp=None,
                  ic_param=None, ga_iter=None, ga_tol=None,
-                 ps_iter=None, ps_tol=None, opts=None):
+                 ps_iter=None, ps_tol=None, opts=None, seed=None):
         """
         Constructor.
 
@@ -92,6 +92,10 @@ class Estimation:
         Guess value of estimated parameters is taken into account only
         if GA is switched of, i.e. ``ga_iter = 0``. Otherwise, GA
         selects random guesses itself.
+
+        The parameter ``seed`` can be used to control the randomness
+        of the GA, e.g. to make the result repetitive.Check ``random.seed()``
+        from the ``random`` package if you don't know how random seeds work.
 
         Parameters:
         -----------
@@ -129,6 +133,8 @@ class Estimation:
             PS tolerance (accepted error)
         opts: dict or None
             Additional options to be passed to the FMI model (e.g. solver tolerance)
+        seed: None or int
+            Random number seed. If None, current time or OS specific randomness is used.
         """
         # est tuple indices
         est_init = 0  # Initial value
@@ -141,6 +147,10 @@ class Estimation:
             assert  (est[v][est_init] >= est[v][est_lo])  \
                 and (est[v][est_init] <= est[v][est_hi]), \
                 'Initial value out of limits ({})'.format(v)
+
+        # Random seed
+        if seed is not None:
+            random.seed(seed)
 
         # Input data
         self.workdir = workdir

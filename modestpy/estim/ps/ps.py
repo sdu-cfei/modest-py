@@ -67,9 +67,9 @@ class PS:
         for key in est:
             lo = est[key][1]
             hi = est[key][2]
-            if est[key][0] is None:
+            if est[key][0] is None:  # If guess is None, assume random guess
                 v = lo + random() * (hi - lo)
-            else:
+            else:  # Else, take the guess passed in est
                 v = est[key][0]
             self.est.append(EstPar(name=key, value=v, lo=lo, hi=hi))
         est = self.est
