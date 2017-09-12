@@ -349,8 +349,8 @@ class Estimation:
 
         Returns
         -------
-        float
-            Validation error
+        dict
+            Validation error, keys: 'tot', '<var1>', '<var2>', ...
         pandas.DataFrame
             Simulation result
         """
