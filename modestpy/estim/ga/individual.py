@@ -65,6 +65,7 @@ class Individual:
         # Make sure the returned result is not empty
         assert self.result.empty is False, 'Empty result returned from simulation... (?)'
         # Calculate error
+        LOGGER.debug("Calculating error ({}) in individual {}".format(self.ftype, self.genes))
         self.error = calc_err(self.result, self.ideal, ftype=self.ftype)
 
     def reset(self):
@@ -98,7 +99,7 @@ class Individual:
         return estimates
 
     def get_clone(self):
-        clone = Individual(self.est_par_objects, self.population, self.genes)
+        clone = Individual(self.est_par_objects, self.population, self.genes, ftype=self.ftype)
         return clone
 
     # Private methods ---------------------------
