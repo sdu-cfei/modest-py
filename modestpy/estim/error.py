@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-def calc_err(result, ideal, forgetting=False):
+def calc_err(result, ideal, forgetting=False, ftype='NRMSE'):
     """
     Returns a dictionary with Normalised Root Mean Square Errors for each variable in ideal.
     The dictionary contains also a key ``tot`` with a sum of all errors
@@ -27,6 +27,7 @@ def calc_err(result, ideal, forgetting=False):
     :param result: DataFrame
     :param ideal: DataFrame
     :param forgetting: bool, if True, the older the error the lower weight (used in Kalman filter tuning)
+    :param string ftype: Cost function type, currently 'RMSE' or 'NRMSE'
     :return: dictionary
     """
 
@@ -72,7 +73,13 @@ def calc_err(result, ideal, forgetting=False):
             DivisionByZero.warning(v, (ideal.index[0], ideal.index[-1]))
             nrmse = rmse
 
-        error[v] = nrmse  # Choose error from above
+        # Choose error function type
+        if ftype == 'NRMSE':
+            error[v] = nrmse
+        elif ftype == 'RMSE':
+            error[v] = rmse
+        else:
+            raise ValueError('Cost function type unknown: {}'.format(ftype))
 
     # Calculate total error (sum of partial errors)
     assert 'tot' not in error, "'tot' is not an allowed name for output variables..."
