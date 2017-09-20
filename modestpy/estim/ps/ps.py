@@ -31,7 +31,8 @@ class PS:
     STEP_INC = 1.2  # Step is multiplied by this factor if solution improves
     STEP_DEC = 2.  # Step is divided by this factor if solution does not improve
 
-    def __init__(self, fmu_path, inp, known, est, ideal, rel_step=0.05, tolerance=0.001, try_lim=30, max_iter=300, opts=None):
+    def __init__(self, fmu_path, inp, known, est, ideal, rel_step=0.05, tolerance=0.001, try_lim=30, max_iter=300,
+                 opts=None, ftype='NRMSE'):
         """
         :param fmu_path: string, absolute path to the FMU
         :param inp: DataFrame, columns with input timeseries, index in seconds
@@ -43,9 +44,13 @@ class PS:
         :param try_lim: integer, maximum number of tries to decrease rel_step
         :param max_iter: integer, maximum number of iterations
         :param dict opts: Additional FMI options to be passed to the simulator (consult FMI specification)
+        :param string ftype: Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
         """
         assert inp.index.equals(ideal.index), 'inp and ideal indexes are not matching'
         assert rel_step > tolerance, 'Relative step must not be smaller than the stop criterion'
+
+        # Cost function type
+        self.ftype = ftype
 
         # Ideal solution
         self.ideal = ideal
@@ -147,7 +152,7 @@ class PS:
 
         initial_result = self.model.simulate(com_points=PS.COM_POINTS)
         self.res = initial_result
-        initial_error = calc_err(initial_result, self.ideal)['tot']
+        initial_error = calc_err(initial_result, self.ideal, ftype=self.ftype)['tot']
         best_err = initial_error
 
         # First line of the summary
@@ -175,7 +180,7 @@ class PS:
                     # Simulate and calculate error
                     self.model.set_param(estpars_2_df([new_par]))
                     result = self.model.simulate(com_points=PS.COM_POINTS)
-                    err = calc_err(result, self.ideal)['tot']
+                    err = calc_err(result, self.ideal, ftype=self.ftype)['tot']
 
                     # Save point if solution improved
                     if err < best_err:

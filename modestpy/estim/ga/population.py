@@ -18,7 +18,7 @@ import copy
 
 class Population:
 
-    def __init__(self, fmu_path, pop_size, inp, known, est, ideal, init=True, opts=None):
+    def __init__(self, fmu_path, pop_size, inp, known, est, ideal, init=True, opts=None, ftype='NRMSE'):
         """
         :param fmu_path: string
         :param pop_size: int
@@ -27,7 +27,8 @@ class Population:
         :param est: dict
         :param ideal: DataFrame
         :param init: bool
-        :param dict opts: Additional FMI options to be passed to the simulator (consult FMI specification)
+        :param dict opts: Additional FMI options to be passed to the simulator (consult FMI specification),
+        :param string ftype: Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
         """
 
         # Initialize list of individuals
@@ -41,6 +42,7 @@ class Population:
         self.est_obj = est
         self.outputs = [var for var in ideal]
         self.ideal = ideal
+        self.ftype = ftype
 
         # Instantiate model
         self.model = None
@@ -101,7 +103,7 @@ class Population:
     def _initialize(self):
         self.individuals = list()
         for i in range(self.pop_size):
-            self.add_individual(Individual(est_objects=self.est_obj, population=self))
+            self.add_individual(Individual(est_objects=self.est_obj, population=self, ftype=self.ftype))
 
     def __str__(self):
         fittest = self.get_fittest()

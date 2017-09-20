@@ -79,7 +79,8 @@ class Estimation:
     def __init__(self, workdir, fmu_path, inp, known, est, ideal,
                  lp_n=None, lp_len=None, lp_frame=None, vp=None,
                  ic_param=None, ga_iter=None, ga_tol=None,
-                 ps_iter=None, ps_tol=None, opts=None, seed=None):
+                 ps_iter=None, ps_tol=None, opts=None, seed=None,
+                 ftype='NRMSE'):
         """
         Constructor.
 
@@ -135,6 +136,8 @@ class Estimation:
             Additional options to be passed to the FMI model (e.g. solver tolerance)
         seed: None or int
             Random number seed. If None, current time or OS specific randomness is used.
+        ftype: string
+            Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
         """
         # est tuple indices
         est_init = 0  # Initial value
@@ -159,6 +162,7 @@ class Estimation:
         self.known = known
         self.est = est
         self.ideal = ideal
+        self.ftype = ftype
 
         # Estimation parameters
         self.GA_POP_SIZE = max((4 * len(est.keys()), 20))   # Default
@@ -257,7 +261,8 @@ class Estimation:
                         mut=0.15,
                         mut_inc=0.5,
                         trm_size=self.GA_POP_SIZE/5,
-                        opts=self.OPTS)
+                        opts=self.OPTS,
+                        ftype=self.ftype)
                 # Run GA
                 ga_estimates = ga.estimate()
                 # Update self.est dictionary
@@ -284,7 +289,7 @@ class Estimation:
                 # Initialize PS
                 ps = PS(self.fmu_path, inp_slice, self.known, self.est, \
                         ideal_slice, max_iter=self.PS_MAX_ITER, tolerance=self.PS_TOL,
-                        opts=self.OPTS)
+                        opts=self.OPTS, ftype=self.ftype)
                 # Run PS
                 ps_estimates = ps.estimate()
                 # PS errors
