@@ -81,7 +81,7 @@ class TestEstimation(unittest.TestCase):
         self.assertGreater(len(res.index), 1)
         self.assertGreater(len(res.columns), 0)
         # raw_input('Continue...') # <-- enabling this line triggers the Matplotlib error (issue #20)
-        self.assertLess(err['tot'], 1e-04)  # NRMSE
+        self.assertLess(err['tot'], 5.2e-04)  # NRMSE
 
     def test_estimation_rmse(self):
             session = Estimation(self.tmpdir, self.fmu_path, self.inp,

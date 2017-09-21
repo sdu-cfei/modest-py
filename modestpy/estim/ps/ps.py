@@ -127,7 +127,7 @@ class PS:
 
         :return: DataFrame
         """
-        return self.summary.drop('rel_step', axis=1)
+        return self.summary.drop(['rel_step', 'error'], axis=1)
 
     def save_plots(self, workdir):
         self.plot_comparison(os.path.join(workdir, 'ps_comparison.png'))

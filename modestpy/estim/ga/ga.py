@@ -194,6 +194,7 @@ class GA:
         for i in range(1, df['generation'].max() + 1):
             par_evo = par_evo.append(self._get_best_from_gen(i))
         par_evo = par_evo.drop('generation', axis=1)  # Index is sufficient
+        par_evo = par_evo.drop('error', axis=1)
         return par_evo
 
     def save_plots(self, workdir):
@@ -237,7 +238,6 @@ class GA:
         :return: Axes
         """
         parameters = self.get_full_solution_trajectory()
-        parameters = parameters.drop('error', axis=1)
         parameters = parameters.drop('generation', axis=1)
         return plots.plot_parameter_evo(parameters, file)
 

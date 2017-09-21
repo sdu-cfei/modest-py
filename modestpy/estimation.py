@@ -235,7 +235,7 @@ class Estimation:
         ps_estimates = None                      # Holds final PS estimates
         final_estimates = None                   # Best estimates from all runs
         all_estimates = pd.DataFrame()           # Best estimates from each run
-        fullsol = pd.DataFrame()                 # Full solution (parameters and errors) for each run
+        fullsol = pd.DataFrame()                 # Full solution (parameters) for each run
         err_evo = pd.DataFrame(columns=['iter']) # Error evolution from each run
 
         n = 0
@@ -357,14 +357,14 @@ class Estimation:
         self._save_plots(plots)
 
         # Save csv files
-        err_evo.set_index('iter').to_csv(os.path.join(self.workdir, 'err_evo.csv'))
+        err_evo.set_index('iter').to_csv(os.path.join(self.workdir, 'errors.csv'))
         all_estimates.to_csv(os.path.join(self.workdir, 'all_estimates.csv'), index=False)
-        final_estimates.to_csv(os.path.join(self.workdir, 'final_estimates.csv'), index=False)
+        final_estimates.to_csv(os.path.join(self.workdir, 'final.csv'), index=False)
 
         # Return
         return final_estimates.to_dict('records')[0]
 
-    def validate(self, use_type='avg'):
+    def validate(self, use_type='best'):
         """
         Performs a simulation with estimated parameters (average or best) 
         for the previously selected validation period.
