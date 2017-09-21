@@ -182,9 +182,10 @@ class GA:
         """
         return self.pop.get_fittest().result.copy()
 
-    def get_parameter_evolution(self):
+    def get_full_solution_trajectory(self):
         """
-        Gets a DataFrame the best parameters from each generation.
+        Gets a DataFrame with parameters and errors from all generations
+        (from fittest individuals).
 
         :return: DataFrame
         """
@@ -192,6 +193,8 @@ class GA:
         par_evo = pd.DataFrame()
         for i in range(1, df['generation'].max() + 1):
             par_evo = par_evo.append(self._get_best_from_gen(i))
+        par_evo = par_evo.drop('generation', axis=1)  # Index is sufficient
+        par_evo = par_evo.drop('error', axis=1)
         return par_evo
 
     def save_plots(self, workdir):
@@ -234,8 +237,7 @@ class GA:
         :param file: string (path to the file, if None, file not created)
         :return: Axes
         """
-        parameters = self.get_parameter_evolution()
-        parameters = parameters.drop('error', axis=1)
+        parameters = self.get_full_solution_trajectory()
         parameters = parameters.drop('generation', axis=1)
         return plots.plot_parameter_evo(parameters, file)
 
