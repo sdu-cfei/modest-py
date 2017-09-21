@@ -121,6 +121,14 @@ class PS:
         """
         return self.summary['error'].tolist()
 
+    def get_full_solution_trajectory(self):
+        """
+        Returns all parameters and errors from all iterations.
+
+        :return: DataFrame
+        """
+        return self.summary.drop('rel_step', axis=1)
+
     def save_plots(self, workdir):
         self.plot_comparison(os.path.join(workdir, 'ps_comparison.png'))
         self.plot_error_evo(os.path.join(workdir, 'ps_error_evo.png'))

@@ -16,6 +16,7 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.ticker
 import pandas as pd
+import numpy as np
 from pyfmi.fmi import FMUException
 try:
     from pandas.plotting import scatter_matrix
@@ -230,11 +231,12 @@ class Estimation:
 
         plots = dict()
 
-        ga_estimates = None
-        ps_estimates = None
-        final_estimates = None
-        all_estimates = pd.DataFrame()
-        err_evo = pd.DataFrame(columns=['iter'])
+        ga_estimates = None                      # Holds final GA estimates
+        ps_estimates = None                      # Holds final PS estimates
+        final_estimates = None                   # Best estimates from all runs
+        all_estimates = pd.DataFrame()           # Best estimates from each run
+        fullsol = pd.DataFrame()                 # Full solution (parameters and errors) for each run
+        err_evo = pd.DataFrame(columns=['iter']) # Error evolution from each run
 
         n = 0
         for period in self.lp:
@@ -280,6 +282,12 @@ class Estimation:
                 ga_errors = ga.get_errors()
                 # Evolution visualization
                 plots['ga_{}'.format(n)] = ga.plot_pop_evo()
+
+                # Get full solution trajectory from GA
+                df = ga.get_full_solution_trajectory()
+                df = df.rename(columns={x: "{}#{}".format(x, n) for x in df})
+                fullsol = pd.concat([fullsol, df], axis=1)  # Add new columns (with new est. runs)
+
             else:
                 # GA not used, assign empty list
                 ga_errors = list()
@@ -306,6 +314,11 @@ class Estimation:
             # Merge err_evo_n (this run) with err_evo (all runs)
             err_evo = err_evo.merge(err_evo_n, on='iter', how='outer')
 
+            # Get full solution trajectory from PS
+            df = ps.get_full_solution_trajectory()
+            df = df.rename(columns={x: "{}#{}".format(x, n) for x in df})
+            fullsol = pd.concat([fullsol, df], axis=0, ignore_index=True)  # Add new rows (with PS)
+
             # Increase learning period counter
             n += 1
 
@@ -315,6 +328,15 @@ class Estimation:
 
             # Append all estimates
             all_estimates = all_estimates.append(current_estimates, ignore_index=True)
+
+        # Save full solution trajectory
+        for col in fullsol:
+            # Drop NaNs
+            v = fullsol[col].dropna().values
+            fullsol[col] = pd.Series(v, index=np.arange(len(v)))
+        fullsol = fullsol.dropna(how='all')
+        fullsol.index.name = 'iter'
+        fullsol.to_csv(os.path.join(self.workdir, 'full.csv'))
 
         # Final estimates
         final_estimates = self._get_avg_estimates(all_estimates) if get_type == 'avg' \
@@ -514,8 +536,8 @@ class Estimation:
         x_list = list()
         y_list = list()
         for n in range(num_of_lp):
-            method = 'method{}'.format(n)
-            err = 'err{}'.format(n)
+            method = 'method#{}'.format(n)
+            err = 'err#{}'.format(n)
             x_circ = len(err_evo.loc[err_evo[method] == 'GA'])
             if x_circ == len(err_evo[method].dropna()):
                 # There are no PS records, move x_circ one back (to the last index)
@@ -546,14 +568,14 @@ class Estimation:
         """
         err_evo_ga = pd.DataFrame({
             'iter': [x for x in range(len(ga_errors))],
-            'err' + str(lp_count): ga_errors,
-            'method' + str(lp_count): ['GA' for x in range(len(ga_errors))]
+            'err#' + str(lp_count): ga_errors,
+            'method#' + str(lp_count): ['GA' for x in range(len(ga_errors))]
         })
 
         err_evo_ps = pd.DataFrame({
             'iter': [x for x in range(len(ga_errors), len(ga_errors) + len(ps_errors))],
-            'err' + str(lp_count): ps_errors,
-            'method' + str(lp_count): ['PS' for x in range(len(ps_errors))]
+            'err#' + str(lp_count): ps_errors,
+            'method#' + str(lp_count): ['PS' for x in range(len(ps_errors))]
         })
 
         err_evo = err_evo_ga.append(err_evo_ps)
