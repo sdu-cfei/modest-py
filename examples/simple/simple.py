@@ -48,7 +48,7 @@ if __name__ == "__main__":
     # Load definition of estimated parameters (name, initial value, bounds)
     with open(est_path) as f:
         est = json.load(f)
-    
+
     # Load definition of known parameters (name, value)
     with open(known_path) as f:
         known = json.load(f)
