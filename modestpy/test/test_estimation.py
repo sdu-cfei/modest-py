@@ -63,29 +63,13 @@ class TestEstimation(unittest.TestCase):
         self.assertIsNotNone(res)
         self.assertGreater(len(res.index), 1)
         self.assertGreater(len(res.columns), 0)
-    
-    def test_estimation_multiple_lp(self):  # This test is probably not needed
-        session = Estimation(self.tmpdir, self.fmu_path, self.inp,
-                             self.known, self.est, self.ideal,
-                             lp_n=2, lp_len=3600,
-                             ga_iter=3, ps_iter=3)
-
-        estimates = session.estimate()
-        err, res = session.validate()
-
-        self.assertIsNotNone(estimates)
-        self.assertGreater(len(estimates), 0)
-        self.assertIsNotNone(err)
-        self.assertIsNotNone(res)
-        self.assertGreater(len(res.index), 1)
-        self.assertGreater(len(res.columns), 0)
 
     def test_estimation_all_args(self):
         session = Estimation(self.tmpdir, self.fmu_path, self.inp,
                              self.known, self.est, self.ideal,
                              lp_n=2, lp_len=3600, lp_frame=(0, 20000),
                              vp = (20000, 40000), ic_param={'Tstart': 'T'},
-                             ga_iter=3, ps_iter=3, seed=1)
+                             ga_iter=3, ps_iter=3, seed=1, ftype='NRMSE')
 
         estimates = session.estimate()
         err, res = session.validate()
@@ -97,13 +81,31 @@ class TestEstimation(unittest.TestCase):
         self.assertGreater(len(res.index), 1)
         self.assertGreater(len(res.columns), 0)
         # raw_input('Continue...') # <-- enabling this line triggers the Matplotlib error (issue #20)
-        self.assertLess(err['tot'], 1e-04)
+        self.assertLess(err['tot'], 1e-04)  # NRMSE
+
+    def test_estimation_rmse(self):
+            session = Estimation(self.tmpdir, self.fmu_path, self.inp,
+                                self.known, self.est, self.ideal,
+                                lp_n=1, lp_len=3600, lp_frame=(0, 20000),
+                                vp = (20000, 40000), ic_param={'Tstart': 'T'},
+                                ga_iter=3, ps_iter=3, seed=1, ftype='RMSE')
+
+            estimates = session.estimate()
+            err, res = session.validate()
+
+            self.assertIsNotNone(estimates)
+            self.assertGreater(len(estimates), 0)
+            self.assertIsNotNone(err)
+            self.assertIsNotNone(res)
+            self.assertGreater(len(res.index), 1)
+            self.assertGreater(len(res.columns), 0)
+            self.assertLess(err['tot'], 1e-03)
 
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(TestEstimation('test_estimation_basic'))
-    #suite.addTest(TestEstimation('test_estimation_multiple_lp'))
     suite.addTest(TestEstimation('test_estimation_all_args'))
+    suite.addTest(TestEstimation('test_estimation_rmse'))
     
     return suite
 

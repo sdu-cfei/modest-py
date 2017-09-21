@@ -21,7 +21,7 @@ class Individual:
 
     COM_POINTS = 500
 
-    def __init__(self, est_objects, population, genes=None):
+    def __init__(self, est_objects, population, genes=None, ftype='NRMSE'):
 
         # Reference to the population object
         self.population = population
@@ -29,6 +29,9 @@ class Individual:
         # Assign variables shared across the population
         self.ideal = population.ideal
         self.model = population.model
+
+        # Cost function type
+        self.ftype = ftype
 
         # Adjust COM_POINTS
         Individual.COM_POINTS = len(self.ideal) - 1 # CVODE solver complained without "-1"
@@ -62,7 +65,8 @@ class Individual:
         # Make sure the returned result is not empty
         assert self.result.empty is False, 'Empty result returned from simulation... (?)'
         # Calculate error
-        self.error = calc_err(self.result, self.ideal)
+        LOGGER.debug("Calculating error ({}) in individual {}".format(self.ftype, self.genes))
+        self.error = calc_err(self.result, self.ideal, ftype=self.ftype)
 
     def reset(self):
         self.result = None
@@ -95,7 +99,7 @@ class Individual:
         return estimates
 
     def get_clone(self):
-        clone = Individual(self.est_par_objects, self.population, self.genes)
+        clone = Individual(self.est_par_objects, self.population, self.genes, ftype=self.ftype)
         return clone
 
     # Private methods ---------------------------
