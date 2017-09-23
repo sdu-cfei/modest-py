@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker
 import pandas as pd
 import numpy as np
+import pyDOE as doe
 from pyfmi.fmi import FMUException
 try:
     from pandas.plotting import scatter_matrix
@@ -79,9 +80,9 @@ class Estimation:
 
     def __init__(self, workdir, fmu_path, inp, known, est, ideal,
                  lp_n=None, lp_len=None, lp_frame=None, vp=None,
-                 ic_param=None, ga_iter=None, ga_tol=None,
+                 ic_param=None, ga_pop=None, ga_iter=None, ga_tol=None,
                  ps_iter=None, ps_tol=None, opts=None, seed=None,
-                 ftype='NRMSE'):
+                 ftype='NRMSE', lhs=False):
         """
         Constructor.
 
@@ -125,6 +126,8 @@ class Estimation:
             Validation period, entire data set if ``None``
         ic_param: dict(str, str) or None
             Mapping between model parameters used for IC and variables from ``ideal``
+        ga_pop: int or None
+            GA population size, if None ``ga_pop`` is chosen automatically based on the number of parameters
         ga_iter: int or None
             Maximum number of GA iterations (generations). If 0, GA is switched off. Default: 50.
         ga_tol: float or None
@@ -139,6 +142,8 @@ class Estimation:
             Random number seed. If None, current time or OS specific randomness is used.
         ftype: string
             Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
+        lhs: bool
+            If True, initial guess is chosen using Lating Hypercube Sampling
         """
         # est tuple indices
         est_init = 0  # Initial value
@@ -164,6 +169,7 @@ class Estimation:
         self.est = est
         self.ideal = ideal
         self.ftype = ftype
+        self.lhs = lhs
 
         # Estimation parameters
         self.GA_POP_SIZE = max((4 * len(est.keys()), 20))   # Default
@@ -172,6 +178,8 @@ class Estimation:
         self.GA_TOL = 1e-6                                  # Default
         self.PS_MAX_ITER = 50                               # Dafault
         self.PS_TOL = 1e-7                                  # Default
+        if ga_pop is not None:
+            self.GA_POP_SIZE = ga_pop
         if ga_iter is not None:
             self.GA_GENERATIONS = ga_iter
         if ps_iter is not None:
@@ -238,6 +246,13 @@ class Estimation:
         fullsol = pd.DataFrame()                 # Full solution (parameters) for each run
         err_evo = pd.DataFrame(columns=['iter']) # Error evolution from each run
 
+        # LHS initialization
+        if self.lhs is True:
+            init_pars = self._lhs_init(par_names=self.est.keys(),
+                                       bounds=[(self.est[x][1], self.est[x][2]) for x in self.est],
+                                       samples=self.GA_POP_SIZE)
+            raw_input("Press ENTER...")
+
         n = 0
         for period in self.lp:
             # Slice data
@@ -264,7 +279,7 @@ class Estimation:
                         mut_inc=0.5,
                         trm_size=self.GA_POP_SIZE/5,
                         opts=self.OPTS,
-                        ftype=self.ftype)
+                        ftype=self.ftype)  # TODO: Add arg with initial guesses
                 # Run GA
                 ga_estimates = ga.estimate()
                 # Update self.est dictionary
@@ -297,7 +312,7 @@ class Estimation:
                 # Initialize PS
                 ps = PS(self.fmu_path, inp_slice, self.known, self.est, \
                         ideal_slice, max_iter=self.PS_MAX_ITER, tolerance=self.PS_TOL,
-                        opts=self.OPTS, ftype=self.ftype)
+                        opts=self.OPTS, ftype=self.ftype)  # TODO: Add LHS init when GA is deactivated
                 # Run PS
                 ps_estimates = ps.estimate()
                 # PS errors
@@ -663,6 +678,41 @@ class Estimation:
             if col == True:  # Never use ``is`` with numpy.bool objects
                 return False
         return True
+
+    def _lhs_init(self, par_names, bounds, samples, criterion='c'):
+        """
+        Returns LHS samples.
+
+        Parameters
+        ----------
+        par_names: list(str)
+            List of parameter names
+        bounds: list(tuple(float, float))
+            List of lower/upper bounds, must be of the same length as par_names
+        samples: int
+            Number of samples
+        criterion: str
+            A string that tells lhs how to sample the points. See docs for pyDOE.lhs().
+
+        Returns
+        -------
+        pandas.DataFrame
+        """
+        lhs = doe.lhs(len(par_names), samples=samples, criterion='c');
+        par_vals = {}
+        for par, i in zip(par_names, range(len(par_names))):
+            par_min = bounds[i][0]
+            par_max = bounds[i][1]
+            par_vals[par] = lhs[:,i] * (par_max - par_min) + par_min
+
+        # Convert dict(str: np.ndarray) to pd.DataFrame
+        par_df = pd.DataFrame(columns=par_names, index=np.arange(samples))
+        for i in range(samples):
+            for p in par_names:
+                par_df.loc[i, p] = par_vals[p][i]
+
+        LOGGER.info('Initial guess based on LHS:\n{}'.format(par_df))
+        return par_df
 
 
 if __name__ == "__main__":
