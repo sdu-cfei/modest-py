@@ -32,8 +32,11 @@ class GA:
     def __init__(self, fmu_path, inp, known, est, ideal,
                  generations=100, tolerance=0.001, look_back=10,
                  pop_size=40, uniformity=0.5, mut=0.1, mut_inc=0.3, trm_size=6, opts=None,
-                 ftype='NRMSE'):
+                 ftype='NRMSE', init_pop=None):
         """
+        If init_pop is given, pop_size does not have to be provided. But if it is, they must match (to avoid
+        human mistakes).
+
         :param fmu_path: string, absolute path to the FMU
         :param inp: DataFrame, columns with input timeseries, index in seconds
         :param known: Dictionary, key=parameter_name, value=value
@@ -52,6 +55,7 @@ class GA:
         :param trm_size: int, size of the tournament
         :param dict opts: Additional FMI options to be passed to the simulator (consult FMI specification)
         :param string ftype: Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
+        :param DataFrame init_pop: Initial population. DataFrame with estimated parameters. 
         """
         self.logger = LOGGER
 
@@ -82,6 +86,12 @@ class GA:
             assert known[key] is not None, 'None is not allowed in known parameters (parameter {})'.format(key)
             known_df[key] = [known[key]]
 
+        # Make sure pop_size and init_pop are matching
+        if init_pop is not None and pop_size is not None:
+            assert pop_size == len(init_pop.index.values), "`pop_size` does not match the size of `init_pop`!"
+        elif init_pop is not None and pop_size is None:
+            pop_size = len(init_pop.index.values)
+
         # Initialize population
         self.logger.info('GENETIC ALGORITHM INSTANCE CREATED...')
         self.logger.info('Initializing the population...')
@@ -93,7 +103,8 @@ class GA:
                               ideal=ideal,
                               init=True,
                               opts=opts,
-                              ftype=ftype)
+                              ftype=ftype,
+                              init_pop=init_pop)
 
     def estimate(self):
         """

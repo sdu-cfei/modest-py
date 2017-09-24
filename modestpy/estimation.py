@@ -251,7 +251,8 @@ class Estimation:
             init_pars = self._lhs_init(par_names=self.est.keys(),
                                        bounds=[(self.est[x][1], self.est[x][2]) for x in self.est],
                                        samples=self.GA_POP_SIZE)
-            raw_input("Press ENTER...")
+        else:
+            init_pars = None
 
         n = 0
         for period in self.lp:
@@ -279,7 +280,8 @@ class Estimation:
                         mut_inc=0.5,
                         trm_size=self.GA_POP_SIZE/5,
                         opts=self.OPTS,
-                        ftype=self.ftype)  # TODO: Add arg with initial guesses
+                        ftype=self.ftype,
+                        init_pop=init_pars)
                 # Run GA
                 ga_estimates = ga.estimate()
                 # Update self.est dictionary

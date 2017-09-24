@@ -18,7 +18,8 @@ import copy
 
 class Population:
 
-    def __init__(self, fmu_path, pop_size, inp, known, est, ideal, init=True, opts=None, ftype='NRMSE'):
+    def __init__(self, fmu_path, pop_size, inp, known, est, ideal, init=True, opts=None,
+                 ftype='NRMSE', init_pop=None):
         """
         :param fmu_path: string
         :param pop_size: int
@@ -29,6 +30,7 @@ class Population:
         :param init: bool
         :param dict opts: Additional FMI options to be passed to the simulator (consult FMI specification),
         :param string ftype: Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
+        :param DataFrame init_pop: Initial population, DataFrame with initial guesses for estimated parameters
         """
 
         # Initialize list of individuals
@@ -49,7 +51,7 @@ class Population:
 
         if init:
             self.instantiate_model(opts=opts)  # Must be done before initialization of individuals
-            self._initialize()
+            self._initialize(init_pop)
             self.calculate()
 
     def instantiate_model(self, opts):
@@ -100,10 +102,25 @@ class Population:
             i += 1
         return all_estim
 
-    def _initialize(self):
+    def _initialize(self, init_pop=None):
         self.individuals = list()
+
+        # How to initialize? Random or explicit initial guess?
+        if init_pop is not None:
+            assert len(init_pop.index) == self.pop_size, "Population size does not match initial guess"
+            init_guess = True
+        else:
+            init_guess = False
+
         for i in range(self.pop_size):
-            self.add_individual(Individual(est_objects=self.est_obj, population=self, ftype=self.ftype))
+            if init_guess:
+                # Update value in EstPar objects with the next initial guess
+                for n in range(len(self.est_obj)):
+                    self.est_obj[n].value = init_pop.loc[i, self.est_obj[n].name]
+                    LOGGER.debug('Explicit initialization of individual: {}'.format(self.est_obj[n]))
+
+            self.add_individual(Individual(est_objects=self.est_obj, population=self,
+                                           ftype=self.ftype, use_init_guess=init_guess))
 
     def __str__(self):
         fittest = self.get_fittest()

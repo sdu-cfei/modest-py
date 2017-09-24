@@ -21,7 +21,19 @@ class Individual:
 
     COM_POINTS = 500
 
-    def __init__(self, est_objects, population, genes=None, ftype='NRMSE'):
+    def __init__(self, est_objects, population, genes=None, use_init_guess=False, ftype='NRMSE'):
+        """
+        Individual can be initialized using `genes` OR initial guess in `est_objects`
+        (genes are inferred from parameters and vice versa). Otherwise, random genes are assumed.
+
+        :param est_objects: List of EstPar objects defining estimated parameters
+        :type est_objects: list(EstPar)
+        :param Population population: Population instance
+        :param genes: Genes (can be also inferred from `parameters`)
+        :type genes: dict(str: float)
+        :param bool use_init_guess: If True, use initial guess from `est_objects`
+        :param str ftype: Cost function type, 'RMSE' or 'NRMSE'
+        """
 
         # Reference to the population object
         self.population = population
@@ -40,11 +52,23 @@ class Individual:
         self.est_par_objects = copy.deepcopy(est_objects)
 
         # Generate genes
-        if not genes:
+        if not genes and not use_init_guess:
+            # Generate random genes
             est_names = Individual._get_names(self.est_par_objects)
             self.genes = Individual._random_genes(est_names)
-        else:
+        elif genes and not use_init_guess:
+            # Use provided genes
             self.genes = copy.deepcopy(genes)
+        elif use_init_guess and not genes:
+            # Infer genes from parameters
+            self.genes = dict()
+            for p in self.est_par_objects:
+                self.genes[p.name] = (p.value - p.lo) / (p.hi - p.lo)
+                assert self.genes[p.name] >= 0. and self.genes[p.name] <= 1., 'Initial guess outside the bounds'
+        else:
+            msg = 'Either genes or parameters have to be None'
+            LOGGER.error(msg)
+            raise ValueError(msg)
 
         # Update parameters
         self._update_parameters()
@@ -130,7 +154,7 @@ class Individual:
     def _random_genes(par_names):
         """
         Generates random genes.
-        :return: None
+        :return: dict(str: float)
         """
         genes = dict()
         for par in par_names:
