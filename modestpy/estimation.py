@@ -205,7 +205,7 @@ class Estimation:
 
     # PUBLIC METHODS =====================================================
 
-    def estimate(self, get_type='avg'):
+    def estimate(self, get_type='best'):
         """
         Estimates parameters using the previously defined settings.
 
@@ -225,7 +225,7 @@ class Estimation:
 
         Parameters
         ----------
-        get_type: str, default 'avg'
+        get_type: str, default 'best'
             Type of returned estimates: 'avg' or 'best'
 
         Returns
