@@ -75,10 +75,35 @@ class TestGA(unittest.TestCase):
             next_err = errors[i]
             self.assertGreaterEqual(prev_err, next_err)
 
+    def test_init_pop(self):
+        init_pop = pd.DataFrame({'R1': [0.1, 0.2, 0.3], 'R2': [0.15, 0.25, 0.35], 'C': [1000., 1100., 1200.]})
+        pop_size = 3
+        self.ga = GA(self.fmu_path, self.inp, self.known,
+                     self.est, self.ideal, generations=self.gen,
+                     pop_size=pop_size, trm_size=self.trm, init_pop=init_pop)
+        i1 = self.ga.pop.individuals[0]
+        i2 = self.ga.pop.individuals[1]
+        i3 = self.ga.pop.individuals[2]
+        R1_lo = self.est['R1'][1]
+        R1_hi = self.est['R1'][2]
+        R2_lo = self.est['R2'][1]
+        R2_hi = self.est['R2'][2]
+        C_lo = self.est['C'][1]
+        C_hi = self.est['C'][2]
+        assert i1.genes == {'C': (1000. - C_lo) / (C_hi - C_lo),
+                            'R1': (0.1 - R1_lo) / (R1_hi - R1_lo),
+                            'R2': (0.15 - R2_lo) / (R2_hi - R2_lo)}
+        assert i2.genes == {'C': (1100. - C_lo) / (C_hi - C_lo),
+                            'R1': (0.2 - R1_lo) / (R1_hi - R1_lo),
+                            'R2': (0.25 - R2_lo) / (R2_hi - R2_lo)}
+        assert i3.genes == {'C': (1200. - C_lo) / (C_hi - C_lo),
+                            'R1': (0.3 - R1_lo) / (R1_hi - R1_lo),
+                            'R2': (0.35 - R2_lo) / (R2_hi - R2_lo)}
 
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(TestGA('test_ga'))
+    suite.addTest(TestGA('test_init_pop'))
 
     return suite
 
