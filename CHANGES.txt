@@ -1,3 +1,9 @@
+Changes in v. 0.0.6:
+====================
+- LHS initialization of GA
+- random seed
+- many small bug fixes
+
 Changes in v. 0.0.5:
 ====================
 - Decreased tolerance of CVode solver in PyFMI
