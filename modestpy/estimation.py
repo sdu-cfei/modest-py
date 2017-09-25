@@ -159,7 +159,9 @@ class Estimation:
 
         # Random seed
         if seed is not None:
+            LOGGER.info('Setting random seed: {}'.format(seed))
             random.seed(seed)
+            np.random.seed(seed)  # Important for other libraries, like pyDOE
 
         # Input data
         self.workdir = workdir
@@ -251,6 +253,7 @@ class Estimation:
             init_pars = self._lhs_init(par_names=self.est.keys(),
                                        bounds=[(self.est[x][1], self.est[x][2]) for x in self.est],
                                        samples=self.GA_POP_SIZE)
+            init_pars.to_csv(os.path.join(self.workdir, 'initial_guess.csv'))
         else:
             init_pars = None
 
@@ -458,9 +461,10 @@ class Estimation:
         -------
         pandas.DataFrame
         """
-        best = all_estimates.loc[all_estimates['error'] == all_estimates['error'].min()]
+        best = all_estimates.loc[all_estimates['error'] == all_estimates['error'].min()]  # It can yield more than 1 row
         best = best.drop('error', axis=1)
-        best.index = [0]
+        best = best.reset_index(drop=True)
+
         return best
 
     def _get_avg_estimates(self, all_estimates):
