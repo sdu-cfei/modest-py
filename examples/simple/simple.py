@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     # MODEL IDENTIFICATION ==========================================
     session = Estimation(workdir, fmu_path, inp, known, est, ideal,
-                         lp_n=5, lp_len=25000, lp_frame=(0, 150000),
+                         lp_n=3, lp_len=25000, lp_frame=(0, 25000),
                          vp = (150000, 215940), ic_param={'Tstart': 'T'},
                          ga_pop=20, ga_iter=20, ps_iter=30, ga_tol=0.001, ps_tol=0.0001,
                          seed=1, ftype='RMSE', lhs=True)  # seed is used to make the results repetitive in this example

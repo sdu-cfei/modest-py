@@ -67,9 +67,10 @@ class TestEstimation(unittest.TestCase):
     def test_estimation_all_args(self):
         session = Estimation(self.tmpdir, self.fmu_path, self.inp,
                              self.known, self.est, self.ideal,
-                             lp_n=2, lp_len=3600, lp_frame=(0, 20000),
-                             vp = (20000, 40000), ic_param={'Tstart': 'T'},
-                             ga_iter=3, ps_iter=3, seed=1, ftype='NRMSE')
+                             lp_n=2, lp_len=3600, lp_frame=(0, 3600),
+                             vp=(20000, 40000), ic_param={'Tstart': 'T'},
+                             ga_iter=3, ps_iter=3, seed=1, ftype='NRMSE',
+                             lhs=True, ga_pop=10)
 
         estimates = session.estimate()
         err, res = session.validate()
@@ -80,13 +81,19 @@ class TestEstimation(unittest.TestCase):
         self.assertIsNotNone(res)
         self.assertGreater(len(res.index), 1)
         self.assertGreater(len(res.columns), 0)
+        self.assertEqual(session.lp[0][0], 0)
+        self.assertEqual(session.lp[0][1], 3600)
         # raw_input('Continue...') # <-- enabling this line triggers the Matplotlib error (issue #20)
-        self.assertLess(err['tot'], 5.2e-04)  # NRMSE
+        self.assertLess(err['tot'], 0.0945)  # NRMSE
+
+        # Make sure initial error is the same in both estimation runs (initial guess is the same due to LHS)
+        errors = pd.read_csv(os.path.join(self.tmpdir, 'errors.csv')).set_index('iter')
+        self.assertEqual(errors.loc[0, 'err#0'], errors.loc[0, 'err#1'])
 
     def test_estimation_rmse(self):
             session = Estimation(self.tmpdir, self.fmu_path, self.inp,
                                 self.known, self.est, self.ideal,
-                                lp_n=1, lp_len=3600, lp_frame=(0, 20000),
+                                lp_n=1, lp_len=3600, lp_frame=(0, 3600),
                                 vp = (20000, 40000), ic_param={'Tstart': 'T'},
                                 ga_iter=3, ps_iter=3, seed=1, ftype='RMSE')
 
@@ -99,7 +106,7 @@ class TestEstimation(unittest.TestCase):
             self.assertIsNotNone(res)
             self.assertGreater(len(res.index), 1)
             self.assertGreater(len(res.columns), 0)
-            self.assertLess(err['tot'], 1e-03)
+            self.assertLess(err['tot'], 0.209)
 
 def suite():
     suite = unittest.TestSuite()

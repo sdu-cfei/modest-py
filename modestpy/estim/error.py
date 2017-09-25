@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-def calc_err(result, ideal, forgetting=False, ftype='NRMSE'):
+def calc_err(result, ideal, forgetting=False, ftype='RMSE'):
     """
     Returns a dictionary with Normalised Root Mean Square Errors for each variable in ideal.
     The dictionary contains also a key ``tot`` with a sum of all errors
@@ -81,11 +81,15 @@ def calc_err(result, ideal, forgetting=False, ftype='NRMSE'):
         else:
             raise ValueError('Cost function type unknown: {}'.format(ftype))
 
+        LOGGER.debug('Calculated partial error ({}) = {}'.format(ftype, error[v]))
+
     # Calculate total error (sum of partial errors)
     assert 'tot' not in error, "'tot' is not an allowed name for output variables..."
     error['tot'] = 0
     for v in variables:
         error['tot'] += error[v]
+
+    LOGGER.debug('Calculated total error ({}) = {}'.format(ftype, error['tot']))
 
     return error
 

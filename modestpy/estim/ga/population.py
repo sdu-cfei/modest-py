@@ -117,7 +117,7 @@ class Population:
                 # Update value in EstPar objects with the next initial guess
                 for n in range(len(self.est_obj)):
                     self.est_obj[n].value = init_pop.loc[i, self.est_obj[n].name]
-                    LOGGER.debug('Explicit initialization of individual: {}'.format(self.est_obj[n]))
+                LOGGER.debug('Initial value provided externally: {}'.format(self.est_obj[n]))
 
             self.add_individual(Individual(est_objects=self.est_obj, population=self,
                                            ftype=self.ftype, use_init_guess=init_guess))
