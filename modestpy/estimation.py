@@ -82,7 +82,7 @@ class Estimation:
                  lp_n=None, lp_len=None, lp_frame=None, vp=None,
                  ic_param=None, ga_pop=None, ga_iter=None, ga_tol=None,
                  ps_iter=None, ps_tol=None, opts=None, seed=None,
-                 ftype='NRMSE', lhs=False):
+                 ftype='RMSE', lhs=False):
         """
         Constructor.
 
