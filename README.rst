@@ -28,13 +28,13 @@ The package can be installed from PyPI:
 
 ::
 
-    pip install modestpy
+    python -m pip install modestpy
 
 On Ubuntu 16.04 or newer, if you get a permission error, you might have to install in the user local directory:
 
 ::
 
-    pip install --user modestpy
+    python -m pip install --user modestpy
 
 To get the latest development version download directly from GitHub repository:
 
@@ -42,8 +42,14 @@ To get the latest development version download directly from GitHub repository:
 
     git clone https://github.com/sdu-cfei/modest-py modestpy
     cd modestpy
-    pip install .
+    python -m pip install .
 
+or 
+
+::
+
+    python -m pip install https://github.com/sdu-cfei/modest-py/archive/master.zip
+    
 **modestpy** relies on `PyFMI <https://pypi.python.org/pypi/PyFMI>`__
 for FMU simulation, which is advised to be installed as part of
 `JModelica <http://jmodelica.org/>`__ (current version 2.0). Other
