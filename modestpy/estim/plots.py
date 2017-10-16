@@ -12,7 +12,7 @@ import numpy as np
 
 # Plot files
 DPI = 150
-FIG_SIZE = (10, 6)
+FIG_SIZE = (15, 10)
 
 
 def plot_comparison(sim_res, ideal_res, f=None):

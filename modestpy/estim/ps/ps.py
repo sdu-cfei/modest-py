@@ -27,11 +27,11 @@ class PS:
     """
 
     COM_POINTS = 500  # Default number of communication points, should be adjusted to the number of samples
-    STEP_CEILING = 0.2  # Maximum allowed relative step
-    STEP_INC = 1.2  # Step is multiplied by this factor if solution improves
-    STEP_DEC = 2.  # Step is divided by this factor if solution does not improve
+    STEP_CEILING = 1.00  # Maximum allowed relative step
+    STEP_INC = 1.0  # Step is multiplied by this factor if solution improves
+    STEP_DEC = 1.5  # Step is divided by this factor if solution does not improve
 
-    def __init__(self, fmu_path, inp, known, est, ideal, rel_step=0.05, tolerance=0.0001, try_lim=30, max_iter=300,
+    def __init__(self, fmu_path, inp, known, est, ideal, rel_step=0.01, tolerance=0.0001, try_lim=30, max_iter=300,
                  opts=None, ftype='NRMSE'):
         """
         :param fmu_path: string, absolute path to the FMU

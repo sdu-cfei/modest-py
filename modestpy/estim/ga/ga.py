@@ -31,7 +31,7 @@ class GA:
     """
     def __init__(self, fmu_path, inp, known, est, ideal,
                  generations=100, tolerance=0.001, look_back=10,
-                 pop_size=40, uniformity=0.5, mut=0.1, mut_inc=0.3, trm_size=6, opts=None,
+                 pop_size=40, uniformity=0.5, mut=0.05, mut_inc=0.3, trm_size=6, opts=None,
                  ftype='NRMSE', init_pop=None):
         """
         If init_pop is given, pop_size does not have to be provided. But if it is, they must match (to avoid

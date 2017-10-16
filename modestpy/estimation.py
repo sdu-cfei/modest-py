@@ -176,18 +176,22 @@ class Estimation:
         # Estimation parameters
         self.GA_POP_SIZE = max((4 * len(est.keys()), 20))   # Default
         self.GA_GENERATIONS = 50                            # Default
-        self.GA_LOOK_BACK = 10                              # Default
+        self.GA_LOOK_BACK = 50                              # Default
         self.GA_TOL = 1e-6                                  # Default
-        self.PS_MAX_ITER = 50                               # Dafault
-        self.PS_TOL = 1e-7                                  # Default
+        self.GA_MUT = 0.05                                  # Default
+        self.GA_MUT_INC = 0.3                               # Default
+        self.PS_MAX_ITER = 500                              # Dafault
+        self.PS_REL_STEP = 0.02                             # Default
+        self.PS_TOL = 1e-11                                 # Default
+        self.PS_TRY_LIM = 1000                              # Default
         if ga_pop is not None:
             self.GA_POP_SIZE = ga_pop
         if ga_iter is not None:
             self.GA_GENERATIONS = ga_iter
-        if ps_iter is not None:
-            self.PS_MAX_ITER = ps_iter
         if ga_tol is not None:
             self.GA_TOL = ga_tol
+        if ps_iter is not None:
+            self.PS_MAX_ITER = ps_iter
         if ps_tol is not None:
             self.PS_TOL = ps_tol
 
@@ -253,7 +257,7 @@ class Estimation:
             init_pars = self._lhs_init(par_names=self.est.keys(),
                                        bounds=[(self.est[x][1], self.est[x][2]) for x in self.est],
                                        samples=self.GA_POP_SIZE)
-            init_pars.to_csv(os.path.join(self.workdir, 'initial_guess.csv'))
+            init_pars.to_csv(os.path.join(self.workdir, 'initial_guess.csv'), index=False)
         else:
             init_pars = None
 
@@ -276,11 +280,11 @@ class Estimation:
                 ga = GA(self.fmu_path, inp_slice, self.known, self.est,
                         ideal_slice, generations=self.GA_GENERATIONS,
                         tolerance=self.GA_TOL,
-                        look_back=10,
+                        look_back=self.GA_LOOK_BACK,
                         pop_size=self.GA_POP_SIZE,
                         uniformity=0.5,
-                        mut=0.15,
-                        mut_inc=0.5,
+                        mut=self.GA_MUT,
+                        mut_inc=self.GA_MUT_INC,
                         trm_size=self.GA_POP_SIZE/5,
                         opts=self.OPTS,
                         ftype=self.ftype,
@@ -317,7 +321,8 @@ class Estimation:
                 # Initialize PS
                 ps = PS(self.fmu_path, inp_slice, self.known, self.est, \
                         ideal_slice, max_iter=self.PS_MAX_ITER, tolerance=self.PS_TOL,
-                        opts=self.OPTS, ftype=self.ftype)  # TODO: Add LHS init when GA is deactivated
+                        opts=self.OPTS, ftype=self.ftype, rel_step=self.PS_REL_STEP,
+                        try_lim=self.PS_TRY_LIM)  # TODO: Add LHS init when GA is deactivated
                 # Run PS
                 ps_estimates = ps.estimate()
                 # PS errors

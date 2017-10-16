@@ -18,10 +18,10 @@ import random
 UNIFORM_RATE = 0.5  # affects crossover
 MUT_RATE = 0.05  # standard mutation rate
 MUT_RATE_INC = 0.3  # increased mutation rate when population diversity is low
-INC_MUT_PROP = 0.7  # proportion of population undergoing increased mutation with slight changes of genes
-MAX_CHANGE = 1  # [%] maximum change of gene in increased mutation (change in parameter depends on lo/hi limits)
+INC_MUT_PROP = 0.5  # proportion of population undergoing increased mutation
+MAX_CHANGE = 25  # [%] maximum change of gene in increased mutation (change in parameter depends on lo/hi limits)
 TOURNAMENT_SIZE = 10  # number of individuals in the tournament
-DIVERSITY_LIM = 0.7  # if DIVERSITY_LIM * 100% of individuals is the same, increased mutation is turned on
+DIVERSITY_LIM = 0.5  # if DIVERSITY_LIM * 100% of individuals is the same, increased mutation is turned on
 ELITISM = True  # if True, the fittest individuals always goes to the next generation
 
 # Printing on the screen
