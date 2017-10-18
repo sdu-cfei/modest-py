@@ -416,6 +416,8 @@ class Estimation:
         est = self._get_avg_estimates(all_est) if use_type == 'avg' \
               else self._get_best_estimates(all_est)
 
+        LOGGER.info('Validation using ({}) parameters: {}'.format(use_type, str(est.to_dict())))
+
         # Slice data
         start, stop = self.vp[0], self.vp[1]
         inp_slice = self.inp.loc[start:stop]
@@ -440,7 +442,7 @@ class Estimation:
             result = model.simulate(com_points=com_points)
         except FMUException as e:
             msg = 'Problem found inside FMU. Did you set all parameters? Log:\n'
-            msg += model.model.model.print_log()
+            msg += str(model.model.model.print_log())
             LOGGER.error(msg)
             raise FMUException(e)
 
@@ -474,6 +476,10 @@ class Estimation:
         best = all_estimates.loc[all_estimates['error'] == all_estimates['error'].min()]  # It can yield more than 1 row
         best = best.drop('error', axis=1)
         best = best.reset_index(drop=True)
+
+        if len(best.index) > 1:
+            # It means that there are 2 or more identical rows - take only one
+            best = best.iloc[0].to_frame().T
 
         return best
 
