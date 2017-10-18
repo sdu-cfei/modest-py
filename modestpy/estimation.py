@@ -334,6 +334,12 @@ class Estimation:
                 ps_errors = ps.get_errors()
                 # PS parameter evolution
                 plots['ps_{}'.format(n)] = ps.plot_parameter_evo()
+
+                # Get full solution trajectory from PS
+                df = ps.get_full_solution_trajectory()
+                df = df.rename(columns={x: "{}#{}".format(x, n) for x in df})
+                fullsol = pd.concat([fullsol, df], axis=0, ignore_index=True)  # Add new rows (with PS)
+
             else:
                 # PS not used, assign empty list
                 ps_errors = list()
@@ -344,17 +350,20 @@ class Estimation:
             # Merge err_evo_n (this run) with err_evo (all runs)
             err_evo = err_evo.merge(err_evo_n, on='iter', how='outer')
 
-            # Get full solution trajectory from PS
-            df = ps.get_full_solution_trajectory()
-            df = df.rename(columns={x: "{}#{}".format(x, n) for x in df})
-            fullsol = pd.concat([fullsol, df], axis=0, ignore_index=True)  # Add new rows (with PS)
-
             # Increase learning period counter
             n += 1
 
             # Current estimates
-            current_estimates = ps_estimates if ps_estimates is not None else ga_estimates
-            current_estimates['error'] = ps_errors[-1] if ps_errors is not None else ga_errors  # BUG if ps_iter = 0
+            if self.GA_GENERATIONS > 0:
+                current_estimates = ga_estimates
+                current_estimates['error'] = ga_errors[-1]
+            elif self.PS_MAX_ITER > 0:
+                current_estimates = ps_estimates
+                current_estimates['error'] = ps_errors[-1]
+            else:
+                msg = 'Cannot get current error. No estimation method found.'
+                LOGGER.error(msg)
+                raise RuntimeError(msg)
 
             # Append all estimates
             all_estimates = all_estimates.append(current_estimates, ignore_index=True)
