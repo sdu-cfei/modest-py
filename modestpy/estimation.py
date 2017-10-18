@@ -290,7 +290,7 @@ class Estimation:
                         uniformity=0.5,
                         mut=self.GA_MUT,
                         mut_inc=self.GA_MUT_INC,
-                        trm_size=self.GA_POP_SIZE//5,
+                        trm_size=max(self.GA_POP_SIZE//5, 1),
                         opts=self.OPTS,
                         ftype=self.ftype,
                         init_pop=init_pars)
