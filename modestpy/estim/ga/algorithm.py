@@ -1,17 +1,22 @@
+# -*- coding: utf-8 -*-
+
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
-
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 # Logger
 from modestpy.log_init import LogInit
 LOG_INIT = LogInit(__name__)
 LOGGER = LOG_INIT.get_logger()
 
-from population import Population
+from modestpy.estim.ga.population import Population
 import random
 
 # Constants controlling the evolution
@@ -163,7 +168,7 @@ def slight_mutation(ind, mut_rate, max_change):
     for g_name in ind.genes:
         if random.random() < mut_rate:
             value = ind.genes[g_name]
-            new_value = value + random.uniform(-1., 1.) * max_change / 100
+            new_value = value + random.uniform(-1., 1.) * max_change / 100.
             if new_value > 1.:
                 new_value = 1.
             if new_value < 0.:
@@ -186,6 +191,6 @@ def tournament_selection(pop, tournament_size):
 def info(txt):
     if VERBOSE:
         if isinstance(txt, str):
-            print '[ALGORITHM]', txt
+            print('[ALGORITHM]', txt)
         else:
-            print '[ALGORITHM]', repr(txt)
+            print('[ALGORITHM]', repr(txt))

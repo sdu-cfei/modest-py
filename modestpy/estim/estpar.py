@@ -1,10 +1,15 @@
+# -*- coding: utf-8 -*-
+
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
-
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import pandas as pd
 import numpy as np

@@ -1,10 +1,15 @@
+# -*- coding: utf-8 -*-
+
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
-
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 from modestpy.log_init import LogInit
 LOG_INIT = LogInit(__name__)
@@ -269,7 +274,7 @@ class PS:
         elif sign == '-':
             sign_mltp = -1.
         else:
-            print 'Unrecognized sign ({})'.format(sign)
+            print('Unrecognized sign ({})'.format(sign))
 
         new_value = estpar.value * (1 + rel_step * sign_mltp)
 

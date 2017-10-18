@@ -1,12 +1,15 @@
+# -*- coding: utf-8 -*-
+
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
-
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
-
-Author: Krzysztof Arendt
 """
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 from modestpy.log_init import LogInit
 LOG_INIT = LogInit(__name__)
@@ -499,11 +502,11 @@ class LearnMan:
             try:
                 new_est[p] = (df[p][0], est[p][1], est[p][2])
             except KeyError as e:
-                print '[ERROR] Key not found: {}'.format(p)
-                print 'Compare keys to find problem:'
-                print 'df: ', df
-                print 'est: ', est
-                print e
+                print('[ERROR] Key not found: {}'.format(p))
+                print('Compare keys to find problem:')
+                print('df: ', df)
+                print('est: ', est)
+                print(e)
                 raise e
 
         return new_est
@@ -563,4 +566,4 @@ if __name__ == '__main__':
 
     eee.index = eee.index.rename('iter')
 
-    print eee.index
+    print(eee.index)

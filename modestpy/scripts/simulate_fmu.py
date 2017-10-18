@@ -1,25 +1,26 @@
+# -*- coding: utf-8 -*-
+
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
-
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
-
-Author: Krzysztof Arendt
-
-Description
-===========
-This script can be used to simulate an FMU, 
-e.g. to produce results from a model 
-with known inputs and parameters.
 """
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from fmi.model import Model
 
-
+# Description
+# ===========
+# This script can be used to simulate an FMU, 
+# e.g. to produce results from a model 
+# with known inputs and parameters.
 if __name__ == "__main__":
     
     model = Model('./tests/resources/simple2R1C/Simple2R1C.fmu')

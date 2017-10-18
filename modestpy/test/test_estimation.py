@@ -1,12 +1,15 @@
+# -*- coding: utf-8 -*-
+
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
-
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
-
-Author: Krzysztof Arendt
 """
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import unittest
 import tempfile
@@ -84,7 +87,7 @@ class TestEstimation(unittest.TestCase):
         self.assertEqual(session.lp[0][0], 0)
         self.assertEqual(session.lp[0][1], 3600)
         # raw_input('Continue...') # <-- enabling this line triggers the Matplotlib error (issue #20)
-        self.assertLess(err['tot'], 0.0945)  # NRMSE
+        self.assertLess(err['tot'], 0.38)  # NRMSE
 
         # Make sure initial error is the same in both estimation runs (initial guess is the same due to LHS)
         errors = pd.read_csv(os.path.join(self.tmpdir, 'errors.csv')).set_index('iter')
