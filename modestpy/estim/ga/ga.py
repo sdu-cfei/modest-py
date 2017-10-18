@@ -1,19 +1,24 @@
+# -*- coding: utf-8 -*-
+
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
-
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 from modestpy.log_init import LogInit
 LOG_INIT = LogInit(__name__)
 LOGGER = LOG_INIT.get_logger()
 
-import algorithm
+from modestpy.estim.ga import algorithm
 import modestpy.estim.plots as plots
 from modestpy.estim.estpar import EstPar
-from population import Population
+from modestpy.estim.ga.population import Population
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -65,7 +70,7 @@ class GA:
         algorithm.UNIFORM_RATE = uniformity
         algorithm.MUT_RATE = mut
         algorithm.MUT_RATE_INC = mut_inc
-        algorithm.TOURNAMENT_SIZE = trm_size
+        algorithm.TOURNAMENT_SIZE = int(trm_size)
 
         self.max_generations = generations
         self.tolerance = tolerance
@@ -302,14 +307,6 @@ class GA:
             fig.set_size_inches(FIG_SIZE)
             fig.savefig(file, dpi=DPI)
         return axes
-
-    # def info(self, txt):
-    #     class_name = self.__class__.__name__
-    #     if VERBOSE:
-    #         if isinstance(txt, str):
-    #             print '[' + class_name + '] ' + txt
-    #         else:
-    #             print '[' + class_name + '] ' + repr(txt)
 
     def _update_res(self, gen_count):
         # Save estimates

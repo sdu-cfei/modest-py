@@ -1,12 +1,15 @@
+# -*- coding: utf-8 -*-
+
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
-
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
-
-Author: Krzysztof Arendt
 """
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import os
 import shutil
@@ -30,7 +33,7 @@ def compile(model_name, mo_path, fmu_path=None):
                       compiler_options=opts)
     std_fmu_path = os.path.join(os.getcwd(), model_name.replace('.', '_') + '.fmu')
     if fmu_path is not None:
-        print "Moving FMU to: {}".format(fmu_path)
+        print("Moving FMU to: {}".format(fmu_path))
         shutil.move(std_fmu_path, fmu_path)
         return fmu_path
     return std_fmu_path

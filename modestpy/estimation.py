@@ -1,10 +1,15 @@
+# -*- coding: utf-8 -*-
+
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
-
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 from modestpy.log_init import LogInit
 LOG_INIT = LogInit(__name__)
@@ -285,7 +290,7 @@ class Estimation:
                         uniformity=0.5,
                         mut=self.GA_MUT,
                         mut_inc=self.GA_MUT_INC,
-                        trm_size=self.GA_POP_SIZE/5,
+                        trm_size=self.GA_POP_SIZE//5,
                         opts=self.OPTS,
                         ftype=self.ftype,
                         init_pop=init_pars)

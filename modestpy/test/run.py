@@ -1,19 +1,22 @@
+# -*- coding: utf-8 -*-
+
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
-
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
-
-Author: Krzysztof Arendt
 """
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import unittest
-import test_ga
-import test_lm
-import test_ps
-import test_estimation
-import test_utilities
+from modestpy.test import test_ga
+from modestpy.test import test_lm
+from modestpy.test import test_ps
+from modestpy.test import test_estimation
+from modestpy.test import test_utilities
 
 
 def all_suites():

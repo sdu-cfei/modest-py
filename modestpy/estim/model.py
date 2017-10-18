@@ -1,10 +1,15 @@
+# -*- coding: utf-8 -*-
+
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
-
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 from modestpy.log_init import LogInit
 LOG_INIT = LogInit(__name__)
@@ -80,6 +85,6 @@ class Model:
         class_name = self.__class__.__name__
         if VERBOSE:
             if isinstance(txt, str):
-                print '[' + class_name + '] ' + txt
+                print('[' + class_name + '] ' + txt)
             else:
-                print '[' + class_name + '] ' + repr(txt)
+                print('[' + class_name + '] ' + repr(txt))
