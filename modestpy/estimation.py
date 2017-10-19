@@ -183,10 +183,7 @@ class Estimation:
         }
         self.GA_OPTS['trm_size'] = max(self.GA_OPTS['pop_size']//5, 1)
         # User GA options
-        if len(ga_opts) > 0:
-            for key in ga_opts:
-                LOGGER.info('User defined GA option: {} = {}'.format(key, ga_opts[key]))
-                self.GA_OPTS[key] = ga_opts[key]
+        self.GA_OPTS = self._update_opts(self.GA_OPTS, ga_opts, 'GA')
 
         # Default PS options
         self.PS_OPTS = {
@@ -196,10 +193,7 @@ class Estimation:
             'try_lim': 1000
         }
         # User PS options
-        if len(ps_opts) > 0:
-            for key in ps_opts:
-                LOGGER.info('User defined PS option: {} = {}'.format(key, ps_opts[key]))
-                self.PS_OPTS[key] = ps_opts[key]
+        self.PS_OPTS = self._update_opts(self.PS_OPTS, ps_opts, 'PS')
 
         # FMI options
         self.FMI_OPTS = fmi_opts  # It's fine if it's None
@@ -470,6 +464,23 @@ class Estimation:
         return err, result
 
     # PRIVATE METHODS ====================================================
+
+    def _update_opts(self, opts, new_opts, method):
+        """
+        :param dict opts: Options to be updated
+        :param dict new_opts: New options (can contain a subset of opts keys)
+        :param str method: Method name, 'GA', 'PS' etc. (used only for logging)
+        :return: Updated dict
+        """
+        if len(new_opts) > 0:
+            for key in new_opts:
+                if key not in opts.keys():
+                    msg = 'Unknown key: {}'.format(key)
+                    LOGGER.error(msg)
+                    raise KeyError(msg)
+                LOGGER.info('User defined option ({}): {} = {}'.format(method, key, new_opts[key]))
+                opts[key] = new_opts[key]
+        return opts
 
     def _get_best_estimates(self, all_estimates):
         """

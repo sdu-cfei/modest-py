@@ -70,7 +70,7 @@ class TestEstimation(unittest.TestCase):
         self.assertGreater(len(res.columns), 0)
 
     def test_estimation_all_args(self):
-        ga_opts = {'generations': 3, 'pop_size': 10}
+        ga_opts = {'generations': 3, 'pop_size': 10, 'trm_size': 5}
         ps_opts = {'max_iter': 3}
         session = Estimation(self.tmpdir, self.fmu_path, self.inp,
                              self.known, self.est, self.ideal,
@@ -91,14 +91,14 @@ class TestEstimation(unittest.TestCase):
         self.assertEqual(session.lp[0][0], 0)
         self.assertEqual(session.lp[0][1], 3600)
         # raw_input('Continue...') # <-- enabling this line triggers the Matplotlib error (issue #20)
-        self.assertLess(err['tot'], 0.58)  # NRMSE
+        self.assertLess(err['tot'], 0.49)  # NRMSE
 
         # Make sure initial error is the same in both estimation runs (initial guess is the same due to LHS)
         errors = pd.read_csv(os.path.join(self.tmpdir, 'errors.csv')).set_index('iter')
         self.assertEqual(errors.loc[0, 'err#0'], errors.loc[0, 'err#1'])
 
     def test_estimation_rmse(self):
-        ga_opts = {'generations': 3}
+        ga_opts = {'generations': 3, 'pop_size': 8, 'trm_size': 3}
         ps_opts = {'max_iter': 3}
 
         session = Estimation(self.tmpdir, self.fmu_path, self.inp,
@@ -116,7 +116,7 @@ class TestEstimation(unittest.TestCase):
         self.assertIsNotNone(res)
         self.assertGreater(len(res.index), 1)
         self.assertGreater(len(res.columns), 0)
-        self.assertLess(err['tot'], 0.209)
+        self.assertLess(err['tot'], 1.48)
         
     def test_ga_only(self):
         ga_opts = {'generations': 1}
@@ -138,6 +138,18 @@ class TestEstimation(unittest.TestCase):
                     ga_opts=ga_opts, ps_opts=ps_opts, seed=1, ftype='RMSE')
         estimates = session.estimate()
 
+    def test_opts(self):
+        ga_opts = {'generations': 10, 'pop_size': 10, 'look_back': 10,
+                   'tol': 0.001, 'mut': 0.02, 'mut_inc': 0.3, 'trm_size': 3}
+        ps_opts = {'max_iter': 10, 'rel_step': 0.1, 'tol': 0.001, 'try_lim': 10}
+        session = Estimation(self.tmpdir, self.fmu_path, self.inp,
+                    self.known, self.est, self.ideal,
+                    ga_opts=ga_opts, ps_opts=ps_opts)
+        ga_return = session.GA_OPTS
+        ps_return = session.PS_OPTS
+        self.assertDictEqual(ga_opts, ga_return)
+        self.assertDictEqual(ps_opts, ps_return)
+
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(TestEstimation('test_estimation_basic'))
@@ -145,6 +157,7 @@ def suite():
     suite.addTest(TestEstimation('test_estimation_rmse'))
     suite.addTest(TestEstimation('test_ga_only'))
     suite.addTest(TestEstimation('test_ps_only'))
+    suite.addTest(TestEstimation('test_opts'))
 
     return suite
 
