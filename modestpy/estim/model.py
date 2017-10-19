@@ -60,7 +60,7 @@ class Model:
         self.model.inputs_from_df(df, exclude)
 
     def set_param(self, df):
-        """ Sets parameters. Can set only subset of model parameters.
+        """ Sets parameters. It is possible to set only a subset of model parameters.
 
         :param df: Dataframe with header and a single row of data
         :return: None

@@ -28,7 +28,7 @@ from random import random
 
 class PS:
     """
-    Pattern _search (Hooke-Jeeves) algorithm for FMU parameter estimation.
+    Pattern search (Hooke-Jeeves) algorithm for FMU parameter estimation.
     """
 
     COM_POINTS = 500  # Default number of communication points, should be adjusted to the number of samples
