@@ -60,7 +60,7 @@ if __name__ == "__main__":
     session = Estimation(workdir, fmu_path, inp, known, est, ideal,
                          lp_n=3, lp_len=25000, lp_frame=(0, 25000),
                          vp = (150000, 215940), ic_param={'Tstart': 'T'},
-                         ga_pop=20, ga_iter=20, ps_iter=1000, ga_tol=0.001, ps_tol=0.00000001,
+                         ga_pop=15, ga_iter=0, ps_iter=1000, ga_tol=0.001, ps_tol=0.00000001,
                          seed=1, ftype='RMSE', lhs=True)  # seed is used to make the results repetitive in this example
 
     estimates = session.estimate()

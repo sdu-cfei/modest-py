@@ -290,7 +290,7 @@ class Estimation:
                         uniformity=0.5,
                         mut=self.GA_MUT,
                         mut_inc=self.GA_MUT_INC,
-                        trm_size=self.GA_POP_SIZE//5,
+                        trm_size=max(self.GA_POP_SIZE//5, 1),
                         opts=self.OPTS,
                         ftype=self.ftype,
                         init_pop=init_pars)
@@ -334,6 +334,12 @@ class Estimation:
                 ps_errors = ps.get_errors()
                 # PS parameter evolution
                 plots['ps_{}'.format(n)] = ps.plot_parameter_evo()
+
+                # Get full solution trajectory from PS
+                df = ps.get_full_solution_trajectory()
+                df = df.rename(columns={x: "{}#{}".format(x, n) for x in df})
+                fullsol = pd.concat([fullsol, df], axis=0, ignore_index=True)  # Add new rows (with PS)
+
             else:
                 # PS not used, assign empty list
                 ps_errors = list()
@@ -344,17 +350,20 @@ class Estimation:
             # Merge err_evo_n (this run) with err_evo (all runs)
             err_evo = err_evo.merge(err_evo_n, on='iter', how='outer')
 
-            # Get full solution trajectory from PS
-            df = ps.get_full_solution_trajectory()
-            df = df.rename(columns={x: "{}#{}".format(x, n) for x in df})
-            fullsol = pd.concat([fullsol, df], axis=0, ignore_index=True)  # Add new rows (with PS)
-
             # Increase learning period counter
             n += 1
 
             # Current estimates
-            current_estimates = ps_estimates if ps_estimates is not None else ga_estimates
-            current_estimates['error'] = ps_errors[-1] if ps_errors is not None else ga_errors  # BUG if ps_iter = 0
+            if self.GA_GENERATIONS > 0:
+                current_estimates = ga_estimates
+                current_estimates['error'] = ga_errors[-1]
+            elif self.PS_MAX_ITER > 0:
+                current_estimates = ps_estimates
+                current_estimates['error'] = ps_errors[-1]
+            else:
+                msg = 'Cannot get current error. No estimation method found.'
+                LOGGER.error(msg)
+                raise RuntimeError(msg)
 
             # Append all estimates
             all_estimates = all_estimates.append(current_estimates, ignore_index=True)
@@ -416,6 +425,8 @@ class Estimation:
         est = self._get_avg_estimates(all_est) if use_type == 'avg' \
               else self._get_best_estimates(all_est)
 
+        LOGGER.info('Validation using ({}) parameters: {}'.format(use_type, str(est.to_dict())))
+
         # Slice data
         start, stop = self.vp[0], self.vp[1]
         inp_slice = self.inp.loc[start:stop]
@@ -440,7 +451,7 @@ class Estimation:
             result = model.simulate(com_points=com_points)
         except FMUException as e:
             msg = 'Problem found inside FMU. Did you set all parameters? Log:\n'
-            msg += model.model.model.print_log()
+            msg += str(model.model.model.print_log())
             LOGGER.error(msg)
             raise FMUException(e)
 
@@ -474,6 +485,10 @@ class Estimation:
         best = all_estimates.loc[all_estimates['error'] == all_estimates['error'].min()]  # It can yield more than 1 row
         best = best.drop('error', axis=1)
         best = best.reset_index(drop=True)
+
+        if len(best.index) > 1:
+            # It means that there are 2 or more identical rows - take only one
+            best = best.iloc[0].to_frame().T
 
         return best
 
