@@ -85,8 +85,9 @@ class Estimation:
 
     def __init__(self, workdir, fmu_path, inp, known, est, ideal,
                  lp_n=None, lp_len=None, lp_frame=None, vp=None,
-                 ic_param=None, ga_opts={}, ps_opts={}, fmi_opts={},
-                 seed=None, ftype='RMSE', lhs=False):
+                 ic_param=None, ga_pop=None, ga_iter=None, ga_tol=None,
+                 ps_iter=None, ps_tol=None, opts=None, seed=None,
+                 ftype='RMSE', lhs=False):
         """
         Constructor.
 
@@ -130,11 +131,17 @@ class Estimation:
             Validation period, entire data set if ``None``
         ic_param: dict(str, str) or None
             Mapping between model parameters used for IC and variables from ``ideal``
-        ga_opts: dict
-            Genetic algorithm options
-        ps_opts: dict
-            Pattern search options
-        fmi_opts: dict
+        ga_pop: int or None
+            GA population size, if None ``ga_pop`` is chosen automatically based on the number of parameters
+        ga_iter: int or None
+            Maximum number of GA iterations (generations). If 0, GA is switched off. Default: 50.
+        ga_tol: float or None
+            GA tolerance (accepted error)
+        ps_iter: int or None
+            Maximum number of PS iterations. If 0, PS is switched off. Default: 50.
+        ps_tol: float or None
+            PS tolerance (accepted error)
+        opts: dict or None
             Additional options to be passed to the FMI model (e.g. solver tolerance)
         seed: None or int
             Random number seed. If None, current time or OS specific randomness is used.
@@ -171,38 +178,29 @@ class Estimation:
         self.ftype = ftype
         self.lhs = lhs
 
-        # Estimation options
-        # Default GA options
-        self.GA_OPTS = {
-            'pop_size': max((4 * len(est.keys()), 20)),
-            'generations': 50,
-            'look_back': 50,
-            'tol': 1e-6,
-            'mut': 0.05,
-            'mut_inc': 0.3,
-        }
-        self.GA_OPTS['trm_size'] = max(self.GA_OPTS['pop_size']//5, 1)
-        # User GA options
-        if len(ga_opts) > 0:
-            for key in ga_opts:
-                LOGGER.info('User defined GA option: {} = {}'.format(key, ga_opts[key]))
-                self.GA_OPTS[key] = ga_opts[key]
+        # Estimation parameters
+        self.GA_POP_SIZE = max((4 * len(est.keys()), 20))   # Default
+        self.GA_GENERATIONS = 50                            # Default
+        self.GA_LOOK_BACK = 50                              # Default
+        self.GA_TOL = 1e-6                                  # Default
+        self.GA_MUT = 0.05                                  # Default
+        self.GA_MUT_INC = 0.3                               # Default
+        self.PS_MAX_ITER = 500                              # Dafault
+        self.PS_REL_STEP = 0.02                             # Default
+        self.PS_TOL = 1e-11                                 # Default
+        self.PS_TRY_LIM = 1000                              # Default
+        if ga_pop is not None:
+            self.GA_POP_SIZE = ga_pop
+        if ga_iter is not None:
+            self.GA_GENERATIONS = ga_iter
+        if ga_tol is not None:
+            self.GA_TOL = ga_tol
+        if ps_iter is not None:
+            self.PS_MAX_ITER = ps_iter
+        if ps_tol is not None:
+            self.PS_TOL = ps_tol
 
-        # Default PS options
-        self.PS_OPTS = {
-            'max_iter': 500,
-            'rel_step': 0.02,
-            'tol': 1e-11,
-            'try_lim': 1000
-        }
-        # User PS options
-        if len(ps_opts) > 0:
-            for key in ps_opts:
-                LOGGER.info('User defined PS option: {} = {}'.format(key, ps_opts[key]))
-                self.PS_OPTS[key] = ps_opts[key]
-
-        # FMI options
-        self.FMI_OPTS = fmi_opts  # It's fine if it's None
+        self.OPTS = opts  # It's fine if it's None
 
         # Learning periods
         self.lp = self._select_lp(lp_n, lp_len, lp_frame)
@@ -245,7 +243,7 @@ class Estimation:
         -------
         dict(str: float)
         """
-        if (self.GA_OPTS['generations'] <= 0) and (self.PS_OPTS['max_iter'] <= 0):
+        if (self.GA_GENERATIONS <= 0) and (self.PS_MAX_ITER <= 0):
             msg = 'Both GA and PS are switched off, cannot estimate!'
             LOGGER.error(msg)
             raise RuntimeError(msg)
@@ -263,7 +261,7 @@ class Estimation:
         if self.lhs is True:
             init_pars = self._lhs_init(par_names=self.est.keys(),
                                        bounds=[(self.est[x][1], self.est[x][2]) for x in self.est],
-                                       samples=self.GA_OPTS['pop_size'])
+                                       samples=self.GA_POP_SIZE)
             init_pars.to_csv(os.path.join(self.workdir, 'initial_guess.csv'), index=False)
         else:
             init_pars = None
@@ -282,18 +280,18 @@ class Estimation:
                     self.known[par] = ic
 
             # Genetic algorithm
-            if self.GA_OPTS['generations'] > 0:
+            if self.GA_GENERATIONS > 0:
                 # Initialize GA
                 ga = GA(self.fmu_path, inp_slice, self.known, self.est,
-                        ideal_slice, generations=self.GA_OPTS['generations'],
-                        tolerance=self.GA_OPTS['tol'],
-                        look_back=self.GA_OPTS['look_back'],
-                        pop_size=self.GA_OPTS['pop_size'],
+                        ideal_slice, generations=self.GA_GENERATIONS,
+                        tolerance=self.GA_TOL,
+                        look_back=self.GA_LOOK_BACK,
+                        pop_size=self.GA_POP_SIZE,
                         uniformity=0.5,
-                        mut=self.GA_OPTS['mut'],
-                        mut_inc=self.GA_OPTS['mut_inc'],
-                        trm_size=self.GA_OPTS['trm_size'],
-                        opts=self.FMI_OPTS,
+                        mut=self.GA_MUT,
+                        mut_inc=self.GA_MUT_INC,
+                        trm_size=max(self.GA_POP_SIZE//5, 1),
+                        opts=self.OPTS,
                         ftype=self.ftype,
                         init_pop=init_pars)
                 # Run GA
@@ -324,12 +322,12 @@ class Estimation:
                 ga_errors = list()
 
             # Pattern search
-            if self.PS_OPTS['max_iter'] > 0:
+            if self.PS_MAX_ITER > 0:
                 # Initialize PS
                 ps = PS(self.fmu_path, inp_slice, self.known, self.est, \
-                        ideal_slice, max_iter=self.PS_OPTS['max_iter'], tolerance=self.PS_OPTS['tol'],
-                        opts=self.FMI_OPTS, ftype=self.ftype, rel_step=self.PS_OPTS['rel_step'],
-                        try_lim=self.PS_OPTS['try_lim'])
+                        ideal_slice, max_iter=self.PS_MAX_ITER, tolerance=self.PS_TOL,
+                        opts=self.OPTS, ftype=self.ftype, rel_step=self.PS_REL_STEP,
+                        try_lim=self.PS_TRY_LIM)  # TODO: Add LHS init when GA is deactivated
                 # Run PS
                 ps_estimates = ps.estimate()
                 # PS errors
@@ -356,10 +354,10 @@ class Estimation:
             n += 1
 
             # Current estimates
-            if self.GA_OPTS['generations'] > 0:
+            if self.GA_GENERATIONS > 0:
                 current_estimates = ga_estimates
                 current_estimates['error'] = ga_errors[-1]
-            elif self.PS_OPTS['max_iter'] > 0:
+            elif self.PS_MAX_ITER > 0:
                 current_estimates = ps_estimates
                 current_estimates['error'] = ps_errors[-1]
             else:

@@ -54,9 +54,11 @@ class TestEstimation(unittest.TestCase):
         shutil.rmtree(self.tmpdir)
 
     def test_estimation_basic(self):
+        ga_opts = {'generations': 3}
+        ps_opts = {'max_iter': 3}
         session = Estimation(self.tmpdir, self.fmu_path, self.inp,
                              self.known, self.est, self.ideal,
-                             ga_iter=3, ps_iter=3)
+                             ga_opts=ga_opts, ps_opts=ps_opts)
         estimates = session.estimate()
         err, res = session.validate()
 
@@ -68,12 +70,14 @@ class TestEstimation(unittest.TestCase):
         self.assertGreater(len(res.columns), 0)
 
     def test_estimation_all_args(self):
+        ga_opts = {'generations': 3, 'pop_size': 10}
+        ps_opts = {'max_iter': 3}
         session = Estimation(self.tmpdir, self.fmu_path, self.inp,
                              self.known, self.est, self.ideal,
                              lp_n=2, lp_len=3600, lp_frame=(0, 3600),
                              vp=(20000, 40000), ic_param={'Tstart': 'T'},
-                             ga_iter=3, ps_iter=3, seed=1, ftype='NRMSE',
-                             lhs=True, ga_pop=10)
+                             ga_opts=ga_opts, ps_opts=ps_opts, seed=1, ftype='NRMSE',
+                             lhs=True)
 
         estimates = session.estimate()
         err, res = session.validate()
@@ -94,11 +98,14 @@ class TestEstimation(unittest.TestCase):
         self.assertEqual(errors.loc[0, 'err#0'], errors.loc[0, 'err#1'])
 
     def test_estimation_rmse(self):
+        ga_opts = {'generations': 3}
+        ps_opts = {'max_iter': 3}
+
         session = Estimation(self.tmpdir, self.fmu_path, self.inp,
                             self.known, self.est, self.ideal,
                             lp_n=1, lp_len=3600, lp_frame=(0, 3600),
                             vp = (20000, 40000), ic_param={'Tstart': 'T'},
-                            ga_iter=3, ps_iter=3, seed=1, ftype='RMSE')
+                            ga_opts=ga_opts, ps_opts=ps_opts, seed=1, ftype='RMSE')
 
         estimates = session.estimate()
         err, res = session.validate()
@@ -112,19 +119,23 @@ class TestEstimation(unittest.TestCase):
         self.assertLess(err['tot'], 0.209)
         
     def test_ga_only(self):
+        ga_opts = {'generations': 1}
+        ps_opts = {'max_iter': 0}
         session = Estimation(self.tmpdir, self.fmu_path, self.inp,
                     self.known, self.est, self.ideal,
                     lp_n=1, lp_len=3600, lp_frame=(0, 3600),
                     vp = (20000, 40000), ic_param={'Tstart': 'T'},
-                    ga_iter=1, ps_iter=0, seed=1, ftype='RMSE')
+                    ga_opts=ga_opts, ps_opts=ps_opts, seed=1, ftype='RMSE')
         estimates = session.estimate()
 
     def test_ps_only(self):
+        ga_opts = {'generations': 0}
+        ps_opts = {'max_iter': 1}
         session = Estimation(self.tmpdir, self.fmu_path, self.inp,
                     self.known, self.est, self.ideal,
                     lp_n=1, lp_len=3600, lp_frame=(0, 3600),
                     vp = (20000, 40000), ic_param={'Tstart': 'T'},
-                    ga_iter=0, ps_iter=1, seed=1, ftype='RMSE')
+                    ga_opts=ga_opts, ps_opts=ps_opts, seed=1, ftype='RMSE')
         estimates = session.estimate()
 
 def suite():
