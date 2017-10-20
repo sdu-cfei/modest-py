@@ -124,7 +124,7 @@ class Individual:
 
     def get_estimates_and_error(self):
         estimates = self.get_estimates()
-        estimates['error'] = self.error['tot']
+        estimates['_error_'] = self.error['tot']
         return estimates
 
     def get_clone(self):

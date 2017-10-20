@@ -59,7 +59,7 @@ class Estimation:
 
     Methods
     -------
-    estimate(get_type='avg')
+    estimate(get='avg')
         Estimates parameters, saves results to ``workdir`` and
         returns chosen type of estimates ('avg' or 'best')
     validate(use_type='avg')
@@ -85,7 +85,7 @@ class Estimation:
 
     def __init__(self, workdir, fmu_path, inp, known, est, ideal,
                  lp_n=None, lp_len=None, lp_frame=None, vp=None,
-                 ic_param=None, ga_opts={}, ps_opts={}, fmi_opts={},
+                 ic_param=None, methods=('GA', 'PS'), ga_opts={}, ps_opts={}, fmi_opts={},
                  seed=None, ftype='RMSE', lhs=False):
         """
         Constructor.
@@ -143,16 +143,13 @@ class Estimation:
         lhs: bool
             If True, initial guess is chosen using Lating Hypercube Sampling
         """
-        # est tuple indices
-        est_init = 0  # Initial value
-        est_lo = 1    # Lower bound
-        est_hi = 2    # Upper bound
-
         # Sanity checks
         assert inp.index.equals(ideal.index), 'inp and ideal indexes are not matching'
+
+        init, lo, hi = 0, 1 ,2  # Initial value, lower bound, upper bound indices
         for v in est:
-            assert  (est[v][est_init] >= est[v][est_lo])  \
-                and (est[v][est_init] <= est[v][est_hi]), \
+            assert  (est[v][init] >= est[v][lo])  \
+                and (est[v][init] <= est[v][hi]), \
                 'Initial value out of limits ({})'.format(v)
 
         # Random seed
@@ -168,55 +165,64 @@ class Estimation:
         self.known = known
         self.est = est
         self.ideal = ideal
-        self.ftype = ftype
         self.lhs = lhs
+        self.methods = methods
 
         # Estimation options
-        # Default GA options
+        # GA options
         self.GA_OPTS = {
-            'pop_size': max((4 * len(est.keys()), 20)),
-            'generations': 50,
-            'look_back': 50,
-            'tol': 1e-6,
-            'mut': 0.05,
-            'mut_inc': 0.3,
-        }
-        self.GA_OPTS['trm_size'] = max(self.GA_OPTS['pop_size']//5, 1)
-        # User GA options
-        self.GA_OPTS = self._update_opts(self.GA_OPTS, ga_opts, 'GA')
+            'maxiter':      50,
+            'pop_size':     max((4 * len(est.keys()), 20)),
+            'tol':          1e-6,
+            'mut':          0.05,
+            'mut_inc':      0.3,
+            'uniformity':   0.5,
+            'look_back':    50,
+            'ftype':        ftype,
+            'opts':         fmi_opts
+        }  # Default
+        self.GA_OPTS['trm_size'] = max(self.GA_OPTS['pop_size']//5, 1)  # Default
+        self.GA_OPTS = self._update_opts(self.GA_OPTS, ga_opts, 'GA')  # User options
 
-        # Default PS options
+        # TODO: Add LHS initialization to GA (maybe inside GA as default) <<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+        # PS options
         self.PS_OPTS = {
-            'max_iter': 500,
+            'maxiter':  500,
             'rel_step': 0.02,
-            'tol': 1e-11,
-            'try_lim': 1000
-        }
-        # User PS options
-        self.PS_OPTS = self._update_opts(self.PS_OPTS, ps_opts, 'PS')
+            'tol':      1e-11,
+            'try_lim':  1000,
+            'ftype':    ftype,
+            'opts':     fmi_opts
+        }  # Default
+        self.PS_OPTS = self._update_opts(self.PS_OPTS, ps_opts, 'PS')  # User options
 
-        # FMI options
-        self.FMI_OPTS = fmi_opts  # It's fine if it's None
+        # Method dictionary
+        self.method_dict = {
+            'GA': (GA, self.GA_OPTS),
+            'PS': (PS, self.PS_OPTS)
+        }  # Key -> method name, value -> (method class, method options)
 
-        # Learning periods
+        # List of learning periods (tuples with start, stop)
         self.lp = self._select_lp(lp_n, lp_len, lp_frame)
 
-        # Validation period
+        # Validation period (a tuple with start, stop)
         if vp is not None:
             self.vp = vp
         else:
             self.vp = (ideal.index[0], ideal.index[-1])
 
         # Initial condition parameters
+        # Take first value from time series from 'ideal' column
         self.ic_param = ic_param  # dict (par_name: ideal_column_name)
 
     # PUBLIC METHODS =====================================================
 
-    def estimate(self, get_type='best'):
+    def estimate(self, get='best'):
         """
         Estimates parameters using the previously defined settings.
 
-        Returns average or best estimates depending on ``get_type``.
+        Returns average or best estimates depending on ``get``.
         Average parameters are calculated as arithmetic average
         from all learning periods. Best parameters are those which
         resulted in the lowest error during respective learning period.
@@ -232,172 +238,112 @@ class Estimation:
 
         Parameters
         ----------
-        get_type: str, default 'best'
+        get: str, default 'best'
             Type of returned estimates: 'avg' or 'best'
 
         Returns
         -------
         dict(str: float)
         """
-        if (self.GA_OPTS['generations'] <= 0) and (self.PS_OPTS['max_iter'] <= 0):
-            msg = 'Both GA and PS are switched off, cannot estimate!'
-            LOGGER.error(msg)
-            raise RuntimeError(msg)
+        # (0) Sanity checks
+        allowed_types = ['best', 'avg']
+        assert get in allowed_types, 'get={} is not allowed'.format(get)
 
-        plots = dict()
+        # (1) Initialize local variables
+        methods = self.methods      # Tuple with method names, e.g. ('GA', 'PS'), ('GA', 'SQP') or ('GA', )
+        plots = list()              # List of plots to saved
 
-        ga_estimates = None                      # Holds final GA estimates
-        ps_estimates = None                      # Holds final PS estimates
-        final_estimates = None                   # Best estimates from all runs
-        all_estimates = pd.DataFrame()           # Best estimates from each run
-        fullsol = pd.DataFrame()                 # Full solution (parameters) for each run
-        err_evo = pd.DataFrame(columns=['iter']) # Error evolution from each run
+        cols = ['_method_', '_error_'] + [par_name for par_name in self.est]
+        summary = pd.DataFrame(columns=cols)  # Estimates and errors from all iterations from all methods
+        summary.index.name = '_iter_'
 
-        # LHS initialization
-        if self.lhs is True:
-            init_pars = self._lhs_init(par_names=self.est.keys(),
-                                       bounds=[(self.est[x][1], self.est[x][2]) for x in self.est],
-                                       samples=self.GA_OPTS['pop_size'])
-            init_pars.to_csv(os.path.join(self.workdir, 'initial_guess.csv'), index=False)
-        else:
-            init_pars = None
+        summary_list = list()  # List of DataFrames with summaries from all runs
 
-        n = 0
+        # (2) Double step estimation
+        n = 1  # Learning period counter
+        
         for period in self.lp:
-            # Slice data
+            # (2.1) Slice data
             start, stop = period[0], period[1]
             inp_slice = self.inp.loc[start:stop]
             ideal_slice = self.ideal.loc[start:stop]
 
-            # Get data for IC parameters and add to known parameters
+            # (2.2) Get data for IC parameters and add to known parameters
             if self.ic_param:
                 for par in self.ic_param:
                     ic = ideal_slice[self.ic_param[par]].iloc[0] 
                     self.known[par] = ic
 
-            # Genetic algorithm
-            if self.GA_OPTS['generations'] > 0:
-                # Initialize GA
-                ga = GA(self.fmu_path, inp_slice, self.known, self.est,
-                        ideal_slice, generations=self.GA_OPTS['generations'],
-                        tolerance=self.GA_OPTS['tol'],
-                        look_back=self.GA_OPTS['look_back'],
-                        pop_size=self.GA_OPTS['pop_size'],
-                        uniformity=0.5,
-                        mut=self.GA_OPTS['mut'],
-                        mut_inc=self.GA_OPTS['mut_inc'],
-                        trm_size=self.GA_OPTS['trm_size'],
-                        opts=self.FMI_OPTS,
-                        ftype=self.ftype,
-                        init_pop=init_pars)
-                # Run GA
-                ga_estimates = ga.estimate()
-                # Update self.est dictionary
-                ga_est_dict = ga_estimates.to_dict('records')[0]
-                for p in ga_est_dict:
-                    try:
-                        new_value = ga_est_dict[p]
-                        lo_limit = self.est[p][1]
-                        hi_limit = self.est[p][2]
-                        self.est[p] = (new_value, lo_limit, hi_limit)
-                    except KeyError as e:
-                        LOGGER.error('Key not found: {}\n'.format(p))
-                        raise e
-                # GA errors
-                ga_errors = ga.get_errors()
-                # Evolution visualization
-                plots['ga_{}'.format(n)] = ga.plot_pop_evo()
+            # (2.3) Iterate over estimation methods (append results from all)
+            m = 0  # Method counter
+            for m_name in methods:
+                # (2.3.1) Instantiate method class
+                m_class = self.method_dict[m_name][0]
+                m_opts = self.method_dict[m_name][1]
 
-                # Get full solution trajectory from GA
-                df = ga.get_full_solution_trajectory()
-                df = df.rename(columns={x: "{}#{}".format(x, n) for x in df})
-                fullsol = pd.concat([fullsol, df], axis=1)  # Add new columns (with new est. runs)
+                m_inst = m_class(self.fmu_path, inp_slice, self.known, self.est, ideal_slice,
+                                 **m_opts)
 
-            else:
-                # GA not used, assign empty list
-                ga_errors = list()
+                # (2.3.2) Estimate
+                m_estimates = m_inst.estimate()
 
-            # Pattern search
-            if self.PS_OPTS['max_iter'] > 0:
-                # Initialize PS
-                ps = PS(self.fmu_path, inp_slice, self.known, self.est, \
-                        ideal_slice, max_iter=self.PS_OPTS['max_iter'], tolerance=self.PS_OPTS['tol'],
-                        opts=self.FMI_OPTS, ftype=self.ftype, rel_step=self.PS_OPTS['rel_step'],
-                        try_lim=self.PS_OPTS['try_lim'])
-                # Run PS
-                ps_estimates = ps.estimate()
-                # PS errors
-                ps_errors = ps.get_errors()
-                # PS parameter evolution
-                plots['ps_{}'.format(n)] = ps.plot_parameter_evo()
+                # (2.3.3) Update current estimates (stored in self.est dictionary)
+                for key in self.est:
+                    new_value = m_estimates[key][0]
+                    self.est[key] = (new_value, self.est[key][1], self.est[key][2])
 
-                # Get full solution trajectory from PS
-                df = ps.get_full_solution_trajectory()
-                df = df.rename(columns={x: "{}#{}".format(x, n) for x in df})
-                fullsol = pd.concat([fullsol, df], axis=0, ignore_index=True)  # Add new rows (with PS)
+                # (2.3.4) Append summary
+                full_traj = m_inst.get_full_solution_trajectory()
+                if m > 0:
+                    full_traj.index += summary.index[-1]  # Add iterations from previous methods
+                summary = summary.append(full_traj, verify_integrity=True)
+                summary.index.rename('_iter_', inplace=True)
 
-            else:
-                # PS not used, assign empty list
-                ps_errors = list()
+                # (2.3.5) Save method's plots
+                plots = m_inst.get_plots()
+                for p in plots:
+                    fig = self._get_figure(p['axes'])
+                    fig_file = os.path.join(self.workdir, "{}_{}.png".format(p['name'], n))
+                    fig.savefig(fig_file, dpi=Estimation.FIG_DPI)
+                plt.close('all')
 
-            # Generate error evolution (err_evo) for this learning period
-            err_evo_n = self._get_err_evo_n(ga_errors, ps_errors, n)
+                # (2.3.6) Increase method counter
+                m += 1
 
-            # Merge err_evo_n (this run) with err_evo (all runs)
-            err_evo = err_evo.merge(err_evo_n, on='iter', how='outer')
+            # (2.4) Add summary from this run to the list of all summaries
+            summary_list.append(summary)
+            summary = pd.DataFrame(columns=cols)  # Reset
 
-            # Increase learning period counter
+            # (2.5) Increase learning period counter
             n += 1
 
-            # Current estimates
-            if self.GA_OPTS['generations'] > 0:
-                current_estimates = ga_estimates
-                current_estimates['error'] = ga_errors[-1]
-            elif self.PS_OPTS['max_iter'] > 0:
-                current_estimates = ps_estimates
-                current_estimates['error'] = ps_errors[-1]
-            else:
-                msg = 'Cannot get current error. No estimation method found.'
-                LOGGER.error(msg)
-                raise RuntimeError(msg)
+        # (3) Get and save best estimates per run and final estimates
+        all_finals = self._get_finals(summary_list)
+        all_finals.to_csv(os.path.join(self.workdir, 'best_per_run.csv'))
+        
+        if get == 'best':
+            cond = all_finals['_error_'] == all_finals['_error_'].min()
+            final = all_finals.loc[cond].iloc[0:1]  # Take only one if more than one present
+            final = final.drop('_error_', axis=1)
+        elif get == 'avg':
+            final = all_finals.drop('_error_', axis=1).mean().to_frame().T
+        else:
+            # This shouldn't happen, because the type is checked at (0)
+            raise RuntimeError('Unknown type of estimates: {}'.format(get))
 
-            # Append all estimates
-            all_estimates = all_estimates.append(current_estimates, ignore_index=True)
+        final_file = os.path.join(self.workdir, 'final.csv')
+        final.to_csv(final_file, index=False)
 
-        # Save full solution trajectory
-        for col in fullsol:
-            # Drop NaNs
-            v = fullsol[col].dropna().values
-            fullsol[col] = pd.Series(v, index=np.arange(len(v)))
-        fullsol = fullsol.dropna(how='all')
-        fullsol.index.name = 'iter'
-        fullsol.to_csv(os.path.join(self.workdir, 'full.csv'))
+        # (4) Save summaries from all learning periods
+        for s, n in zip(summary_list, range(1, len(summary_list) + 1)):
+            sfile = os.path.join(self.workdir, 'summary_{}.csv'.format(n))
+            s.to_csv(sfile)
 
-        # Final estimates
-        final_estimates = self._get_avg_estimates(all_estimates) if get_type == 'avg' \
-                          else self._get_best_estimates(all_estimates) 
+        # (5) Save error plot including all learning periods
+        err = pd.DataFrame() # TODO: Continue here
 
-        # Generate plots
-        plots['err_evo'] = self._plot_err_evo(err_evo)
-
-        if n > 1:
-            try:
-                plots['all_estimates'] = self._plot_all_estimates(all_estimates)
-            except Exception as e:
-                # TODO: Why it fails sometimes?
-                LOGGER.error('Unable to plot scatter matrix')
-                LOGGER.error(e.message)
-
-        # Save plots
-        self._save_plots(plots)
-
-        # Save csv files
-        err_evo.set_index('iter').to_csv(os.path.join(self.workdir, 'errors.csv'))
-        all_estimates.to_csv(os.path.join(self.workdir, 'all_estimates.csv'), index=False)
-        final_estimates.to_csv(os.path.join(self.workdir, 'final.csv'), index=False)
-
-        # Return
-        return final_estimates.to_dict('records')[0]
+        # (5) Return final estimates
+        return final
 
     def validate(self, use_type='best'):
         """
@@ -465,6 +411,22 @@ class Estimation:
 
     # PRIVATE METHODS ====================================================
 
+    def _get_finals(self, summary_list):
+        """
+        Returns final estimates and errors from all learning periods
+
+        :param list(DataFrame) summary_list: List of all summaries from all runs
+        :param bool avg: If true, return average estimates, else return best estimates
+        :return: DataFrame with final estimates
+        """
+        finals = pd.DataFrame()
+        for s in summary_list:
+            finals = finals.append(s.drop('_method_', axis=1).iloc[-1:], ignore_index=True)
+        finals.index += 1  # Start from 1
+        finals.index.name = '_run_'
+
+        return finals
+
     def _update_opts(self, opts, new_opts, method):
         """
         :param dict opts: Options to be updated
@@ -521,6 +483,30 @@ class Estimation:
         avg = all_estimates.mean().to_frame().T
         avg = avg.drop('error', axis=1)
         return avg
+
+    def _get_figure(self, ax):
+        """
+        Retrieves figure from axes. Axes can be either an instance
+        of Matplotlib.Axes or a 1D/2D array of Matplotlib.Axes.
+
+        :param ax: Axes or vector/array of Axes
+        :return: Matplotlib.Figure
+        """
+        fig = None
+        try:
+            # Single plot
+            fig = ax.get_figure()
+        except AttributeError:
+            # Subplots
+            try:
+                # 1D grid
+                fig = ax[0].get_figure()
+            except AttributeError:
+                # 2D grid
+                fig = ax[0][0].get_figure()
+        # Adjust size
+        fig.set_size_inches(Estimation.FIG_SIZE)
+        return fig
 
     def _save_plots(self, plots):
         """
@@ -607,39 +593,6 @@ class Estimation:
         ax.scatter(x_list, y_list, marker='o', c='grey', edgecolors='k')
         ax.xaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
         return ax
-
-    def _get_err_evo_n(self, ga_errors, ps_errors, lp_count):
-        """
-        Generates DataFrame from lists ``ga_errors`` and ``ps_errors``,
-        representing error evolution. The DataFrame has the
-        following collumns: ``iter, err0, method0, ..., errN, methodN``.
-        Methods are described with a string ``GA`` or ``PS``.
-
-        Parameters
-        ----------
-        ga_errors: list
-        ps_errors: list
-        lp_count: int
-
-        Returns
-        -------
-        pandas.DataFrame
-        """
-        err_evo_ga = pd.DataFrame({
-            'iter': [x for x in range(len(ga_errors))],
-            'err#' + str(lp_count): ga_errors,
-            'method#' + str(lp_count): ['GA' for x in range(len(ga_errors))]
-        })
-
-        err_evo_ps = pd.DataFrame({
-            'iter': [x for x in range(len(ga_errors), len(ga_errors) + len(ps_errors))],
-            'err#' + str(lp_count): ps_errors,
-            'method#' + str(lp_count): ['PS' for x in range(len(ps_errors))]
-        })
-
-        err_evo = err_evo_ga.append(err_evo_ps)
-
-        return err_evo
 
     def _select_lp(self, lp_n=None, lp_len=None, lp_frame=None):
         """

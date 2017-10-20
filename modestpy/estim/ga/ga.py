@@ -34,8 +34,14 @@ class GA:
     Genetic algorithm for FMU parameter estimation.
     This is the main class of the package, containing the high-level algorithm and some result plotting methods.
     """
+
+    NAME = 'GA'
+    METHOD = '_method_'
+    ITER = '_iter_'
+    ERR = '_error_'
+
     def __init__(self, fmu_path, inp, known, est, ideal,
-                 generations=100, tolerance=0.001, look_back=10,
+                 maxiter=100, tol=0.001, look_back=10,
                  pop_size=40, uniformity=0.5, mut=0.05, mut_inc=0.3, trm_size=6, opts=None,
                  ftype='NRMSE', init_pop=None):
         """
@@ -47,10 +53,10 @@ class GA:
         :param known: Dictionary, key=parameter_name, value=value
         :param est: Dictionary, key=parameter_name, value=tuple (guess value, lo limit, hi limit), guess can be None
         :param ideal: DataFrame, ideal solution to be compared with model outputs (variable names must match)
-        :param generations: int, maximum number of generations
-        :param tolerance: float, when error does not decrease by more than ``tolerance`` for the last ``lookback``
+        :param maxiter: int, maximum number of generations
+        :param tol: float, when error does not decrease by more than ``tol`` for the last ``lookback``
                generations, simulation stops
-        :param look_back: int, number of past generations to track the error decrease (see ``tolerance``)
+        :param look_back: int, number of past generations to track the error decrease (see ``tol``)
         :param pop_size: int, size of the population
         :param uniformity: float (0.-1.), uniformity rate, affects gene exchange in the crossover operation
         :param mut: float (0.-1.), mutation rate, specifies how often genes are to be mutated to a random value,
@@ -72,8 +78,8 @@ class GA:
         algorithm.MUT_RATE_INC = mut_inc
         algorithm.TOURNAMENT_SIZE = int(trm_size)
 
-        self.max_generations = generations
-        self.tolerance = tolerance
+        self.max_generations = maxiter
+        self.tol = tol
         self.look_back = look_back
 
         # Results
@@ -152,14 +158,14 @@ class GA:
                 err_past = self.fittest_errors[-self.look_back]
                 err_now = self.fittest_errors[-1]
                 err_decrease = err_past - err_now
-                if err_decrease < self.tolerance:
-                    self.logger.info('Error decrease smaller than tolerance: {0:.5f} < {1:.5f}'
-                              .format(err_decrease, self.tolerance))
+                if err_decrease < self.tol:
+                    self.logger.info('Error decrease smaller than tol: {0:.5f} < {1:.5f}'
+                              .format(err_decrease, self.tol))
                     self.logger.info('Stopping evolution...')
                     err_decreasing = False
                 else:
-                    self.logger.info("'Look back' error decrease = {0:.5f} > tolerance = {1:.5f}\n"
-                              .format(err_decrease, self.tolerance))
+                    self.logger.info("'Look back' error decrease = {0:.5f} > tol = {1:.5f}\n"
+                              .format(err_decrease, self.tol))
             # Increase generation count
             gen_count += 1
 
@@ -200,18 +206,29 @@ class GA:
 
     def get_full_solution_trajectory(self):
         """
-        Gets a DataFrame with parameters and errors from all generations
-        (from fittest individuals).
+        Returns all parameters and errors from all iterations.
+        The returned DataFrame contains columns with parameter names,
+        additional column '_error_' for the error and the index
+        named '_iter_'.
 
         :return: DataFrame
         """
         df = self.all_estim_and_err.copy()
-        par_evo = pd.DataFrame()
-        for i in range(1, df['generation'].max() + 1):
-            par_evo = par_evo.append(self._get_best_from_gen(i))
-        par_evo = par_evo.drop('generation', axis=1)  # Index is sufficient
-        par_evo = par_evo.drop('error', axis=1)
-        return par_evo
+        summary = pd.DataFrame()
+        for i in range(1, df[GA.ITER].max() + 1):
+            summary = summary.append(self._get_best_from_gen(i))
+
+        summary[GA.ITER] = summary[GA.ITER].astype(int)
+        summary = summary.set_index(GA.ITER)
+
+        summary[GA.METHOD] = GA.NAME
+
+        return summary
+
+    def get_plots(self):
+        plots = list()
+        plots.append({'name': 'GA', 'axes': self.plot_pop_evo()})
+        return plots
 
     def save_plots(self, workdir):
         self.plot_comparison(os.path.join(workdir, 'ga_comparison.png'))
@@ -278,8 +295,8 @@ class GA:
         estimates = self.all_estim_and_err
         pars = list(estimates.columns)
         pars.remove('individual')
-        pars.remove('generation')
-        pars.remove('error')
+        pars.remove(GA.ITER)
+        pars.remove(GA.ERR)
         assert len(pars) > 0, 'No parameters found'
 
         fig, axes = plt.subplots(nrows=len(pars), sharex=True)
@@ -291,9 +308,9 @@ class GA:
 
         for v in pars:
             ax = axes[i]
-            scatter = ax.scatter(x=estimates['generation'], y=estimates[v], c=estimates['error'],
+            scatter = ax.scatter(x=estimates[GA.ITER], y=estimates[v], c=estimates[GA.ERR],
                                  cmap='viridis', edgecolors='none', vmin=last_err, vmax=first_err, alpha=0.25)
-            ax.set_xlim([0, estimates['generation'].max() + 1])
+            ax.set_xlim([0, estimates[GA.ITER].max() + 1])
             ax.text(x=1.05, y=0.5, s=v, transform=ax.transAxes, fontweight='bold',
                     horizontalalignment='center', verticalalignment='center')
             i += 1
@@ -311,7 +328,7 @@ class GA:
     def _update_res(self, gen_count):
         # Save estimates
         generation_estimates = self.pop.get_all_estimates_and_errors()
-        generation_estimates['generation'] = gen_count
+        generation_estimates[GA.ITER] = gen_count
         self.all_estim_and_err = pd.concat([self.all_estim_and_err, generation_estimates])
 
         # Append error lists
@@ -325,9 +342,9 @@ class GA:
         :return: DataFrame
         """
         df = self.all_estim_and_err.copy()
-        df.index = df['generation']
+        df.index = df[GA.ITER]
         # Select individuals with minimum error from the chosen individuals
-        fittest = df.loc[df['error'] == df.loc[generation]['error'].min()].loc[generation]
+        fittest = df.loc[df[GA.ERR] == df.loc[generation][GA.ERR].min()].loc[generation]
         # Check how many individuals found
         if isinstance(fittest, pd.DataFrame):
             # More than 1 found...

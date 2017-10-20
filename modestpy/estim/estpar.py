@@ -31,10 +31,12 @@ class EstPar:
 
 
 def estpars_2_df(est_pars):
-    """Converts list of EstPar instances into DataFrame.
+    """
+    Converts list of EstPar instances into DataFrame.
 
     :param est_pars: list of EstPar instances
-    :return: None"""
+    :return: DataFrame
+    """
     df = pd.DataFrame()
     for p in est_pars:
         df[p.name] = np.array([p.value])

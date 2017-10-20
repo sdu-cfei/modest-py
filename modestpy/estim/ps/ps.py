@@ -31,12 +31,17 @@ class PS:
     Pattern search (Hooke-Jeeves) algorithm for FMU parameter estimation.
     """
 
+    NAME = 'PS'
+    METHOD = '_method_'
+    ITER = '_iter_'
+    ERR = '_error_'
+
     COM_POINTS = 500  # Default number of communication points, should be adjusted to the number of samples
     STEP_CEILING = 1.00  # Maximum allowed relative step
     STEP_INC = 1.0  # Step is multiplied by this factor if solution improves
     STEP_DEC = 1.5  # Step is divided by this factor if solution does not improve
 
-    def __init__(self, fmu_path, inp, known, est, ideal, rel_step=0.01, tolerance=0.0001, try_lim=30, max_iter=300,
+    def __init__(self, fmu_path, inp, known, est, ideal, rel_step=0.01, tol=0.0001, try_lim=30, maxiter=300,
                  opts=None, ftype='NRMSE'):
         """
         :param fmu_path: string, absolute path to the FMU
@@ -45,14 +50,14 @@ class PS:
         :param est: Dictionary, key=parameter_name, value=tuple (guess value, lo limit, hi limit), guess can be None
         :param ideal: DataFrame, ideal solution to be compared with model outputs (variable names must match)
         :param rel_step: float, initial relative step when modifying parameters
-        :param tolerance: float, stopping criterion, when rel_step becomes smaller than tolerance algorithm stops
+        :param tol: float, stopping criterion, when rel_step becomes smaller than tol algorithm stops
         :param try_lim: integer, maximum number of tries to decrease rel_step
-        :param max_iter: integer, maximum number of iterations
+        :param maxiter: integer, maximum number of iterations
         :param dict opts: Additional FMI options to be passed to the simulator (consult FMI specification)
         :param string ftype: Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
         """
         assert inp.index.equals(ideal.index), 'inp and ideal indexes are not matching'
-        assert rel_step > tolerance, 'Relative step must not be smaller than the stop criterion'
+        assert rel_step > tol, 'Relative step must not be smaller than the stop criterion'
 
         # Cost function type
         self.ftype = ftype
@@ -91,14 +96,14 @@ class PS:
         # Initial value for relative parameter step (0-1)
         self.rel_step = rel_step
 
-        # Min. allowed relative parameter change (0-1) - PS stops when self.max_change < tolerance
-        self.tolerance = tolerance
+        # Min. allowed relative parameter change (0-1) - PS stops when self.max_change < tol
+        self.tol = tol
 
         # Max. number of iterations without moving to a new point
         self.try_lim = try_lim
 
         # Max. number of iterations in total
-        self.max_iter = max_iter
+        self.max_iter = maxiter
 
         # Outputs
         self.summary = pd.DataFrame()
@@ -118,21 +123,24 @@ class PS:
         """
         :return: float, last error
         """
-        return float(self.summary['error'].iloc[-1])
+        return float(self.summary[PS.ERR].iloc[-1])
 
     def get_errors(self):
         """
         :return: list, all errors from all iterations
         """
-        return self.summary['error'].tolist()
+        return self.summary[PS.ERR].tolist()
 
     def get_full_solution_trajectory(self):
         """
         Returns all parameters and errors from all iterations.
+        The returned DataFrame contains columns with parameter names,
+        additional column '_error_' for the error and the index
+        named '_iter_'.
 
         :return: DataFrame
         """
-        return self.summary.drop(['rel_step', 'error'], axis=1)
+        return self.summary
 
     def save_plots(self, workdir):
         self.plot_comparison(os.path.join(workdir, 'ps_comparison.png'))
@@ -143,11 +151,12 @@ class PS:
         return plots.plot_comparison(self.res, self.ideal, file)
 
     def plot_error_evo(self, file=None):
-        err_df = pd.DataFrame(self.summary['error'])
+        err_df = pd.DataFrame(self.summary[PS.ERR])
         return plots.plot_error_evo(err_df, file)
 
     def plot_parameter_evo(self, file=None):
-        par_df = self.summary.drop('error', axis=1)
+        par_df = self.summary.drop([PS.METHOD], axis=1)
+        par_df = par_df.rename(columns={x: 'error' if x == PS.ERR else x for x in par_df.columns})
         return plots.plot_parameter_evo(par_df, file)
 
     def plot_inputs(self, file=None):
@@ -170,16 +179,14 @@ class PS:
 
         # First line of the summary
         summary = estpars_2_df(current_estimates)
-        summary['error'] = [initial_error]
-        summary['rel_step'] = [self.rel_step]
-        summary.index.names = ['iter']
+        summary[PS.ERR] = [initial_error]
 
         # Counters
         n_try = 0
         iteration = 0
 
         # Search loop
-        while (n_try < self.try_lim) and (iteration < self.max_iter) and (self.rel_step > self.tolerance):
+        while (n_try < self.try_lim) and (iteration < self.max_iter) and (self.rel_step > self.tol):
             iteration += 1
             LOGGER.info('Iteration no. {} ========================='.format(iteration))
             improved = False
@@ -213,8 +220,7 @@ class PS:
             current_estimates_df = estpars_2_df(current_estimates)
             current_estimates_df.index = [iteration]
             summary = pd.concat([summary, current_estimates_df])
-            summary['error'][iteration] = best_err
-            summary['rel_step'][iteration] = self.rel_step
+            summary[PS.ERR][iteration] = best_err
 
             if not improved:
                 n_try += 1
@@ -235,11 +241,18 @@ class PS:
 
         # Reorder columns in summary
         s_cols = summary.columns.tolist()
-        s_cols.remove('rel_step')
-        s_cols.append('rel_step')
-        s_cols.remove('error')
-        s_cols.append('error')
+        s_cols.remove(PS.ERR)
+        s_cols.append(PS.ERR)
         summary = summary[s_cols]
+
+        # Start iterations from 1
+        summary.index += 1
+
+        # Rename index in summary
+        summary.index = summary.index.rename(PS.ITER)
+
+        # Add column with method name
+        summary[PS.METHOD] = PS.NAME
 
         # Print summary
         reason = 'Unknown'
@@ -247,7 +260,7 @@ class PS:
             reason = 'Maximum number of tries to decrease the step reached'
         elif iteration >= self.max_iter:
             reason = 'Maximum number of iterations reached'
-        elif self.rel_step <= self.tolerance:
+        elif self.rel_step <= self.tol:
             reason = 'Relative step smaller than the stoping criterion'
 
         LOGGER.info('Pattern search finished. Reason: {}'.format(reason))
@@ -258,6 +271,11 @@ class PS:
         final_estimates = estpars_2_df(best_estimates)
 
         return final_estimates
+
+    def get_plots(self):
+        plots = list()
+        plots.append({'name': 'PS', 'axes': self.plot_parameter_evo()})
+        return plots
 
     def _get_new_estpar(self, estpar, rel_step, sign):
         """
