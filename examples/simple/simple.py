@@ -61,8 +61,8 @@ if __name__ == "__main__":
                          lp_n=2, lp_len=25000, lp_frame=(0, 25000),
                          vp = (150000, 215940), ic_param={'Tstart': 'T'},
                          methods=('GA', 'PS'),
-                         ga_opts={'maxiter': 5, 'tol': 0.001, 'ftype': 'RMSE'},
-                         ps_opts={'maxiter': 10, 'tol': 0.0001, 'ftype': 'RMSE'},
+                         ga_opts={'maxiter': 20, 'tol': 0.001, 'ftype': 'RMSE'},
+                         ps_opts={'maxiter': 40, 'tol': 0.0001, 'ftype': 'RMSE'},
                          seed=1, lhs=True)  # seed is used to make the results repetitive in this example
 
     estimates = session.estimate()

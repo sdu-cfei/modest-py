@@ -340,7 +340,13 @@ class Estimation:
             s.to_csv(sfile)
 
         # (5) Save error plot including all learning periods
-        err = pd.DataFrame() # TODO: Continue here
+        err = pd.DataFrame()
+        for s, n in zip(summary_list, range(1, len(summary_list) +1)):
+            next_err = pd.Series(data=s['_error_'], name='error #{}'.format(n))
+            err = pd.concat([err, next_err], axis=1) 
+        err.to_csv(os.path.join(self.workdir, 'errors.csv'))
+
+        # TODO: Add plot
 
         # (5) Return final estimates
         return final
