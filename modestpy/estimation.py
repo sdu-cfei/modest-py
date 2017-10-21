@@ -167,6 +167,10 @@ class Estimation:
         self.methods = methods
         self.ftype = ftype
 
+        # Results placeholders
+        self.best_per_run = None
+        self.final = None
+
         # Estimation options
         # GA options
         self.GA_OPTS = {
@@ -231,9 +235,9 @@ class Estimation:
         convex), and sometimes can be overfitted.
 
         The chosen type of estimates ('avg' or 'best') is saved
-        in a csv file ``final_estimates.csv`` in the working directory.
+        in a csv file ``final.csv`` in the working directory.
         In addition estimates and errors from all learning periods 
-        are saved in ``all_estimates.csv``.
+        are saved in ``best_per_run.csv``.
 
         Parameters
         ----------
@@ -317,15 +321,15 @@ class Estimation:
             n += 1
 
         # (3) Get and save best estimates per run and final estimates
-        all_finals = self._get_finals(summary_list)
-        all_finals.to_csv(os.path.join(self.workdir, 'best_per_run.csv'))
+        best_per_run = self._get_finals(summary_list)
+        best_per_run.to_csv(os.path.join(self.workdir, 'best_per_run.csv'))
         
         if get == 'best':
-            cond = all_finals['_error_'] == all_finals['_error_'].min()
-            final = all_finals.loc[cond].iloc[0:1]  # Take only one if more than one present
+            cond = best_per_run['_error_'] == best_per_run['_error_'].min()
+            final = best_per_run.loc[cond].iloc[0:1]  # Take only one if more than one present
             final = final.drop('_error_', axis=1)
         elif get == 'avg':
-            final = all_finals.drop('_error_', axis=1).mean().to_frame().T
+            final = best_per_run.drop('_error_', axis=1).mean().to_frame().T
         else:
             # This shouldn't happen, because the type is checked at (0)
             raise RuntimeError('Unknown type of estimates: {}'.format(get))
@@ -343,18 +347,17 @@ class Estimation:
         fig = self._get_figure(ax)
         fig.savefig(os.path.join(self.workdir, 'errors.png'))
 
-        # (5) Return final estimates
+        # (6) Assign results to instance attributes
+        self.best_per_run = best_per_run
+        self.final = final
+
+        # (7) Return final estimates
         return final
 
-    def validate(self, use_type='best'):
+    def validate(self):
         """
         Performs a simulation with estimated parameters (average or best) 
         for the previously selected validation period.
-
-        Parameters
-        ----------
-        use_type: string, default 'avg'
-            Type of estimates to use ('avg' or 'best')
 
         Returns
         -------
@@ -364,11 +367,10 @@ class Estimation:
             Simulation result
         """
         # Get estimates
-        all_est = pd.read_csv(os.path.join(self.workdir, 'all_estimates.csv'))
-        est = self._get_avg_estimates(all_est) if use_type == 'avg' \
-              else self._get_best_estimates(all_est)
+        est = self.final
+        est.index = [0] # Reset index (needed by model.set_param())
 
-        LOGGER.info('Validation using ({}) parameters: {}'.format(use_type, str(est.to_dict())))
+        LOGGER.info('Validation of parameters: {}'.format(str(est.iloc[0].to_dict())))
 
         # Slice data
         start, stop = self.vp[0], self.vp[1]
@@ -402,10 +404,9 @@ class Estimation:
 
         # Create validation plot
         plots = dict()
-        plots['validation_'+use_type] = plot_comparison(result, ideal_slice, f=None)
-
-        # Save plot
-        self._save_plots(plots)
+        ax = plot_comparison(result, ideal_slice, f=None)
+        fig = self._get_figure(ax)
+        fig.savefig(os.path.join(self.workdir, 'validation.png'), dpi=Estimation.FIG_DPI)
 
         # Return
         return err, result
@@ -447,46 +448,6 @@ class Estimation:
                 opts[key] = new_opts[key]
         return opts
 
-    def _get_best_estimates(self, all_estimates):
-        """
-        Returns best estimates from ``all_estimates``.
-
-        Parameters
-        ----------
-        all_estimates: pandas.DataFrame
-            Estimates and errors from all learning periods
-        
-        Returns
-        -------
-        pandas.DataFrame
-        """
-        best = all_estimates.loc[all_estimates['error'] == all_estimates['error'].min()]  # It can yield more than 1 row
-        best = best.drop('error', axis=1)
-        best = best.reset_index(drop=True)
-
-        if len(best.index) > 1:
-            # It means that there are 2 or more identical rows - take only one
-            best = best.iloc[0].to_frame().T
-
-        return best
-
-    def _get_avg_estimates(self, all_estimates):
-        """
-        Returns average estimates from ``all_estimates``.
-
-        Parameters
-        ----------
-        all_estimates: pandas.DataFrame
-            Estimates and errors from all learning periods
-        
-        Returns
-        -------
-        pandas.DataFrame
-        """
-        avg = all_estimates.mean().to_frame().T
-        avg = avg.drop('error', axis=1)
-        return avg
-
     def _get_figure(self, ax):
         """
         Retrieves figure from axes. Axes can be either an instance
@@ -511,56 +472,15 @@ class Estimation:
         fig.set_size_inches(Estimation.FIG_SIZE)
         return fig
 
-    def _save_plots(self, plots):
-        """
-        Saves all plots from ``plots`` in the working directory.
-
-        Parameters
-        ----------
-        plots: list(matplotlib.Axes)
-
-        Returns
-        -------
-        None
-        """
-        LOGGER.info('Saving plots...')
-        for name in plots:
-            LOGGER.info('Saving {}'.format(name))
-            ax = plots[name]
-            # Get figure
-            try:
-                # Single plot
-                fig = ax.get_figure()
-            except AttributeError:
-                # Subplots
-                try:
-                    # 1D grid
-                    fig = ax[0].get_figure()
-                except AttributeError:
-                    # 2D grid
-                    fig = ax[0][0].get_figure()
-            # Adjust size
-            fig.set_size_inches(Estimation.FIG_SIZE)
-            # Save file
-            filepath = os.path.join(self.workdir, name + '.png')
-            fig.savefig(filepath, dpi=Estimation.FIG_DPI)
-        # Close all plots (to release instances for garbage collecting)
-        plt.close('all')
-
-    def _plot_all_estimates(self, all_estimates):
+    def _plot_all_estimates(self):
         """
         Generates a scatter matrix plot for all estimates and errors.
-
-        Parameters
-        ----------
-        all_estimates: pandas.DataFrame
-            All estimates and errors
 
         Returns
         -------
         matplotlib.Axes
         """
-        ax = scatter_matrix(all_estimates, marker='o', alpha=0.5)
+        ax = scatter_matrix(self.best_per_run, marker='o', alpha=0.5)
         return ax
 
     def _plot_error_per_run(self, summary_list, err_type):
@@ -650,40 +570,6 @@ class Estimation:
             i += 1
 
         return xloc, yloc
-
-    def _plot_err_evo(self, err_evo):
-        """
-        Generates a plot for error evolution.
-
-        Parameters
-        ----------
-        err_evo: pandas.DataFrame
-
-        Returns
-        -------
-        matplotlib.Axes
-        """
-        # Plot lines
-        ax = err_evo[[x for x in err_evo.columns if 'err' in x]].plot()
-        ax.set_xlabel('Iterations')
-        ax.set_ylabel('Total RMSE')
-        # Plot circles marking transition from GA to PS
-        num_of_lp = len([x for x in err_evo.columns if 'err' in x])
-        x_list = list()
-        y_list = list()
-        for n in range(num_of_lp):
-            method = 'method#{}'.format(n)
-            err = 'err#{}'.format(n)
-            x_circ = len(err_evo.loc[err_evo[method] == 'GA'])
-            if x_circ == len(err_evo[method].dropna()):
-                # There are no PS records, move x_circ one back (to the last index)
-                x_circ -= 1
-            y_circ = err_evo[err].iloc[x_circ]
-            x_list.append(x_circ)
-            y_list.append(y_circ)
-        ax.scatter(x_list, y_list, marker='o', c='grey', edgecolors='k')
-        ax.xaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
-        return ax
 
     def _select_lp(self, lp_n=None, lp_len=None, lp_frame=None):
         """
@@ -801,23 +687,3 @@ class Estimation:
 
         LOGGER.info('Initial guess based on LHS:\n{}'.format(par_df))
         return par_df
-
-
-if __name__ == "__main__":
-
-    # Example
-    import json
-
-    workdir = "/home/krza/Desktop/temp"
-    fmu_path = "./examples/simple/resources/Simple2R1C_ic_linux64.fmu"
-    inp = pd.read_csv("./examples/simple/resources/inputs.csv").set_index('time')
-    known = json.load(open("./examples/simple/resources/known.json"))
-    est = json.load(open("./examples/simple/resources/est.json"))
-    ideal = pd.read_csv("./examples/simple/resources/result.csv").set_index('time')
-
-    session = Estimation(workdir, fmu_path, inp, known, est, ideal,
-                         lp_n=3, lp_len=3600, lp_frame=None, vp=(3600, 20000),
-                         ic_param={'Tstart': 'T'}, ga_iter=3, ps_iter=3)
-    estimates = session.estimate()
-    err, res = session.validate('avg')
-    err, res = session.validate('best')
