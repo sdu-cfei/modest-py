@@ -23,7 +23,6 @@ def all_suites():
 
     suites = [
         test_ga.suite(),
-        test_lm.suite(),
         test_ps.suite(),
         test_estimation.suite(),
         test_utilities.suite()
