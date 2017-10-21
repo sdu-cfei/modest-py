@@ -112,7 +112,7 @@ class Population:
 
         # How to initialize? Random or explicit initial guess?
         if init_pop is not None:
-            assert len(init_pop.index) == self.pop_size, "Population size does not match initial guess"
+            assert len(init_pop.index) == self.pop_size, "Population size does not match initial guess {} != {}".format(init_pop.index.size, self.pop_size)
             init_guess = True
         else:
             init_guess = False

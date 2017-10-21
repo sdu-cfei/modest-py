@@ -15,14 +15,15 @@ from modestpy.log_init import LogInit
 LOG_INIT = LogInit(__name__)
 LOGGER = LOG_INIT.get_logger()
 
+import os
+import random
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 from modestpy.estim.ga import algorithm
 import modestpy.estim.plots as plots
 from modestpy.estim.estpar import EstPar
 from modestpy.estim.ga.population import Population
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-import os
 
 # Plot files
 DPI = 100
@@ -43,10 +44,12 @@ class GA:
     def __init__(self, fmu_path, inp, known, est, ideal,
                  maxiter=100, tol=0.001, look_back=10,
                  pop_size=40, uniformity=0.5, mut=0.05, mut_inc=0.3, trm_size=6, opts=None,
-                 ftype='NRMSE', init_pop=None):
+                 ftype='RMSE', init_pop=None):
         """
-        If init_pop is given, pop_size does not have to be provided. But if it is, they must match (to avoid
-        human mistakes).
+        The population can be initialized in various ways:
+        - if `init_pop` is None, one individual is initialized using initial guess from `est`
+        - if `init_pop` contains less individuals than `pop_size`, then the rest is random
+        - if `init_pop` == `pop_size` then no random individuals are generated
 
         :param fmu_path: string, absolute path to the FMU
         :param inp: DataFrame, columns with input timeseries, index in seconds
@@ -66,7 +69,7 @@ class GA:
         :param trm_size: int, size of the tournament
         :param dict opts: Additional FMI options to be passed to the simulator (consult FMI specification)
         :param string ftype: Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
-        :param DataFrame init_pop: Initial population. DataFrame with estimated parameters. 
+        :param DataFrame init_pop: Initial population. DataFrame with estimated parameters. If None, takes initial guess from est.
         """
         self.logger = LOGGER
 
@@ -97,11 +100,20 @@ class GA:
             assert known[key] is not None, 'None is not allowed in known parameters (parameter {})'.format(key)
             known_df[key] = [known[key]]
 
-        # Make sure pop_size and init_pop are matching
-        if init_pop is not None and pop_size is not None:
-            assert pop_size == len(init_pop.index.values), "`pop_size` does not match the size of `init_pop`!"
-        elif init_pop is not None and pop_size is None:
-            pop_size = len(init_pop.index.values)
+        # The number of individuals in init_pop can be lower than the desired pop_size.
+        # Take individuals from init_pop and add random individuals until pop_size == len(init_pop)
+        if init_pop is None:
+            # Take initial guess from est dictionary
+            init_pop = pd.DataFrame({k: [est[k][0]] for k in est})
+
+        if init_pop is not None:
+            missing = pop_size - init_pop.index.size
+            if missing > 0:
+                while missing > 0:
+                    init_pop = init_pop.append({
+                        n: random.random() * (est[n][2] - est[n][1]) + est[n][1] for n in est
+                    }, ignore_index=True)
+                    missing -= 1
 
         # Initialize population
         self.logger.info('GENETIC ALGORITHM INSTANCE CREATED...')

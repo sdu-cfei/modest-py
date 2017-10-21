@@ -42,7 +42,7 @@ class PS:
     STEP_DEC = 1.5  # Step is divided by this factor if solution does not improve
 
     def __init__(self, fmu_path, inp, known, est, ideal, rel_step=0.01, tol=0.0001, try_lim=30, maxiter=300,
-                 opts=None, ftype='NRMSE'):
+                 opts=None, ftype='RMSE'):
         """
         :param fmu_path: string, absolute path to the FMU
         :param inp: DataFrame, columns with input timeseries, index in seconds
