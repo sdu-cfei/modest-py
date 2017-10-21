@@ -13,7 +13,6 @@ from __future__ import print_function
 
 import unittest
 from modestpy.test import test_ga
-from modestpy.test import test_lm
 from modestpy.test import test_ps
 from modestpy.test import test_estimation
 from modestpy.test import test_utilities
