@@ -86,19 +86,15 @@ class Estimation:
     def __init__(self, workdir, fmu_path, inp, known, est, ideal,
                  lp_n=None, lp_len=None, lp_frame=None, vp=None,
                  ic_param=None, methods=('GA', 'PS'), ga_opts={}, ps_opts={}, fmi_opts={},
-                 seed=None, ftype='RMSE', lhs=False):
+                 ftype='RMSE', lhs=False, seed=None):
         """
-        Constructor.
-
         Index in DataFrames ``inp`` and ``ideal`` must be named 'time'
         and given in seconds. The index name assertion check is
         implemented to avoid situations in which a user reads DataFrame
         from a csv and forgets to use ``DataFrame.set_index(column_name)``
-        (it happens quite often...).
+        (it happens quite often...). TODO: Check index name assertion.
 
-        Guess value of estimated parameters is taken into account only
-        if GA is switched of, i.e. ``ga_iter = 0``. Otherwise, GA
-        selects random guesses itself.
+        Guess value of estimated parameters is not taken into account in GA.
 
         The parameter ``seed`` can be used to control the randomness
         of the GA, e.g. to make the result repetitive.Check ``random.seed()``
@@ -130,18 +126,20 @@ class Estimation:
             Validation period, entire data set if ``None``
         ic_param: dict(str, str) or None
             Mapping between model parameters used for IC and variables from ``ideal``
+        methods: tuple(str, str)
+            List of methods to be used in the pipeline
         ga_opts: dict
             Genetic algorithm options
         ps_opts: dict
             Pattern search options
         fmi_opts: dict
             Additional options to be passed to the FMI model (e.g. solver tolerance)
-        seed: None or int
-            Random number seed. If None, current time or OS specific randomness is used.
         ftype: string
             Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
         lhs: bool
             If True, initial guess is chosen using Lating Hypercube Sampling
+        seed: None or int
+            Random number seed. If None, current time or OS specific randomness is used.
         """
         # Sanity checks
         assert inp.index.equals(ideal.index), 'inp and ideal indexes are not matching'
@@ -167,6 +165,7 @@ class Estimation:
         self.ideal = ideal
         self.lhs = lhs
         self.methods = methods
+        self.ftype = ftype
 
         # Estimation options
         # GA options
@@ -340,13 +339,9 @@ class Estimation:
             s.to_csv(sfile)
 
         # (5) Save error plot including all learning periods
-        err = pd.DataFrame()
-        for s, n in zip(summary_list, range(1, len(summary_list) +1)):
-            next_err = pd.Series(data=s['_error_'], name='error #{}'.format(n))
-            err = pd.concat([err, next_err], axis=1) 
-        err.to_csv(os.path.join(self.workdir, 'errors.csv'))
-
-        # TODO: Add plot
+        ax = self._plot_error_per_run(summary_list, err_type=self.ftype)
+        fig = self._get_figure(ax)
+        fig.savefig(os.path.join(self.workdir, 'errors.png'))
 
         # (5) Return final estimates
         return final
@@ -435,6 +430,8 @@ class Estimation:
 
     def _update_opts(self, opts, new_opts, method):
         """
+        Updates the dictionary with method options.
+
         :param dict opts: Options to be updated
         :param dict new_opts: New options (can contain a subset of opts keys)
         :param str method: Method name, 'GA', 'PS' etc. (used only for logging)
@@ -565,6 +562,94 @@ class Estimation:
         """
         ax = scatter_matrix(all_estimates, marker='o', alpha=0.5)
         return ax
+
+    def _plot_error_per_run(self, summary_list, err_type):
+        """
+        :param list(DataFrame) summary_list: Summary list
+        :param str err_type: Error type
+        :return: Axes
+        """
+        # Error evolution per estimation run
+        err = pd.DataFrame()
+        for s, n in zip(summary_list, range(1, len(summary_list) +1)):
+            next_err = pd.Series(data=s['_error_'], name='error #{}'.format(n))
+            err = pd.concat([err, next_err], axis=1)
+
+        # Plot
+        fig, ax = plt.subplots(1, 1, figsize=Estimation.FIG_SIZE, dpi=Estimation.FIG_DPI)
+        err.plot(ax=ax)
+
+        # Get line colors
+        lines = ax.get_lines()
+        colors = [l.get_color() for l in lines]
+
+        # Method switch marks
+        xloc, yloc = self._get_method_switch_xy(summary_list)
+
+        mltp = len(xloc) // len(colors)  # In cases there is more switches than lines
+        if mltp > 1:
+            colors_copy = copy.copy(colors)
+            colors = list()
+            for c in colors_copy:
+                for i in range(mltp):
+                    colors.append(c)
+
+        for x, y, c in zip(xloc, yloc, colors * mltp):
+            ax.scatter(x, y, marker='o', c='white', edgecolors=c, lw=1.5, zorder=10)
+
+        # Formatting
+        ax.set_xlabel("Iterations")
+        ax.set_ylabel("Error ({})".format(err_type))
+        ax.xaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
+
+        return ax
+
+    def _get_method_switch_xy(self, summary_list):
+        """
+        Returns a tuple with two lists describing x, y coordinates
+        marking when there was a switch to a next method in the estimation.
+
+        The first list contains x coordinates, the second list contains y coordinates.
+        x coordinates represent iterations. y coordinates represent simulation error.
+
+        :param list(DataFrame) summary_list: List of DataFrames with summary
+        :return: tuple(list(int), list(int))
+        """
+
+        # Construct an array with indices marking method switches.
+        # E.g. if there were 3 methods used in 2 estimation runs,
+        # the returned list looks as follows:
+        #
+        # [[11, 34, 20],  -> estimation run #1
+        #  [23, 49, 15]]  -> estimation run #2
+        #    |   |   |
+        #    m1  m2  m3
+        #
+        # where m1, m2, m3 are iteration numbers when method 1, 2, 3 started.
+        switch_array = list()
+        for s in summary_list:
+            methods = s['_method_'].values
+            switch = list()
+            last = None
+            for n, i in zip(methods, range(len(methods))):
+                if last is None:
+                    last = n
+                if n != last:
+                    switch.append(i)
+                last = n
+            switch_array.append(switch)
+
+        # Generate x, y lists
+        xloc = list()
+        yloc = list()
+        i = 0
+        for run in switch_array:
+            for index in run:
+                xloc.append(index)
+                yloc.append(summary_list[i]['_error_'].iloc[index-1])
+            i += 1
+
+        return xloc, yloc
 
     def _plot_err_evo(self, err_evo):
         """
