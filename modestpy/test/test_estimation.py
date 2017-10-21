@@ -91,7 +91,7 @@ class TestEstimation(unittest.TestCase):
         self.assertEqual(session.lp[0][0], 0)
         self.assertEqual(session.lp[0][1], 3600)
         # raw_input('Continue...') # <-- enabling this line triggers the Matplotlib error (issue #20)
-        self.assertLess(err['tot'], 0.661)  # NRMSE
+        self.assertLess(err['tot'], 1.02)  # NRMSE
 
     def test_estimation_rmse(self):
         ga_opts = {'maxiter': 3, 'pop_size': 8, 'trm_size': 3}
