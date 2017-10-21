@@ -38,40 +38,37 @@ class Estimation:
     """
     Public API of ``modestpy``.
 
-    This class wraps genetic algorithm (GA) and pattern search (PS)
-    methods into a single combined estimation algorithm. The user
-    needs only to instantiate this class and then call the method
+    This class allows to use multiple estimation methods in a single
+    estimation pipeline. The user needs only to instantiate this class,
+    define the desired sequence of estimation methods and call
     ``estimate()``. All results are saved in the working directory 
     ``workdir``.
-
-    .. note:: To switch off GA or PS, simply set the number of
-              iterations to 0, e.g. ``ga_iter=0`` or ``ps_iter=0``.
-
-    .. note:: Guess values of estimated parameters are taken into
-              account only if GA is switched off, i.e.
-              ``ga_iter = 0``. Otherwise GA selects random initial
-              guesses itself.
 
     .. note:: ``inp`` and ``ideal`` DataFrames **must have** index
               named ``time``. This is to avoid a common user mistake 
               of loading DataFrame from a csv and forgetting to set 
               the right index. The index should be in seconds.
+              TODO: Is it still true?
 
     Methods
     -------
-    estimate(get='avg')
+    estimate(get='best')
         Estimates parameters, saves results to ``workdir`` and
-        returns chosen type of estimates ('avg' or 'best')
-    validate(use_type='avg')
-        Performs a validation of the model using chosen
-        type of estimates ('avg' or 'best')
+        returns chosen type of estimates ('avg' or 'best').
+    validate()
+        Performs a validation of the model on the chosen validation period
 
     Examples
     --------
     >>> from modestpy import Estimation
     >>> session = Estimation(workdir, fmu_path, inp, known, est, ideal,
-                             lp_n=3, lp_len=3600, lp_frame=None, vp=None,
-                             ic_param={'Tstart': 'T'}, ga_iter=30, ps_iter=30)
+                             lp_n=2, lp_len=25000, lp_frame=(0, 25000),
+                             vp = (150000, 215940), ic_param={'Tstart': 'T'},
+                             methods=('GA', 'PS'),
+                             ga_opts={'maxiter': 5, 'tol': 0.001},
+                             ps_opts={'maxiter': 20, 'tol': 0.0001},
+                             ftype='RMSE') 
+
     >>> estimates = session.estimate()
     >>> err, res = session.validate()
     """
@@ -94,11 +91,11 @@ class Estimation:
         from a csv and forgets to use ``DataFrame.set_index(column_name)``
         (it happens quite often...). TODO: Check index name assertion.
 
-        Guess value of estimated parameters is not taken into account in GA.
+        Currently available estimation methods:
+            - GA - genetic algorithm
+            - PS - pattern search (Hooke-Jeeves)
 
-        The parameter ``seed`` can be used to control the randomness
-        of the GA, e.g. to make the result repetitive.Check ``random.seed()``
-        from the ``random`` package if you don't know how random seeds work.
+        .. note:: Guess value of estimated parameters is not taken into account in GA.
 
         Parameters:
         -----------
@@ -168,8 +165,8 @@ class Estimation:
         self.ftype = ftype
 
         # Results placeholders
-        self.best_per_run = None
-        self.final = None
+        self.best_per_run = pd.DataFrame()
+        self.final = pd.DataFrame()
 
         # Estimation options
         # GA options
@@ -223,18 +220,15 @@ class Estimation:
 
     def estimate(self, get='best'):
         """
-        Estimates parameters using the previously defined settings.
+        Estimates parameters.
 
         Returns average or best estimates depending on ``get``.
         Average parameters are calculated as arithmetic average
         from all learning periods. Best parameters are those which
         resulted in the lowest error during respective learning period.
-        Estimates obtained with 'avg' may be suboptimal, but there is
-        higher chance to avoid overfitting. Estimates obtained with 'best'
-        sometimes perform better (especially when the error function is 
-        convex), and sometimes can be overfitted.
+        It is advised to use 'best' parameters.
 
-        The chosen type of estimates ('avg' or 'best') is saved
+        The chosen estimates ('avg' or 'best') are saved
         in a csv file ``final.csv`` in the working directory.
         In addition estimates and errors from all learning periods 
         are saved in ``best_per_run.csv``.
@@ -471,17 +465,6 @@ class Estimation:
         # Adjust size
         fig.set_size_inches(Estimation.FIG_SIZE)
         return fig
-
-    def _plot_all_estimates(self):
-        """
-        Generates a scatter matrix plot for all estimates and errors.
-
-        Returns
-        -------
-        matplotlib.Axes
-        """
-        ax = scatter_matrix(self.best_per_run, marker='o', alpha=0.5)
-        return ax
 
     def _plot_error_per_run(self, summary_list, err_type):
         """
