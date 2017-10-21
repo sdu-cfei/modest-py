@@ -17,6 +17,7 @@ import shutil
 import pandas as pd
 import json
 import os
+import random
 from modestpy.estim.ga.ga import GA
 from modestpy.utilities.sysarch import get_sys_arch
 
@@ -51,16 +52,17 @@ class TestGA(unittest.TestCase):
             self.known = json.load(f)
 
         # GA settings
-        self.gen = 6
-        self.pop = 9
-        self.trm = 4
+        self.gen = 4
+        self.pop = 8
+        self.trm = 3
 
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
 
     def test_ga(self):
+        random.seed(1)
         self.ga = GA(self.fmu_path, self.inp, self.known,
-                     self.est, self.ideal, generations=self.gen,
+                     self.est, self.ideal, maxiter=self.gen,
                      pop_size=self.pop, trm_size=self.trm)
         self.estimates = self.ga.estimate()
 
@@ -79,10 +81,11 @@ class TestGA(unittest.TestCase):
             self.assertGreaterEqual(prev_err, next_err)
 
     def test_init_pop(self):
+        random.seed(1)
         init_pop = pd.DataFrame({'R1': [0.1, 0.2, 0.3], 'R2': [0.15, 0.25, 0.35], 'C': [1000., 1100., 1200.]})
         pop_size = 3
         self.ga = GA(self.fmu_path, self.inp, self.known,
-                     self.est, self.ideal, generations=self.gen,
+                     self.est, self.ideal, maxiter=self.gen,
                      pop_size=pop_size, trm_size=self.trm, init_pop=init_pop)
         i1 = self.ga.pop.individuals[0]
         i2 = self.ga.pop.individuals[1]
@@ -93,14 +96,14 @@ class TestGA(unittest.TestCase):
         R2_hi = self.est['R2'][2]
         C_lo = self.est['C'][1]
         C_hi = self.est['C'][2]
-        assert i1.genes == {'C': (1000. - C_lo) / (C_hi - C_lo),
-                            'R1': (0.1 - R1_lo) / (R1_hi - R1_lo),
+        assert i1.genes == {'C':  (1000. - C_lo) / (C_hi - C_lo),
+                            'R1': (0.1 - R1_lo)  / (R1_hi - R1_lo),
                             'R2': (0.15 - R2_lo) / (R2_hi - R2_lo)}
-        assert i2.genes == {'C': (1100. - C_lo) / (C_hi - C_lo),
-                            'R1': (0.2 - R1_lo) / (R1_hi - R1_lo),
+        assert i2.genes == {'C':  (1100. - C_lo) / (C_hi - C_lo),
+                            'R1': (0.2 - R1_lo)  / (R1_hi - R1_lo),
                             'R2': (0.25 - R2_lo) / (R2_hi - R2_lo)}
-        assert i3.genes == {'C': (1200. - C_lo) / (C_hi - C_lo),
-                            'R1': (0.3 - R1_lo) / (R1_hi - R1_lo),
+        assert i3.genes == {'C':  (1200. - C_lo) / (C_hi - C_lo),
+                            'R1': (0.3 - R1_lo)  / (R1_hi - R1_lo),
                             'R2': (0.35 - R2_lo) / (R2_hi - R2_lo)}
 
 def suite():
