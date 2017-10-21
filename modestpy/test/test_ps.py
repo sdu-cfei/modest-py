@@ -51,7 +51,7 @@ class TestPS(unittest.TestCase):
             self.known = json.load(f)
 
         # PS settings
-        self.max_iter = 10
+        self.max_iter = 3
         self.try_lim = 2
 
     def tearDown(self):
@@ -59,7 +59,7 @@ class TestPS(unittest.TestCase):
 
     def test_ps(self):
         self.ps = PS(self.fmu_path, self.inp, self.known,
-                     self.est, self.ideal, max_iter=self.max_iter,
+                     self.est, self.ideal, maxiter=self.max_iter,
                      try_lim=self.try_lim)
         self.estimates = self.ps.estimate()
 
