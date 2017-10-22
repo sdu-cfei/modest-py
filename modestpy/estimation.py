@@ -33,6 +33,7 @@ from modestpy.estim.ps.ps import PS
 from modestpy.estim.model import Model
 import modestpy.estim.error
 from modestpy.estim.plots import plot_comparison
+import modestpy.utilities.figures as figures
 
 class Estimation:
     """
@@ -299,7 +300,7 @@ class Estimation:
                 # (2.3.5) Save method's plots
                 plots = m_inst.get_plots()
                 for p in plots:
-                    fig = self._get_figure(p['axes'])
+                    fig = figures.get_figure(p['axes'])
                     fig_file = os.path.join(self.workdir, "{}_{}.png".format(p['name'], n))
                     fig.savefig(fig_file, dpi=Estimation.FIG_DPI)
                 plt.close('all')
@@ -338,7 +339,7 @@ class Estimation:
 
         # (5) Save error plot including all learning periods
         ax = self._plot_error_per_run(summary_list, err_type=self.ftype)
-        fig = self._get_figure(ax)
+        fig = figures.get_figure(ax)
         fig.savefig(os.path.join(self.workdir, 'errors.png'))
 
         # (6) Assign results to instance attributes
@@ -399,7 +400,7 @@ class Estimation:
         # Create validation plot
         plots = dict()
         ax = plot_comparison(result, ideal_slice, f=None)
-        fig = self._get_figure(ax)
+        fig = figures.get_figure(ax)
         fig.savefig(os.path.join(self.workdir, 'validation.png'), dpi=Estimation.FIG_DPI)
 
         # Return
@@ -441,30 +442,6 @@ class Estimation:
                 LOGGER.info('User defined option ({}): {} = {}'.format(method, key, new_opts[key]))
                 opts[key] = new_opts[key]
         return opts
-
-    def _get_figure(self, ax):
-        """
-        Retrieves figure from axes. Axes can be either an instance
-        of Matplotlib.Axes or a 1D/2D array of Matplotlib.Axes.
-
-        :param ax: Axes or vector/array of Axes
-        :return: Matplotlib.Figure
-        """
-        fig = None
-        try:
-            # Single plot
-            fig = ax.get_figure()
-        except AttributeError:
-            # Subplots
-            try:
-                # 1D grid
-                fig = ax[0].get_figure()
-            except AttributeError:
-                # 2D grid
-                fig = ax[0][0].get_figure()
-        # Adjust size
-        fig.set_size_inches(Estimation.FIG_SIZE)
-        return fig
 
     def _plot_error_per_run(self, summary_list, err_type):
         """

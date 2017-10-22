@@ -19,12 +19,16 @@ from modestpy.estim.model import Model
 from modestpy.estim.estpar import estpars_2_df
 from modestpy.estim.estpar import EstPar
 from modestpy.estim.error import calc_err
+import modestpy.utilities.figures as figures
 import modestpy.estim.plots as plots
 import pandas as pd
 import copy
 import os
 from random import random
 
+# Plot files
+DPI = 100
+FIG_SIZE = (15, 10)
 
 class PS:
     """
@@ -157,6 +161,22 @@ class PS:
     def plot_parameter_evo(self, file=None):
         par_df = self.summary.drop([PS.METHOD], axis=1)
         par_df = par_df.rename(columns={x: 'error' if x == PS.ERR else x for x in par_df.columns})
+
+        # Get axes
+        axes = par_df.plot(subplots=True)
+        fig = figures.get_figure(axes)
+        ## Extend y lim
+        #axes = _extend_ylim(axes, par_df)  # Not needed?
+        # x label
+        axes[-1].set_xlabel('Iteration')
+        # ylim for error
+        axes[-1].set_ylim(0, None)
+
+        if file:
+            fig.set_size_inches(FIG_SIZE)
+            fig.savefig(file, dpi=DPI)
+        return axes
+
         return plots.plot_parameter_evo(par_df, file)
 
     def plot_inputs(self, file=None):
