@@ -29,6 +29,7 @@ except ImportError:
     from pandas.tools.plotting import scatter_matrix
 from modestpy.estim.ga.ga import GA
 from modestpy.estim.ps.ps import PS
+from modestpy.estim.sqp.sqp import SQP
 from modestpy.estim.model import Model
 import modestpy.estim.error
 from modestpy.estim.plots import plot_comparison
@@ -82,8 +83,8 @@ class Estimation:
 
     def __init__(self, workdir, fmu_path, inp, known, est, ideal,
                  lp_n=None, lp_len=None, lp_frame=None, vp=None,
-                 ic_param=None, methods=('GA', 'PS'), ga_opts={}, ps_opts={}, fmi_opts={},
-                 ftype='RMSE', seed=None):
+                 ic_param=None, methods=('GA', 'PS'), ga_opts={}, ps_opts={}, sqp_opts={}, 
+                 fmi_opts={}, ftype='RMSE', seed=None):
         """
         Index in DataFrames ``inp`` and ``ideal`` must be named 'time'
         and given in seconds. The index name assertion check is
@@ -129,6 +130,8 @@ class Estimation:
             Genetic algorithm options
         ps_opts: dict
             Pattern search options
+        sqp_opts: dict
+            SQP solver options
         fmi_opts: dict
             Additional options to be passed to the FMI model (e.g. solver tolerance)
         ftype: string
@@ -177,12 +180,10 @@ class Estimation:
             'look_back':    50,
             'lhs':          False,
             'ftype':        ftype,
-            'opts':         fmi_opts
+            'fmi_opts':     fmi_opts
         }  # Default
         self.GA_OPTS['trm_size'] = max(self.GA_OPTS['pop_size']//5, 1)  # Default
         self.GA_OPTS = self._update_opts(self.GA_OPTS, ga_opts, 'GA')  # User options
-
-        # TODO: Add LHS initialization to GA (maybe inside GA as default) <<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
         # PS options
         self.PS_OPTS = {
@@ -191,14 +192,23 @@ class Estimation:
             'tol':      1e-11,
             'try_lim':  1000,
             'ftype':    ftype,
-            'opts':     fmi_opts
+            'fmi_opts': fmi_opts
         }  # Default
         self.PS_OPTS = self._update_opts(self.PS_OPTS, ps_opts, 'PS')  # User options
+
+        # SQP options
+        self.SQP_OPTS = {
+            'scipy_opts': {'disp': True, 'iprint': 2, 'maxiter': 150, 'ftol': 1e-16, 'eps': 1e-4, 'full_output': True},
+            'ftype': ftype,
+            'fmi_opts': fmi_opts
+        } # Default
+        self.SQP_OPTS = self._update_opts(self.SQP_OPTS, sqp_opts, 'SQP')  # User options
 
         # Method dictionary
         self.method_dict = {
             'GA': (GA, self.GA_OPTS),
-            'PS': (PS, self.PS_OPTS)
+            'PS': (PS, self.PS_OPTS),
+            'SQP': (SQP, self.SQP_OPTS)
         }  # Key -> method name, value -> (method class, method options)
 
         # List of learning periods (tuples with start, stop)
@@ -287,7 +297,7 @@ class Estimation:
 
                 # (2.4.3) Update current estimates (stored in self.est dictionary)
                 for key in est:
-                    new_value = m_estimates[key][0]
+                    new_value = m_estimates[key].iloc[0]
                     est[key] = (new_value, est[key][1], est[key][2])
 
                 # (2.4.4) Append summary

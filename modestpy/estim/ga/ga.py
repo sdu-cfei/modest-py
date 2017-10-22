@@ -45,7 +45,7 @@ class GA:
 
     def __init__(self, fmu_path, inp, known, est, ideal,
                  maxiter=100, tol=0.001, look_back=10,
-                 pop_size=40, uniformity=0.5, mut=0.05, mut_inc=0.3, trm_size=6, opts=None,
+                 pop_size=40, uniformity=0.5, mut=0.05, mut_inc=0.3, trm_size=6, fmi_opts=None,
                  ftype='RMSE', init_pop=None, lhs=False):
         """
         The population can be initialized in various ways:
@@ -69,7 +69,7 @@ class GA:
         :param mut_inc: float (0.-1.), increased mutation rate, specifies how often genes are to be mutated by a
                small amount, used when the population diversity is low, helps to reach a local optimum
         :param trm_size: int, size of the tournament
-        :param dict opts: Additional FMI options to be passed to the simulator (consult FMI specification)
+        :param dict fmi_opts: Additional FMI options to be passed to the simulator (consult FMI specification)
         :param string ftype: Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
         :param DataFrame init_pop: Initial population. DataFrame with estimated parameters. If None, takes initial guess from est.
         :param bool lhs: If True, init_pop and initial guess in est are neglected, and the population is chosen using Lating Hypercube Sampling.
@@ -134,7 +134,7 @@ class GA:
                               est=estpars,
                               ideal=ideal,
                               init=True,
-                              opts=opts,
+                              opts=fmi_opts,
                               ftype=ftype,
                               init_pop=init_pop)
 
@@ -247,6 +247,13 @@ class GA:
         return summary
 
     def get_plots(self):
+        """
+        Returns a list with important plots produced by this estimation method.
+        Each list element is a dictionary with keys 'name' and 'axes'. The name
+        should be given as a string, while axes as matplotlib.Axes instance.
+
+        :return: list(dict)
+        """
         plots = list()
         plots.append({'name': 'GA', 'axes': self.plot_pop_evo()})
         return plots

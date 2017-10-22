@@ -47,7 +47,7 @@ class PS:
     STEP_DEC = 1.5  # Step is divided by this factor if solution does not improve
 
     def __init__(self, fmu_path, inp, known, est, ideal, rel_step=0.01, tol=0.0001, try_lim=30, maxiter=300,
-                 opts=None, ftype='RMSE'):
+                 fmi_opts=None, ftype='RMSE'):
         """
         :param fmu_path: string, absolute path to the FMU
         :param inp: DataFrame, columns with input timeseries, index in seconds
@@ -58,7 +58,7 @@ class PS:
         :param tol: float, stopping criterion, when rel_step becomes smaller than tol algorithm stops
         :param try_lim: integer, maximum number of tries to decrease rel_step
         :param maxiter: integer, maximum number of iterations
-        :param dict opts: Additional FMI options to be passed to the simulator (consult FMI specification)
+        :param dict fmi_opts: Additional FMI options to be passed to the simulator (consult FMI specification)
         :param string ftype: Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
         """
         assert inp.index.equals(ideal.index), 'inp and ideal indexes are not matching'
@@ -96,7 +96,7 @@ class PS:
 
         # Model
         output_names = [var for var in ideal]
-        self.model = PS._get_model_instance(fmu_path, inp, known_df, est, output_names, opts)
+        self.model = PS._get_model_instance(fmu_path, inp, known_df, est, output_names, fmi_opts)
 
         # Initial value for relative parameter step (0-1)
         self.rel_step = rel_step
@@ -292,6 +292,13 @@ class PS:
         return final_estimates
 
     def get_plots(self):
+        """
+        Returns a list with important plots produced by this estimation method.
+        Each list element is a dictionary with keys 'name' and 'axes'. The name
+        should be given as a string, while axes as matplotlib.Axes instance.
+
+        :return: list(dict)
+        """
         plots = list()
         plots.append({'name': 'PS', 'axes': self.plot_parameter_evo()})
         return plots
@@ -323,8 +330,8 @@ class PS:
         return EstPar(estpar.name, estpar.lo, estpar.hi, new_value)
 
     @staticmethod
-    def _get_model_instance(fmu_path, inputs, known_pars, est, output_names, opts=None):
-        model = Model(fmu_path, opts)
+    def _get_model_instance(fmu_path, inputs, known_pars, est, output_names, fmi_opts=None):
+        model = Model(fmu_path, fmi_opts)
         model.set_input(inputs)
         model.set_param(known_pars)
         model.set_param(estpars_2_df(est))
