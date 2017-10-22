@@ -259,45 +259,48 @@ class Estimation:
 
         # (2) Double step estimation
         n = 1  # Learning period counter
-        
+
         for period in self.lp:
-            # (2.1) Slice data
+            # (2.1) Copy initial parameters
+            est = copy.copy(self.est)
+
+            # (2.2) Slice data
             start, stop = period[0], period[1]
             inp_slice = self.inp.loc[start:stop]
             ideal_slice = self.ideal.loc[start:stop]
 
-            # (2.2) Get data for IC parameters and add to known parameters
+            # (2.3) Get data for IC parameters and add to known parameters
             if self.ic_param:
                 for par in self.ic_param:
                     ic = ideal_slice[self.ic_param[par]].iloc[0] 
                     self.known[par] = ic
 
-            # (2.3) Iterate over estimation methods (append results from all)
+            # (2.4) Iterate over estimation methods (append results from all)
             m = 0  # Method counter
             for m_name in methods:
-                # (2.3.1) Instantiate method class
+                # (2.4.1) Instantiate method class
                 m_class = self.method_dict[m_name][0]
                 m_opts = self.method_dict[m_name][1]
 
-                m_inst = m_class(self.fmu_path, inp_slice, self.known, self.est, ideal_slice,
+                m_inst = m_class(self.fmu_path, inp_slice, self.known, est, ideal_slice,
                                  **m_opts)
 
-                # (2.3.2) Estimate
+                # (2.4.2) Estimate
                 m_estimates = m_inst.estimate()
 
-                # (2.3.3) Update current estimates (stored in self.est dictionary)
-                for key in self.est:
+                # (2.4.3) Update current estimates (stored in self.est dictionary)
+                for key in est:
                     new_value = m_estimates[key][0]
-                    self.est[key] = (new_value, self.est[key][1], self.est[key][2])
+                    est[key] = (new_value, est[key][1], est[key][2])
 
-                # (2.3.4) Append summary
+                # (2.4.4) Append summary
                 full_traj = m_inst.get_full_solution_trajectory()
                 if m > 0:
                     full_traj.index += summary.index[-1]  # Add iterations from previous methods
                 summary = summary.append(full_traj, verify_integrity=True)
                 summary.index.rename('_iter_', inplace=True)
 
-                # (2.3.5) Save method's plots
+                # (2.4.5) Save method's plots
                 plots = m_inst.get_plots()
                 for p in plots:
                     fig = figures.get_figure(p['axes'])
@@ -306,14 +309,14 @@ class Estimation:
                     fig.savefig(fig_file, dpi=Estimation.FIG_DPI)
                 plt.close('all')
 
-                # (2.3.6) Increase method counter
+                # (2.4.6) Increase method counter
                 m += 1
 
-            # (2.4) Add summary from this run to the list of all summaries
+            # (2.5) Add summary from this run to the list of all summaries
             summary_list.append(summary)
             summary = pd.DataFrame(columns=cols)  # Reset
 
-            # (2.5) Increase learning period counter
+            # (2.6) Increase learning period counter
             n += 1
 
         # (3) Get and save best estimates per run and final estimates
