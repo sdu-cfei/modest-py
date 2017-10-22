@@ -15,9 +15,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Plot files
-DPI = 150
-FIG_SIZE = (15, 10)
 
 
 def plot_comparison(sim_res, ideal_res, f=None):
@@ -54,9 +51,6 @@ def plot_comparison(sim_res, ideal_res, f=None):
         ax_last = axes
     ax_last.set_xlabel('time [h]')
 
-    if f:
-        fig.set_size_inches(FIG_SIZE)
-        plt.savefig(f, dpi=DPI)
     return axes
 
 
@@ -73,8 +67,7 @@ def plot_error_evo(errors, f=None):
     ax.set_ylabel('Error (NRMSE)')
     if f:
         fig = ax.get_figure()
-        fig.set_size_inches(FIG_SIZE)
-        fig.savefig(f, dpi=DPI, figsize=FIG_SIZE)
+        fig.savefig(f)
     return ax
 
 
@@ -95,8 +88,7 @@ def plot_parameter_evo(parameters, file=None):
     axes[-1].set_xlabel('Iteration')
 
     if file:
-        fig.set_size_inches(FIG_SIZE)
-        fig.savefig(file, dpi=DPI)
+        fig.savefig(file)
     return axes
 
 
@@ -113,8 +105,7 @@ def plot_inputs(inputs, file=None):
     axes[-1].set_xlabel('Time [s]')
 
     if file:
-        fig.set_size_inches(FIG_SIZE)
-        fig.savefig(file, dpi=DPI)
+        fig.savefig(file)
     return axes
 
 

@@ -25,9 +25,6 @@ import modestpy.estim.plots as plots
 from modestpy.estim.estpar import EstPar
 from modestpy.estim.ga.population import Population
 
-# Plot files
-DPI = 100
-FIG_SIZE = (15, 10)
 
 
 class GA:
@@ -35,6 +32,10 @@ class GA:
     Genetic algorithm for FMU parameter estimation.
     This is the main class of the package, containing the high-level algorithm and some result plotting methods.
     """
+
+    # Ploting settings
+    FIG_DPI = 150
+    FIG_SIZE = (15, 10)
 
     NAME = 'GA'
     METHOD = '_method_'
@@ -260,8 +261,8 @@ class GA:
         ax.set_ylabel('Error (NRMSE)')
         if file:
             fig = ax.get_figure()
-            fig.set_size_inches(FIG_SIZE)
-            fig.savefig(file, dpi=DPI, figsize=FIG_SIZE)
+            fig.set_size_inches(GA.FIG_SIZE)
+            fig.savefig(file, dpi=GA.FIG_DPI)
         return ax
 
     def plot_comparison(self, file=None):
@@ -333,8 +334,8 @@ class GA:
         fig.colorbar(scatter, cax=cbar_ax, label='Error')
 
         if file:
-            fig.set_size_inches(FIG_SIZE)
-            fig.savefig(file, dpi=DPI)
+            fig.set_size_inches(GA.FIG_SIZE)
+            fig.savefig(file, dpi=GA.FIG_DPI)
         return axes
 
     def _update_res(self, gen_count):

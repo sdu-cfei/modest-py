@@ -26,14 +26,15 @@ import copy
 import os
 from random import random
 
-# Plot files
-DPI = 100
-FIG_SIZE = (15, 10)
 
 class PS:
     """
     Pattern search (Hooke-Jeeves) algorithm for FMU parameter estimation.
     """
+
+    # Ploting settings
+    FIG_DPI = 150
+    FIG_SIZE = (10, 6)
 
     NAME = 'PS'
     METHOD = '_method_'
@@ -173,11 +174,9 @@ class PS:
         axes[-1].set_ylim(0, None)
 
         if file:
-            fig.set_size_inches(FIG_SIZE)
-            fig.savefig(file, dpi=DPI)
+            fig.set_size_inches(PS.FIG_SIZE)
+            fig.savefig(file, dpi=PS.FIG_DPI)
         return axes
-
-        return plots.plot_parameter_evo(par_df, file)
 
     def plot_inputs(self, file=None):
         return plots.plot_inputs(self.inputs, file)

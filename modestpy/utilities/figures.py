@@ -7,9 +7,6 @@ This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
 
-# Plot files
-DPI = 100
-FIG_SIZE = (15, 10)
 
 def get_figure(ax):
     """
@@ -31,6 +28,5 @@ def get_figure(ax):
         except AttributeError:
             # 2D grid
             fig = ax[0][0].get_figure()
-    # Adjust size
-    fig.set_size_inches(FIG_SIZE)
+
     return fig

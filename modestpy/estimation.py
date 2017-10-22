@@ -302,6 +302,7 @@ class Estimation:
                 for p in plots:
                     fig = figures.get_figure(p['axes'])
                     fig_file = os.path.join(self.workdir, "{}_{}.png".format(p['name'], n))
+                    fig.set_size_inches(Estimation.FIG_SIZE)
                     fig.savefig(fig_file, dpi=Estimation.FIG_DPI)
                 plt.close('all')
 
@@ -401,6 +402,7 @@ class Estimation:
         plots = dict()
         ax = plot_comparison(result, ideal_slice, f=None)
         fig = figures.get_figure(ax)
+        fig.set_size_inches(Estimation.FIG_SIZE)
         fig.savefig(os.path.join(self.workdir, 'validation.png'), dpi=Estimation.FIG_DPI)
 
         # Return
