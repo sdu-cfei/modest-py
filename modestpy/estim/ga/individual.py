@@ -152,7 +152,7 @@ class Individual:
         """
         for par in self.est_par_objects:
             gene = genes[par.name]
-            par.value = par.lo + gene * (par.hi - par.lo)
+            par.value = par.lo + gene * (par.hi - par.lo)  # TODO: This is bad practice (but works here)
         return self.est_par_objects
 
     @staticmethod

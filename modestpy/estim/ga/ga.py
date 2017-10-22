@@ -20,6 +20,7 @@ import random
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import pyDOE as doe
 from modestpy.estim.ga import algorithm
 import modestpy.estim.plots as plots
 from modestpy.estim.estpar import EstPar
@@ -45,7 +46,7 @@ class GA:
     def __init__(self, fmu_path, inp, known, est, ideal,
                  maxiter=100, tol=0.001, look_back=10,
                  pop_size=40, uniformity=0.5, mut=0.05, mut_inc=0.3, trm_size=6, opts=None,
-                 ftype='RMSE', init_pop=None):
+                 ftype='RMSE', init_pop=None, lhs=False):
         """
         The population can be initialized in various ways:
         - if `init_pop` is None, one individual is initialized using initial guess from `est`
@@ -71,6 +72,7 @@ class GA:
         :param dict opts: Additional FMI options to be passed to the simulator (consult FMI specification)
         :param string ftype: Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
         :param DataFrame init_pop: Initial population. DataFrame with estimated parameters. If None, takes initial guess from est.
+        :param bool lhs: If True, init_pop and initial guess in est are neglected, and the population is chosen using Lating Hypercube Sampling.
         """
         self.logger = LOGGER
 
@@ -101,12 +103,18 @@ class GA:
             assert known[key] is not None, 'None is not allowed in known parameters (parameter {})'.format(key)
             known_df[key] = [known[key]]
 
-        # The number of individuals in init_pop can be lower than the desired pop_size.
-        # Take individuals from init_pop and add random individuals until pop_size == len(init_pop)
-        if init_pop is None:
-            # Take initial guess from est dictionary
+        # If LHS initialization, init_pop is disregarded
+        if lhs:
+            init_pop = GA._lhs_init(par_names=[p.name for p in estpars],
+                                    bounds=[(p.lo, p.hi) for p in estpars],
+                                    samples=pop_size,
+                                    criterion='c')
+        # Else, if no init_pop provided, generate one individual based on initial guess from `est`
+        elif init_pop is None:
             init_pop = pd.DataFrame({k: [est[k][0]] for k in est})
 
+        # Take individuals from init_pop and add random individuals until pop_size == len(init_pop)
+        # (the number of individuals in init_pop can be lower than the desired pop_size)
         if init_pop is not None:
             missing = pop_size - init_pop.index.size
             if missing > 0:
@@ -378,3 +386,32 @@ class GA:
         :return: int
         """
         return len(self.get_estimates())
+
+    @staticmethod
+    def _lhs_init(par_names, bounds, samples, criterion='c'):
+        """
+        Returns LHS samples.
+
+        :param par_names: List of parameter names
+        :type par_names: list(str)
+        :param bounds: List of lower/upper bounds, must be of the same length as par_names
+        :type bounds: list(tuple(float, float))
+        :param int samples: Number of samples
+        :param str criterion: A string that tells lhs how to sample the points. See docs for pyDOE.lhs().
+        :return: DataFrame
+        """
+        lhs = doe.lhs(len(par_names), samples=samples, criterion='c');
+        par_vals = {}
+        for par, i in zip(par_names, range(len(par_names))):
+            par_min = bounds[i][0]
+            par_max = bounds[i][1]
+            par_vals[par] = lhs[:,i] * (par_max - par_min) + par_min
+
+        # Convert dict(str: np.ndarray) to pd.DataFrame
+        par_df = pd.DataFrame(columns=par_names, index=np.arange(samples))
+        for i in range(samples):
+            for p in par_names:
+                par_df.loc[i, p] = par_vals[p][i]
+
+        LOGGER.info('Initial guess based on LHS:\n{}'.format(par_df))
+        return par_df

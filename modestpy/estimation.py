@@ -22,7 +22,6 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker
 import pandas as pd
 import numpy as np
-import pyDOE as doe
 from pyfmi.fmi import FMUException
 try:
     from pandas.plotting import scatter_matrix
@@ -84,7 +83,7 @@ class Estimation:
     def __init__(self, workdir, fmu_path, inp, known, est, ideal,
                  lp_n=None, lp_len=None, lp_frame=None, vp=None,
                  ic_param=None, methods=('GA', 'PS'), ga_opts={}, ps_opts={}, fmi_opts={},
-                 ftype='RMSE', lhs=False, seed=None):
+                 ftype='RMSE', seed=None):
         """
         Index in DataFrames ``inp`` and ``ideal`` must be named 'time'
         and given in seconds. The index name assertion check is
@@ -134,8 +133,6 @@ class Estimation:
             Additional options to be passed to the FMI model (e.g. solver tolerance)
         ftype: string
             Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
-        lhs: bool
-            If True, initial guess is chosen using Lating Hypercube Sampling
         seed: None or int
             Random number seed. If None, current time or OS specific randomness is used.
         """
@@ -161,7 +158,6 @@ class Estimation:
         self.known = known
         self.est = est
         self.ideal = ideal
-        self.lhs = lhs
         self.methods = methods
         self.ftype = ftype
 
@@ -179,6 +175,7 @@ class Estimation:
             'mut_inc':      0.3,
             'uniformity':   0.5,
             'look_back':    50,
+            'lhs':          False,
             'ftype':        ftype,
             'opts':         fmi_opts
         }  # Default
@@ -617,38 +614,3 @@ class Estimation:
             if col == True:  # Never use ``is`` with numpy.bool objects
                 return False
         return True
-
-    def _lhs_init(self, par_names, bounds, samples, criterion='c'):
-        """
-        Returns LHS samples.
-
-        Parameters
-        ----------
-        par_names: list(str)
-            List of parameter names
-        bounds: list(tuple(float, float))
-            List of lower/upper bounds, must be of the same length as par_names
-        samples: int
-            Number of samples
-        criterion: str
-            A string that tells lhs how to sample the points. See docs for pyDOE.lhs().
-
-        Returns
-        -------
-        pandas.DataFrame
-        """
-        lhs = doe.lhs(len(par_names), samples=samples, criterion='c');
-        par_vals = {}
-        for par, i in zip(par_names, range(len(par_names))):
-            par_min = bounds[i][0]
-            par_max = bounds[i][1]
-            par_vals[par] = lhs[:,i] * (par_max - par_min) + par_min
-
-        # Convert dict(str: np.ndarray) to pd.DataFrame
-        par_df = pd.DataFrame(columns=par_names, index=np.arange(samples))
-        for i in range(samples):
-            for p in par_names:
-                par_df.loc[i, p] = par_vals[p][i]
-
-        LOGGER.info('Initial guess based on LHS:\n{}'.format(par_df))
-        return par_df

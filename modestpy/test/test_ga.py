@@ -14,10 +14,11 @@ from __future__ import print_function
 import unittest
 import tempfile
 import shutil
-import pandas as pd
 import json
 import os
 import random
+import pandas as pd
+import numpy as np
 from modestpy.estim.ga.ga import GA
 from modestpy.utilities.sysarch import get_sys_arch
 
@@ -61,20 +62,20 @@ class TestGA(unittest.TestCase):
 
     def test_ga(self):
         random.seed(1)
-        self.ga = GA(self.fmu_path, self.inp, self.known,
+        ga = GA(self.fmu_path, self.inp, self.known,
                      self.est, self.ideal, maxiter=self.gen,
                      pop_size=self.pop, trm_size=self.trm)
-        self.estimates = self.ga.estimate()
+        self.estimates = ga.estimate()
 
         # Generate plot
         plot_path = file=os.path.join(self.tmpdir, 'popevo.png')
-        self.ga.plot_pop_evo(plot_path)
+        ga.plot_pop_evo(plot_path)
 
         # Make sure plot is created
         self.assertTrue(os.path.exists(plot_path))
 
         # Make sure errors do not increase
-        errors = self.ga.get_errors()
+        errors = ga.get_errors()
         for i in range(1, len(errors)):
             prev_err = errors[i-1]
             next_err = errors[i]
@@ -84,12 +85,12 @@ class TestGA(unittest.TestCase):
         random.seed(1)
         init_pop = pd.DataFrame({'R1': [0.1, 0.2, 0.3], 'R2': [0.15, 0.25, 0.35], 'C': [1000., 1100., 1200.]})
         pop_size = 3
-        self.ga = GA(self.fmu_path, self.inp, self.known,
+        ga = GA(self.fmu_path, self.inp, self.known,
                      self.est, self.ideal, maxiter=self.gen,
                      pop_size=pop_size, trm_size=self.trm, init_pop=init_pop)
-        i1 = self.ga.pop.individuals[0]
-        i2 = self.ga.pop.individuals[1]
-        i3 = self.ga.pop.individuals[2]
+        i1 = ga.pop.individuals[0]
+        i2 = ga.pop.individuals[1]
+        i3 = ga.pop.individuals[2]
         R1_lo = self.est['R1'][1]
         R1_hi = self.est['R1'][2]
         R2_lo = self.est['R2'][1]
@@ -105,6 +106,30 @@ class TestGA(unittest.TestCase):
         assert i3.genes == {'C':  (1200. - C_lo) / (C_hi - C_lo),
                             'R1': (0.3 - R1_lo)  / (R1_hi - R1_lo),
                             'R2': (0.35 - R2_lo) / (R2_hi - R2_lo)}
+
+    def test_lhs(self):
+        """
+        Tests if populations of two instances with lhs=True and the same seed are identical.
+        """
+        random.seed(1)
+        np.random.seed(1)
+        ga = GA(self.fmu_path, self.inp, self.known, self.est, self.ideal, maxiter=self.gen, lhs=True)
+        indiv = ga.pop.individuals
+        par1 = list()
+        for i in indiv:
+            par1.append(i.get_estimates(as_dict=True))
+
+        random.seed(1)
+        np.random.seed(1)
+        ga = GA(self.fmu_path, self.inp, self.known, self.est, self.ideal, maxiter=self.gen, lhs=True)
+        indiv = ga.pop.individuals
+        par2 = list()
+        for i in indiv:
+            par2.append(i.get_estimates(as_dict=True))
+
+        for d1, d2 in zip(par1, par2):
+            self.assertDictEqual(d1, d2)
+
 
 def suite():
     suite = unittest.TestSuite()

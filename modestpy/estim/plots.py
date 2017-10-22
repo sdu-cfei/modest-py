@@ -51,6 +51,9 @@ def plot_comparison(sim_res, ideal_res, f=None):
         ax_last = axes
     ax_last.set_xlabel('time [h]')
 
+    if f:
+        fig.savefig(f)
+
     return axes
 
 

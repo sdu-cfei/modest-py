@@ -70,14 +70,13 @@ class TestEstimation(unittest.TestCase):
         self.assertGreater(len(res.columns), 0)
 
     def test_estimation_all_args(self):
-        ga_opts = {'maxiter': 3, 'pop_size': 10, 'trm_size': 5}
+        ga_opts = {'maxiter': 3, 'pop_size': 10, 'trm_size': 5, 'lhs': True}
         ps_opts = {'maxiter': 3}
         session = Estimation(self.tmpdir, self.fmu_path, self.inp,
                              self.known, self.est, self.ideal,
                              lp_n=2, lp_len=3600, lp_frame=(0, 3600),
                              vp=(20000, 40000), ic_param={'Tstart': 'T'},
-                             ga_opts=ga_opts, ps_opts=ps_opts, seed=1, ftype='NRMSE',
-                             lhs=True)
+                             ga_opts=ga_opts, ps_opts=ps_opts, seed=1, ftype='NRMSE')
 
         estimates = session.estimate()
         err, res = session.validate()
@@ -91,7 +90,7 @@ class TestEstimation(unittest.TestCase):
         self.assertEqual(session.lp[0][0], 0)
         self.assertEqual(session.lp[0][1], 3600)
         # raw_input('Continue...') # <-- enabling this line triggers the Matplotlib error (issue #20)
-        self.assertLess(err['tot'], 1.02)  # NRMSE
+        self.assertLess(err['tot'], 1.65)  # NRMSE
 
     def test_estimation_rmse(self):
         ga_opts = {'maxiter': 3, 'pop_size': 8, 'trm_size': 3}
