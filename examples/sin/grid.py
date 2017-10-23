@@ -16,6 +16,7 @@ import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 from modestpy import Estimation
 from modestpy.utilities.sysarch import get_sys_arch
 from modestpy.fmi.compiler import mo_2_fmu
@@ -62,7 +63,7 @@ if __name__ == "__main__":
     ideal = model.simulate(com_points=inp.index.size - 1)
     #ideal.to_csv(os.path.join('examples', 'sin', 'resources', 'ideal.csv'))
     
-    # Estimation ==============================================
+    # Grid search ==============================================
 
     # Working directory
     workdir = os.path.join('examples', 'sin', 'workdir')
@@ -70,29 +71,56 @@ if __name__ == "__main__":
         os.mkdir(workdir)
         assert os.path.exists(workdir), "Work directory does not exist"
 
-    # Estimated and known parameters
-    known = {}
-    est = {'a': (7., 0., 8.), 'b': (2.0, 1., 4.)}
+    a_bounds = (0., 8.1)
+    b_bounds = (1., 4.1)
+    a_step = 0.5
+    b_step = 0.1
 
-    # Session
-    session = Estimation(workdir, fmu_path, inp, known, est, ideal,
-                         methods=('GA', ),
-                         ga_opts={'maxiter': 200, 'tol': 1e-6, 'lhs': False, 'pop_size': 5, 'trm_size': 2},
-                         ps_opts={'maxiter': 500, 'tol': 1e-8},
-                         sqp_opts={},
-                         ftype='RMSE', seed=1)
+    a_grid = np.arange(a_bounds[0], a_bounds[1], a_step)
+    b_grid = np.arange(b_bounds[0], b_bounds[1], b_step)
 
-    estimates = session.estimate()
-    err, res = session.validate()
+    rmse = pd.DataFrame(index=pd.Index(a_grid, name='a'), columns=pd.Series(b_grid, name='b'))
 
-    # Check estimates =========================================
-    epsilon = 1e-2
-    a_err = abs(estimates['a'].iloc[0] - a)
-    b_err = abs(estimates['b'].iloc[0] - b)
-    if a_err < epsilon and b_err < epsilon:
-        print("ESTIMATED PARAMETERS ARE CORRECT (ERRORS BELOW {})".format(epsilon))
-    else:
-        print("ESTIMATED PARAMETERS INCORRECT: a_err={}, b_err={} > {}".format(a_err, b_err, epsilon))
+    # Cost function shape
+    for ai in a_grid:
+        for bi in b_grid:
+            par = pd.DataFrame(index=[0])
+            par['a'] = ai
+            par['b'] = bi
+
+            model.parameters_from_df(par)
+            yi = model.simulate(com_points=inp.index.size - 1)
+            yi['ideal'] = ideal['y']
+            rmse.loc[ai, bi] = ((yi['ideal'] - yi['y']) ** 2).mean()
+
+    rmse.to_csv(os.path.join(workdir, 'rmse.csv'))
+    rmse = rmse.astype(float)
+    ax = sns.heatmap(rmse.iloc[::-1]) # Use reversed index
+    ax.set_title('RMSE')
+    fig = ax.get_figure()
+    fig.set_size_inches(10, 7)
+    fig.savefig(os.path.join(workdir, 'RMSE_grid.png'), dpi=100)
+
+    # Search path
+    fig, ax = plt.subplots(1, 1, figsize=(10, 7))
+    ab = pd.read_csv(os.path.join(workdir, 'summary_1.csv')).set_index('_iter_')
+    ax.set_xlabel('b')
+    ax.set_ylabel('a')
+
+    x = b_grid
+    y = a_grid
+    
+    ax.plot(ab['b'].values, ab['a'].values, color='r', marker='x')
+    ax.set_xlim(b_bounds[0], b_bounds[1])
+    ax.set_ylim(a_bounds[0], a_bounds[1])
+
+    z = rmse.values
+    cs = ax.contour(x, y, rmse.values, levels=[0.5, 3, 6, 10, 15, 25])
+    ax.clabel(cs)
+
+    fig.savefig(os.path.join(workdir, 'search_path.png'), dpi=100)
+
+    plt.show()
 
     # Delete FMU ==============================================
     os.remove(fmu_path)
