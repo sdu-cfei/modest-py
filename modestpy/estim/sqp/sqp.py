@@ -16,10 +16,12 @@ LOG_INIT = LogInit(__name__)
 LOGGER = LOG_INIT.get_logger()
 
 import pandas as pd
+import numpy as np
 import copy
 import os
 from random import random
 from scipy.optimize import minimize
+from scipy.optimize import fmin_slsqp
 from modestpy.estim.model import Model
 from modestpy.estim.estpar import EstPar
 from modestpy.estim.estpar import estpars_2_df
@@ -35,24 +37,34 @@ class SQP:
     COM_POINTS = 500  # Default number of communication points, should be adjusted to the number of samples
     TMP_SUMMARY = pd.DataFrame()  # Summary placeholder
 
-    def __init__(self, fmu_path, inp, known, est, ideal, sqp_opts={}, opts=None, ftype='NRMSE'):
+    NAME = 'SQP'
+    METHOD = '_method_'
+    ITER = '_iter_'
+    ERR = '_error_'
+
+    def __init__(self, fmu_path, inp, known, est, ideal, scipy_opts={}, fmi_opts=None, ftype='RMSE'):
         """
         :param fmu_path: string, absolute path to the FMU
         :param inp: DataFrame, columns with input timeseries, index in seconds
         :param known: Dictionary, key=parameter_name, value=value
         :param est: Dictionary, key=parameter_name, value=tuple (guess value, lo limit, hi limit), guess can be None
         :param ideal: DataFrame, ideal solution to be compared with model outputs (variable names must match)
-        :param dict sqp_opts: Additional options passed to the SLSQP solver in SciPy
-        :param dict opts: Additional FMI options to be passed to the simulator (consult FMI specification)
+        :param dict scipy_opts: Additional options passed to the SLSQP solver in SciPy
+        :param dict fmi_opts: Additional FMI options to be passed to the simulator (consult FMI specification)
         :param string ftype: Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
         """
         assert inp.index.equals(ideal.index), 'inp and ideal indexes are not matching'
 
+        # Warning regarding limited functionality of SQP
+        warning_msg = "SQP solver chosen. SQP is not well tested yet and has a limited functionality. " + \
+                      "While the final solution should be OK, the intermediate results obtained from SciPy seem to be incorrect... "
+        LOGGER.warning(warning_msg)
+
         # SLSQP soler options
-        self.sqp_opts = {'disp': True, 'iprint': 2, 'maxiter': 150, 'ftol': 0.00000001}
-        if len(sqp_opts) > 0:
-            for key in sqp_opts:
-                self.sqp_opts[key] = sqp_opts[key]
+        self.scipy_opts = {'disp': True, 'iprint': 2, 'maxiter': 150, 'full_output': True}
+        if len(scipy_opts) > 0:
+            for key in scipy_opts:
+                self.scipy_opts[key] = scipy_opts[key]
 
         # Cost function type
         self.ftype = ftype
@@ -86,17 +98,18 @@ class SQP:
 
         # Model
         output_names = [var for var in ideal]
-        self.model = SQP._get_model_instance(fmu_path, inp, known_df, est, output_names, opts)
+        self.model = SQP._get_model_instance(fmu_path, inp, known_df, est, output_names, fmi_opts)
 
         # Outputs
         self.summary = pd.DataFrame()
         self.res = pd.DataFrame()
-        self.best_err = 9999.
+        self.best_err = 1e7
 
         # Temporary placeholder for summary
         # It needs to be stored as class variable, because it has to be updated
         # from a static method used as callback
-        SQP.TMP_SUMMARY = pd.DataFrame(columns=[x.name for x in self.est])
+        self.summary_cols = [x.name for x in self.est] + [SQP.ERR, SQP.METHOD]
+        SQP.TMP_SUMMARY = pd.DataFrame(columns=self.summary_cols)
 
         # Log
         LOGGER.info('SQP initialized... =========================')
@@ -113,8 +126,12 @@ class SQP:
             """Returns model error"""
             # Updated parameters are stored in x. Need to update the model.
             parameters = pd.DataFrame(index=[0])
-            for v, ep in zip(x, self.est):
-                parameters[ep.name] = v
+            try:
+                for v, ep in zip(x, self.est):
+                    parameters[ep.name] = SQP.rescale(v, ep.lo, ep.hi)
+            except TypeError as e:
+                print(x)
+                raise e
             self.model.set_param(parameters)
             result = self.model.simulate(com_points=SQP.COM_POINTS)
             err = calc_err(result, self.ideal, ftype=self.ftype)['tot']
@@ -125,30 +142,82 @@ class SQP:
 
             return err
 
-        x0 = [x.value for x in self.est]      # Initial guess
-        b = [(x.lo, x.hi) for x in self.est]  # Parameter bounds
+        x0 = [SQP.scale(x.value, x.lo, x.hi) for x in self.est]  # Initial guess
+        b = [(0, 1) for x in self.est]  # Parameter bounds
 
-        xres = minimize(objective, x0, bounds=b, constraints=[],
-                        method='SLSQP', callback=SQP._callback,
-                        options={'disp': True, 'iprint': 2, 'maxiter': 50})
-        par = xres.x
+        out = minimize(objective, x0, bounds=b, constraints=[],
+                       method='SLSQP', callback=SQP._callback,
+                       options=self.scipy_opts)
 
-        # Save summary
-        self.summary = SQP.TMP_SUMMARY.copy()
-        SQP.TMP_SUMMARY = pd.DataFrame(columns=[x.name for x in self.est]) # Reset temp placeholder
-        self.summary.to_csv('sqp_test.csv')
-        print(self.summary)
+        outx = [SQP.rescale(x, ep.lo, ep.hi) for x, ep in zip(out.x.tolist(), self.est)]
 
-        return par
+        # Update summary
+        self.summary = SQP.TMP_SUMMARY.copy() 
+        self.summary.index += 1  # Adjust iteration counter
+        self.summary.index.name = SQP.ITER  # Rename index
+        self.summary[SQP.ERR] = map(objective, self.summary[[x.name for x in self.est]].values)  # Update error
+        for ep in self.est:
+            name = ep.name
+            self.summary[name] = map(lambda x: SQP.rescale(x, ep.lo, ep.hi), self.summary[name])  # Rescale
+        SQP.TMP_SUMMARY = pd.DataFrame(columns=self.summary_cols) # Reset temp placeholder
+
+        # Return DataFrame with estimates
+        par_vec = outx
+        par_df = pd.DataFrame(columns=[x.name for x in self.est], index=[0])
+        for col, x in zip(par_df.columns, par_vec):
+            par_df[col] = x
+
+        return par_df
+
+    @staticmethod
+    def scale(v, lo, hi):
+        # scaled = (rescaled - lo) / (hi - lo)
+        return (v - lo) / (hi - lo)
+
+    @staticmethod
+    def rescale(v, lo, hi):
+        # rescaled = lo + scaled * (hi - lo)
+        return lo + v * (hi - lo)
+
+    def get_plots(self):
+        """
+        Returns a list with important plots produced by this estimation method.
+        Each list element is a dictionary with keys 'name' and 'axes'. The name
+        should be given as a string, while axes as matplotlib.Axes instance.
+
+        :return: list(dict)
+        """
+        return list()
+
+    def get_full_solution_trajectory(self):
+        """
+        Returns all parameters and errors from all iterations.
+        The returned DataFrame contains columns with parameter names,
+        additional column '_error_' for the error and the index
+        named '_iter_'.
+
+        :return: DataFrame
+        """
+        return self.summary
+
+    # PRIVATE METHODS
 
     @staticmethod
     def _callback(xk):
-        SQP.TMP_SUMMARY = SQP.TMP_SUMMARY.append({n: v for n, v in zip(SQP.TMP_SUMMARY.columns, xk)},
-                                                 ignore_index=True)
+        # New row
+        row = pd.DataFrame(index=[0])
+        for x, c in zip(xk, SQP.TMP_SUMMARY.columns):
+            row[c] = x
+
+        row[SQP.ERR] = np.nan
+        row[SQP.METHOD] = SQP.NAME
+
+        # Append
+        SQP.TMP_SUMMARY = SQP.TMP_SUMMARY.append(row, ignore_index=True)
 
     @staticmethod
-    def _get_model_instance(fmu_path, inputs, known_pars, est, output_names, opts=None):
-        model = Model(fmu_path, opts)
+    def _get_model_instance(fmu_path, inputs, known_pars, est, output_names, fmi_opts=None):
+        model = Model(fmu_path, fmi_opts)
         model.set_input(inputs)
         model.set_param(known_pars)
         model.set_param(estpars_2_df(est))

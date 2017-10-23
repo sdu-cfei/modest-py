@@ -58,11 +58,12 @@ if __name__ == "__main__":
 
     # MODEL IDENTIFICATION ==========================================
     session = Estimation(workdir, fmu_path, inp, known, est, ideal,
-                         lp_n=2, lp_len=25000, lp_frame=(0, 25000),
-                         vp = (150000, 215940), ic_param={'Tstart': 'T'},
+                         lp_n=2, lp_len=50000, lp_frame=(0, 50000),
+                         vp = (0, 50000), ic_param={'Tstart': 'T'},
                          methods=('GA', 'PS'),
-                         ga_opts={'maxiter': 10, 'tol': 0.001, 'lhs': True},
-                         ps_opts={'maxiter': 20, 'tol': 0.0001},
+                         ga_opts={'maxiter': 5, 'tol': 0.001, 'lhs': True},
+                         ps_opts={'maxiter': 500, 'tol': 1e-6},
+                         sqp_opts={},
                          ftype='RMSE', seed=1)  # seed is used to make the results repetitive in this example
 
     estimates = session.estimate()

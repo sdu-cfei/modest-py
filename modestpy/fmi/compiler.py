@@ -17,7 +17,7 @@ from pymodelica import compile_fmu
 from modestpy.utilities.sysarch import get_sys_arch
 
 
-def compile(model_name, mo_path, fmu_path=None):
+def mo_2_fmu(model_name, mo_path, fmu_path=None):
     """
     Compiles FMU 2.0 CS from a MO file (Modelica model).
 
@@ -53,6 +53,6 @@ if __name__ == "__main__":
     mo_path = os.path.join('.', 'tests', 'resources', 'simple2R1C', 'Simple2R1C.mo')
     fmu_path = os.path.join('.', 'tests', 'resources', 'simple2R1C', 'Simple2R1C_{}.fmu'.format(platform))
     model_name = "Simple2R1C"
-    
+
     # Compilation
-    compile(model_name, mo_path, fmu_path)
+    mo_2_fmu(model_name, mo_path, fmu_path)
