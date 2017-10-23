@@ -201,8 +201,6 @@ class Estimation:
             'scipy_opts': {'disp': True,
                            'iprint': 2,
                            'maxiter': 150,
-                           'ftol': 1e-16,
-                           'eps': 1e-4,
                            'full_output': True},
             'ftype': ftype,
             'fmi_opts': fmi_opts

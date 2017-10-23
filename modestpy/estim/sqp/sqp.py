@@ -55,6 +55,12 @@ class SQP:
         """
         assert inp.index.equals(ideal.index), 'inp and ideal indexes are not matching'
 
+        # Warning regarding limited functionality of SQP
+        warning_msg = "SQP solver chosen. SQP has a limited functionality at the moment. " + \
+                      "While final solution should be OK, the intermediate solutions obtained from SciPy seem to be incorrect..."
+        LOGGER.warning(warning_msg)
+        raw_input('Press ENTER to confirm and proceed...')
+
         # SLSQP soler options
         self.scipy_opts = {'disp': True, 'iprint': 2, 'maxiter': 150, 'full_output': True}
         if len(scipy_opts) > 0:
