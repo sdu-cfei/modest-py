@@ -133,14 +133,6 @@ class TestEstimation(unittest.TestCase):
                     ga_opts=ga_opts, ps_opts=ps_opts, seed=1, ftype='RMSE')
         estimates = session.estimate()
 
-    # def test_sqp_only(self):
-    #     session = Estimation(self.tmpdir, self.fmu_path, self.inp,
-    #                 self.known, self.est, self.ideal,
-    #                 lp_n=1, lp_len=3600, lp_frame=(0, 3600),
-    #                 vp = (20000, 40000), ic_param={'Tstart': 'T'}, methods=('SQP', ), 
-    #                 ga_opts=ga_opts, ps_opts=ps_opts, seed=1, ftype='RMSE')
-    #     estimates = session.estimate()
-
     def test_opts(self):
         ga_opts = {'maxiter': 10, 'pop_size': 10, 'look_back': 10,
                    'tol': 0.001, 'mut': 0.02, 'mut_inc': 0.3, 'trm_size': 3}
