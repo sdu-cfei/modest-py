@@ -11,6 +11,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import time
 import json
 import os
 import pandas as pd
@@ -42,10 +43,10 @@ if __name__ == "__main__":
 
     # Inputs
     inp = pd.DataFrame()
-    time = np.arange(0, 86401, 100)
-    inp['time'] = time
-    inp['u1'] = np.full(time.shape, 2.)
-    inp['u2'] = np.sin(time / 3000.)
+    t = np.arange(0, 86401, 100)
+    inp['time'] = t
+    inp['u1'] = np.full(t.shape, 2.)
+    inp['u2'] = np.sin(t / 3000.)
     inp = inp.set_index('time')
     #inp.to_csv(os.path.join('examples', 'lin', 'resources', 'input.csv'))
 
@@ -78,21 +79,25 @@ if __name__ == "__main__":
     # Session
     session = Estimation(workdir, fmu_path, inp, known, est, ideal,
                          lp_n=1, lp_len=86400/2, lp_frame=(0, 86400/2), vp = (86400/2, 86400),
-                         methods=('GA',),
-                         ga_opts={'maxiter': 200, 'tol': 1e-6, 'lhs': False, 'pop_size': 5, 'trm_size': 2},
+                         methods=('SQP',),
+                         ga_opts={'maxiter': 200, 'tol': 1e-6, 'lhs': True},
                          ps_opts={'maxiter': 500, 'tol': 1e-8},
                          sqp_opts={},
                          ftype='RMSE', seed=1)
 
+    t0 = time.time()
     estimates = session.estimate()
+    t1 = time.time()
     err, res = session.validate()
+
+    print("ELAPSED TIME: {}".format(t1 - t0))
 
     # Check estimates =========================================
     epsilon = 1e-2
     a_err = abs(estimates['a'].iloc[0] - a)
     b_err = abs(estimates['b'].iloc[0] - b)
     if a_err < epsilon and b_err < epsilon:
-        print("ESTIMATED PARAMETERS ARE CORRECT (ERRORS BELOW {})".format(epsilon))
+        print("ESTIMATED PARAMETERS ARE CORRECT: a_err={}, b_err={} < {}".format(a_err, b_err, epsilon))
     else:
         print("ESTIMATED PARAMETERS INCORRECT: a_err={}, b_err={} > {}".format(a_err, b_err, epsilon))
 
