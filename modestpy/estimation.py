@@ -361,7 +361,7 @@ class Estimation:
         self.final = final
 
         # (7) Estimates to dict
-        final = final.to_dict('records')
+        final = final.to_dict('records')[0]
 
         # (8) Return final estimates
         return final
