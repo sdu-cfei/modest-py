@@ -360,7 +360,10 @@ class Estimation:
         self.best_per_run = best_per_run
         self.final = final
 
-        # (7) Return final estimates
+        # (7) Estimates to dict
+        final = final.to_dict('records')
+
+        # (8) Return final estimates
         return final
 
     def validate(self):
