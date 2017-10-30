@@ -174,15 +174,15 @@ class Estimation:
             'maxiter':      50,
             'pop_size':     max((4 * len(est.keys()), 20)),
             'tol':          1e-6,
-            'mut':          0.05,
-            'mut_inc':      0.3,
+            'mut':          0.10,
+            'mut_inc':      0.33,
             'uniformity':   0.5,
             'look_back':    50,
             'lhs':          False,
             'ftype':        ftype,
             'fmi_opts':     fmi_opts
         }  # Default
-        self.GA_OPTS['trm_size'] = max(self.GA_OPTS['pop_size']//5, 1)  # Default
+        self.GA_OPTS['trm_size'] = max(self.GA_OPTS['pop_size']//6, 2)  # Default
         self.GA_OPTS = self._update_opts(self.GA_OPTS, ga_opts, 'GA')  # User options
 
         # PS options

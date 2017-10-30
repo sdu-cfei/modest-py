@@ -21,12 +21,12 @@ import random
 
 # Constants controlling the evolution
 UNIFORM_RATE = 0.5  # affects crossover
-MUT_RATE = 0.05  # standard mutation rate
-MUT_RATE_INC = 0.3  # increased mutation rate when population diversity is low
-INC_MUT_PROP = 0.5  # proportion of population undergoing increased mutation
-MAX_CHANGE = 25  # [%] maximum change of gene in increased mutation (change in parameter depends on lo/hi limits)
+MUT_RATE = 0.10  # standard mutation rate
+MUT_RATE_INC = 0.33  # increased mutation rate when population diversity is low
+INC_MUT_PROP = 0.33  # proportion of population undergoing increased mutation
+MAX_CHANGE = 10  # [%] maximum change of gene in increased mutation (change in parameter depends on lo/hi limits)
 TOURNAMENT_SIZE = 10  # number of individuals in the tournament
-DIVERSITY_LIM = 0.5  # if DIVERSITY_LIM * 100% of individuals is the same, increased mutation is turned on
+DIVERSITY_LIM = 0.33  # if DIVERSITY_LIM * 100% of individuals is the same, increased mutation is turned on
 ELITISM = True  # if True, the fittest individuals always goes to the next generation
 
 # Printing on the screen
@@ -78,6 +78,10 @@ def evolve(pop):
                 # Increased mutation rate, completely random new values
                 LOGGER.info('Increased mutation, RANDOM changes in genes, individual no. ' + str(i))
                 mutation(new_pop.individuals[i], MUT_RATE_INC)
+
+    # # Standard mutation
+    # for i in range(elite_offset, new_pop.size()):
+    #         mutation(new_pop.individuals[i], MUT_RATE)
 
     # Calculate
     new_pop.calculate()
