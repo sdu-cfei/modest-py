@@ -12,7 +12,6 @@ from __future__ import division
 from __future__ import print_function
 
 import time
-import json
 import os
 import pandas as pd
 import numpy as np
@@ -77,7 +76,7 @@ if __name__ == "__main__":
 
     # Session
     session = Estimation(workdir, fmu_path, inp, known, est, ideal,
-                         methods=('SQP', ),
+                         methods=('GA', 'PS'),
                          ga_opts={'maxiter': 200, 'tol': 1e-6, 'lhs': False, 'pop_size': 5, 'trm_size': 2},
                          ps_opts={'maxiter': 500, 'tol': 1e-8},
                          sqp_opts={'scipy_opts':{'eps': 1e-12}},
@@ -92,8 +91,8 @@ if __name__ == "__main__":
 
     # Check estimates =========================================
     epsilon = 1e-2
-    a_err = abs(estimates['a'].iloc[0] - a)
-    b_err = abs(estimates['b'].iloc[0] - b)
+    a_err = abs(estimates['a'] - a)
+    b_err = abs(estimates['b'] - b)
     if a_err < epsilon and b_err < epsilon:
         print("ESTIMATED PARAMETERS ARE CORRECT: a_err={}, b_err={} < {}".format(a_err, b_err, epsilon))
     else:
