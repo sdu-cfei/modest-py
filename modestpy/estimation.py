@@ -118,7 +118,7 @@ class Estimation:
             Number of learning periods, one if ``None``
         lp_len: float or None
             Length of a single learning period, entire ``lp_frame`` if ``None``
-        lp_frame: tupe of floats or None
+        lp_frame: tuple of floats or None
             Learning period time frame, entire data set if ``None``
         vp: tuple(float, float) or None
             Validation period, entire data set if ``None``
