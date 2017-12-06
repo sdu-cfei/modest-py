@@ -83,7 +83,7 @@ class Estimation:
 
     def __init__(self, workdir, fmu_path, inp, known, est, ideal,
                  lp_n=None, lp_len=None, lp_frame=None, vp=None,
-                 ic_param=None, methods=('GA', 'PS'), ga_opts={}, ps_opts={}, sqp_opts={}, 
+                 ic_param=None, methods=('GA', 'PS'), ga_opts={}, ps_opts={}, sqp_opts={},
                  fmi_opts={}, ftype='RMSE', seed=None):
         """
         Index in DataFrames ``inp`` and ``ideal`` must be named 'time'
@@ -282,7 +282,7 @@ class Estimation:
             # (2.3) Get data for IC parameters and add to known parameters
             if self.ic_param:
                 for par in self.ic_param:
-                    ic = ideal_slice[self.ic_param[par]].iloc[0] 
+                    ic = ideal_slice[self.ic_param[par]].iloc[0]
                     self.known[par] = ic
 
             # (2.4) Iterate over estimation methods (append results from all)
@@ -332,7 +332,7 @@ class Estimation:
         # (3) Get and save best estimates per run and final estimates
         best_per_run = self._get_finals(summary_list)
         best_per_run.to_csv(os.path.join(self.workdir, 'best_per_run.csv'))
-        
+
         if get == 'best':
             cond = best_per_run['_error_'] == best_per_run['_error_'].min()
             final = best_per_run.loc[cond].iloc[0:1]  # Take only one if more than one present
@@ -392,7 +392,7 @@ class Estimation:
         # Initialize IC parameters and add to known
         if self.ic_param:
             for par in self.ic_param:
-                ic = ideal_slice[self.ic_param[par]].iloc[0] 
+                ic = ideal_slice[self.ic_param[par]].iloc[0]
                 self.known[par] = ic
 
         # Initialize model
@@ -619,7 +619,7 @@ class Estimation:
         Parameters
         ----------
         df: DataFrame
-        
+
         Returns
         -------
         boolean

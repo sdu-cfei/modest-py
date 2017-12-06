@@ -62,7 +62,7 @@ if __name__ == "__main__":
     model.specify_outputs(['y'])
     ideal = model.simulate(com_points=inp.index.size - 1)
     #ideal.to_csv(os.path.join('examples', 'sin', 'resources', 'ideal.csv'))
-    
+
     # Grid search ==============================================
 
     # Working directory
@@ -109,7 +109,7 @@ if __name__ == "__main__":
 
     x = b_grid
     y = a_grid
-    
+
     ax.plot(ab['b'].values, ab['a'].values, color='r', marker='x')
     ax.set_xlim(b_bounds[0], b_bounds[1])
     ax.set_ylim(a_bounds[0], a_bounds[1])

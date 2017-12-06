@@ -152,7 +152,7 @@ class SQP:
         outx = [SQP.rescale(x, ep.lo, ep.hi) for x, ep in zip(out.x.tolist(), self.est)]
 
         # Update summary
-        self.summary = SQP.TMP_SUMMARY.copy() 
+        self.summary = SQP.TMP_SUMMARY.copy()
         self.summary.index += 1  # Adjust iteration counter
         self.summary.index.name = SQP.ITER  # Rename index
         self.summary[SQP.ERR] = map(objective, self.summary[[x.name for x in self.est]].values)  # Update error

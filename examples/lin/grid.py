@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
     x = b_grid
     y = a_grid
-    
+
     ax.plot(ab['b'].values, ab['a'].values, color='r', marker='x')
     ax.set_xlim(b_bounds[0], b_bounds[1])
     ax.set_ylim(a_bounds[0], a_bounds[1])

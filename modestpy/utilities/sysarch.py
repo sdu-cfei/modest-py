@@ -34,7 +34,7 @@ def get_sys_arch():
     """
     sys_type = platform.system()
     bit_arch = platform.architecture()[0]
-    
+
     sys = None
     bits = None
 
@@ -42,12 +42,12 @@ def get_sys_arch():
         sys = 'win'
     elif ('linux' in sys_type) or ('Linux' in sys_type) or ('LINUX' in sys_type):
         sys = 'linux'
-    
+
     if '32' in bit_arch:
         bits = '32'
     elif '64' in bit_arch:
         bits = '64'
-    
+
     if (sys and bits):
         sys_bits = sys + bits
     else:
