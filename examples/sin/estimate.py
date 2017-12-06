@@ -61,7 +61,7 @@ if __name__ == "__main__":
     model.specify_outputs(['y'])
     ideal = model.simulate(com_points=inp.index.size - 1)
     #ideal.to_csv(os.path.join('examples', 'sin', 'resources', 'ideal.csv'))
-    
+
     # Estimation ==============================================
 
     # Working directory

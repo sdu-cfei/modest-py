@@ -276,7 +276,7 @@ class Estimation:
             # Get data for IC parameters and add to known parameters
             if self.ic_param:
                 for par in self.ic_param:
-                    ic = ideal_slice[self.ic_param[par]].iloc[0] 
+                    ic = ideal_slice[self.ic_param[par]].iloc[0]
                     self.known[par] = ic
 
             # Genetic algorithm
@@ -379,7 +379,7 @@ class Estimation:
 
         # Final estimates
         final_estimates = self._get_avg_estimates(all_estimates) if get_type == 'avg' \
-                          else self._get_best_estimates(all_estimates) 
+                          else self._get_best_estimates(all_estimates)
 
         # Generate plots
         plots['err_evo'] = self._plot_err_evo(err_evo)
@@ -435,7 +435,7 @@ class Estimation:
         # Initialize IC parameters and add to known
         if self.ic_param:
             for par in self.ic_param:
-                ic = ideal_slice[self.ic_param[par]].iloc[0] 
+                ic = ideal_slice[self.ic_param[par]].iloc[0]
                 self.known[par] = ic
 
         # Initialize model
@@ -477,7 +477,7 @@ class Estimation:
         ----------
         all_estimates: pandas.DataFrame
             Estimates and errors from all learning periods
-        
+
         Returns
         -------
         pandas.DataFrame
@@ -500,7 +500,7 @@ class Estimation:
         ----------
         all_estimates: pandas.DataFrame
             Estimates and errors from all learning periods
-        
+
         Returns
         -------
         pandas.DataFrame
@@ -698,7 +698,7 @@ class Estimation:
         Parameters
         ----------
         df: DataFrame
-        
+
         Returns
         -------
         boolean

@@ -18,11 +18,11 @@ from fmi.model import Model
 
 # Description
 # ===========
-# This script can be used to simulate an FMU, 
-# e.g. to produce results from a model 
+# This script can be used to simulate an FMU,
+# e.g. to produce results from a model
 # with known inputs and parameters.
 if __name__ == "__main__":
-    
+
     model = Model('./tests/resources/simple2R1C/Simple2R1C.fmu')
 
     # Inputs
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     model.parameters_from_csv('./tests/resources/simple2R1C/parameters.csv')
     model.specify_outputs(['T'])
     res = model.simulate(len(inp.index) - 1)
-    
+
     res.to_csv('./tests/resources/simple2R1C/result.csv')
 
     res.plot()

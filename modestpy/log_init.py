@@ -18,9 +18,9 @@ class LogInit:
     """
     Used for logger initialization. Ensures, that only the top one logger gets new handlers.
     The top logger is found at runtime. 
-    
+
     Add the following lines to all modules:
-    
+
     from log_init import LogInit
     LOG_INIT = LogInit(__name__)
     LOGGER = LOG_INIT.get_logger()
@@ -76,7 +76,7 @@ class LogInit:
     def get_logger(self):
         """
         Returns the assigned logger
-        
+
         :return: logging.Logger
         """
         return self.logger

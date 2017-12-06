@@ -24,7 +24,7 @@ from modestpy.utilities.sysarch import get_sys_arch
 class TestEstimation(unittest.TestCase):
 
     def setUp(self):
-        
+
         # Platform (win32, win64, linux32, linux 64)
         platform = get_sys_arch()
         assert platform, "Unsupported platform type!"
@@ -112,7 +112,7 @@ class TestEstimation(unittest.TestCase):
         self.assertGreater(len(res.index), 1)
         self.assertGreater(len(res.columns), 0)
         self.assertLess(err['tot'], 1.48)
-        
+
     def test_ga_only(self):
         ga_opts = {'maxiter': 1}
         ps_opts = {'maxiter': 0}
