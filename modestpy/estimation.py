@@ -366,10 +366,18 @@ class Estimation:
         # (8) Return final estimates
         return final
 
-    def validate(self):
+    def validate(self, vp=None):
         """
-        Performs a simulation with estimated parameters (average or best) 
-        for the previously selected validation period.
+        Performs a simulation with estimated parameters
+        for the previously selected validation period. Other period
+        can be chosen with the `vp` argument. User chosen `vp` in this method
+        does not override the validation period chosen during instantiation
+        of this class.
+
+        Parameters
+        ----------
+        vp: tuple or None
+            Validation period given as a tuple of start and stop time in seconds.
 
         Returns
         -------
@@ -385,7 +393,10 @@ class Estimation:
         LOGGER.info('Validation of parameters: {}'.format(str(est.iloc[0].to_dict())))
 
         # Slice data
-        start, stop = self.vp[0], self.vp[1]
+        if vp is None:
+            start, stop = self.vp[0], self.vp[1]
+        else:
+            start, stop = vp[0], vp[1]
         inp_slice = self.inp.loc[start:stop]
         ideal_slice = self.ideal.loc[start:stop]
 

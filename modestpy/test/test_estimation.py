@@ -79,14 +79,19 @@ class TestEstimation(unittest.TestCase):
                              ga_opts=ga_opts, ps_opts=ps_opts, seed=1, ftype='NRMSE')
 
         estimates = session.estimate()
-        err, res = session.validate()
+        err, res = session.validate()  # Standard validation period
+        err2, res2 = session.validate(vp=(25000, 28600))
 
         self.assertIsNotNone(estimates)
         self.assertGreater(len(estimates), 0)
         self.assertIsNotNone(err)
         self.assertIsNotNone(res)
+        self.assertIsNotNone(err2)
+        self.assertIsNotNone(res2)
         self.assertGreater(len(res.index), 1)
         self.assertGreater(len(res.columns), 0)
+        self.assertGreater(len(res2.index), 1)
+        self.assertGreater(len(res2.columns), 0)
         self.assertEqual(session.lp[0][0], 0)
         self.assertEqual(session.lp[0][1], 3600)
         # raw_input('Continue...') # <-- enabling this line triggers the Matplotlib error (issue #20)
