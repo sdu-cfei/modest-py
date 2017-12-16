@@ -26,11 +26,18 @@ class Model(object):
 
     # Number of tries to simulate a model
     # (sometimes the solver can't converge at first)
-    TRIES = 3
+    TRIES = 15
 
     def __init__(self, fmu_path, opts=None):
         self.logger = logging.getLogger(type(self).__name__)
-        self.model = load_fmu(fmu_path)
+
+        try:
+            self.logger.debug("Loading FMU")
+            self.model = load_fmu(fmu_path)
+        except FMUException as e:
+            self.logger.error(type(e).__name__)
+            self.logger.error(e.message)
+
         self.start = None
         self.end = None
         self.timeline = None
@@ -164,14 +171,20 @@ class Model(object):
         while tries < Model.TRIES:
             try:
                 assert (self.start is not None) and (self.end is not None), 'start and stop cannot be None'  # Shouldn't it be OR?
+                self.logger.debug("Starting simulation")
                 self.res = self.model.simulate(start_time=self.start,
                                                final_time=self.end,
                                                input=input_obj,
                                                options=fmi_opts)
                 break
             except FMUException as e:
+                self.logger.warning("Simulation failed, failure no. {}".format(tries))
+                self.logger.warning(type(e).__name__)
+                self.logger.warning(e.message)
                 tries += 1
                 if tries >= Model.TRIES:
+                    self.logger.error("Maximum number of failures reached ({})"\
+                                      "Won't try again...".format(Model.TRIES))
                     raise e
 
 
