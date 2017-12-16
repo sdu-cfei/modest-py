@@ -178,12 +178,12 @@ class Model(object):
                                                options=fmi_opts)
                 break
             except FMUException as e:
+                tries += 1
                 self.logger.warning("Simulation failed, failure no. {}".format(tries))
                 self.logger.warning(type(e).__name__)
                 self.logger.warning(e.message)
-                tries += 1
                 if tries >= Model.TRIES:
-                    self.logger.error("Maximum number of failures reached ({})"\
+                    self.logger.error("Maximum number of failures reached ({}). "\
                                       "Won't try again...".format(Model.TRIES))
                     raise e
 
