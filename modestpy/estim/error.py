@@ -32,6 +32,7 @@ def calc_err(result, ideal, forgetting=False, ftype='RMSE'):
     :param string ftype: Cost function type, currently 'RMSE' or 'NRMSE'
     :return: dictionary
     """
+    logger = logging.getLogger("error")
 
     for v in ideal.columns:
         assert v in result.columns, \
@@ -71,9 +72,10 @@ def calc_err(result, ideal, forgetting=False, ftype='RMSE'):
         if ideal_mean != 0.:
             nrmse = rmse / ideal_mean # Normalized root mean square error
         else:
-            # Division by zero attempt
-            DivisionByZero.warning(v, (ideal.index[0], ideal.index[-1]))
-            nrmse = rmse
+            msg = "Ideal solution for variable '{}' in the period ({}, {}) is null, " \
+                  "so the error cannot be normalized.".format(variable, period[0], period[1])
+            logger.error(msg)
+            raise ZeroDivisionError(msg)
 
         # Choose error function type
         if ftype == 'NRMSE':
@@ -83,7 +85,7 @@ def calc_err(result, ideal, forgetting=False, ftype='RMSE'):
         else:
             raise ValueError('Cost function type unknown: {}'.format(ftype))
 
-        logging.debug('Calculated partial error ({}) = {}'.format(ftype, error[v]))
+        logger.debug('Calculated partial error ({}) = {}'.format(ftype, error[v]))
 
     # Calculate total error (sum of partial errors)
     assert 'tot' not in error, "'tot' is not an allowed name for output variables..."
@@ -91,33 +93,8 @@ def calc_err(result, ideal, forgetting=False, ftype='RMSE'):
     for v in variables:
         error['tot'] += error[v]
 
-    logging.debug('Calculated total error ({}) = {}'.format(ftype, error['tot']))
+    logger.debug('Calculated total error ({}) = {}'.format(ftype, error['tot']))
 
     return error
 
-
-class DivisionByZero:
-
-    def __init__(self):
-        pass
-
-    ACCEPT_ZERO_DIVISION = False
-
-    @staticmethod
-    def warning(variable, period):
-        if DivisionByZero.ACCEPT_ZERO_DIVISION is False:
-            logging.warning("[WARNING] Ideal solution for variable '{}' in the period ({}, {}) is null, " \
-                  "so the error cannot be normalized. " \
-                  "You can cancel or assume NRMSE=RMSE.".format(variable, period[0], period[1]))
-            logging.warning("If you accpet NRMSE=RMSE, it will be assumed also in future cases during this simulation.")
-
-            decision = raw_input("Enter 'c' to cancel or any other key to continue with NRMSE=RMSE: ")
-
-            if decision == 'c':
-                raise ZeroDivisionError
-            else:
-                DivisionByZero.ACCEPT_ZERO_DIVISION = True
-
-if __name__ == '__main__':
-    zero_warning('TEST', (0, 999))
 

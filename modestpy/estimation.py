@@ -82,7 +82,8 @@ class Estimation(object):
     def __init__(self, workdir, fmu_path, inp, known, est, ideal,
                  lp_n=None, lp_len=None, lp_frame=None, vp=None,
                  ic_param=None, methods=('GA', 'PS'), ga_opts={}, ps_opts={}, sqp_opts={},
-                 fmi_opts={}, ftype='RMSE', seed=None, default_log=True):
+                 fmi_opts={}, ftype='RMSE', seed=None,
+                 default_log=True, logfile='modestpy.log'):
         """
         Index in DataFrames ``inp`` and ``ideal`` must be named 'time'
         and given in seconds. The index name assertion check is
@@ -138,10 +139,12 @@ class Estimation(object):
             Random number seed. If None, current time or OS specific randomness is used.
         default_log: bool
             If true, use default logging settings. Use false if you want to use own logging.
+        logfile: str
+            If default_log=True, this argument can be used to specify the log file name
         """
         # Default logging configuration?
         if default_log:
-            config_logger(filename='modestpy.log', level='DEBUG')
+            config_logger(filename=logfile, level='DEBUG')
 
         self.logger = logging.getLogger(type(self).__name__)
 

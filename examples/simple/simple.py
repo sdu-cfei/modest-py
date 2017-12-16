@@ -65,7 +65,7 @@ if __name__ == "__main__":
                          ps_opts={'maxiter': 500, 'tol': 1e-6},
                          sqp_opts={},
                          ftype='RMSE', seed=1,  # seed is used to make the results repetitive in this example
-                         default_log=True)
+                         default_log=True, logfile='simple.log')
 
     estimates = session.estimate()
     err, res = session.validate()
