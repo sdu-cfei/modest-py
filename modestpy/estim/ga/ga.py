@@ -11,10 +11,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from modestpy.log_init import LogInit
-LOG_INIT = LogInit(__name__)
-LOGGER = LOG_INIT.get_logger()
-
+import logging
 import os
 import random
 import pandas as pd
@@ -28,7 +25,7 @@ from modestpy.estim.ga.population import Population
 
 
 
-class GA:
+class GA(object):
     """
     Genetic algorithm for FMU parameter estimation.
     This is the main class of the package, containing the high-level algorithm and some result plotting methods.
@@ -74,7 +71,7 @@ class GA:
         :param DataFrame init_pop: Initial population. DataFrame with estimated parameters. If None, takes initial guess from est.
         :param bool lhs: If True, init_pop and initial guess in est are neglected, and the population is chosen using Lating Hypercube Sampling.
         """
-        self.logger = LOGGER
+        self.logger = logging.getLogger(type(self).__name__)
 
         assert inp.index.equals(ideal.index), 'inp and ideal indexes are not matching'
 
@@ -420,5 +417,6 @@ class GA:
             for p in par_names:
                 par_df.loc[i, p] = par_vals[p][i]
 
-        LOGGER.info('Initial guess based on LHS:\n{}'.format(par_df))
+        logger = logging.getLogger(GA.__name__)
+        logger.info('Initial guess based on LHS:\n{}'.format(par_df))
         return par_df

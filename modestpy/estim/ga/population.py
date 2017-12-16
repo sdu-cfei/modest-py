@@ -11,17 +11,14 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from modestpy.log_init import LogInit
-LOG_INIT = LogInit(__name__)
-LOGGER = LOG_INIT.get_logger()
-
+import logging
 from modestpy.estim.ga.individual import Individual
 from modestpy.estim.model import Model
 import pandas as pd
 import copy
 
 
-class Population:
+class Population(object):
 
     def __init__(self, fmu_path, pop_size, inp, known, est, ideal, init=True, opts=None,
                  ftype='NRMSE', init_pop=None):
@@ -37,6 +34,7 @@ class Population:
         :param string ftype: Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
         :param DataFrame init_pop: Initial population, DataFrame with initial guesses for estimated parameters
         """
+        self.logger = logging.getLogger(type(self).__name__)
 
         # Initialize list of individuals
         self.individuals = list()
@@ -122,7 +120,7 @@ class Population:
                 # Update value in EstPar objects with the next initial guess
                 for n in range(len(self.est_obj)):
                     self.est_obj[n].value = init_pop.loc[i, self.est_obj[n].name]
-                LOGGER.debug('Initial value provided externally: {}'.format(self.est_obj[n]))
+                self.logger.debug('Initial value provided externally: {}'.format(self.est_obj[n]))
 
             self.add_individual(Individual(est_objects=self.est_obj, population=self,
                                            ftype=self.ftype, use_init_guess=init_guess))

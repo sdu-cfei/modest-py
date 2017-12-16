@@ -11,10 +11,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from modestpy.log_init import LogInit
-LOG_INIT = LogInit(__name__)
-LOGGER = LOG_INIT.get_logger()
-
+import logging
 from pyfmi import load_fmu
 from pyfmi.fmi import FMUException
 import numpy as np
@@ -22,7 +19,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-class Model:
+class Model(object):
     """
     FMU model to be simulated with inputs and parameters provided from files or dataframes.
     """
@@ -32,6 +29,7 @@ class Model:
     TRIES = 3
 
     def __init__(self, fmu_path, opts=None):
+        self.logger = logging.getLogger(type(self).__name__)
         self.model = load_fmu(fmu_path)
         self.start = None
         self.end = None
@@ -118,7 +116,7 @@ class Model:
         """
 
         if com_points is None:
-            LOGGER.warning('[fmi\\model] Warning! Default number of communication points assumed (500)')
+            self.logger.warning('[fmi\\model] Warning! Default number of communication points assumed (500)')
             com_points = 500
 
         # IC
@@ -139,26 +137,27 @@ class Model:
         fmi_opts = self.model.simulate_options()
         fmi_opts['result_handling'] = 'memory'              # Prevents saving a result file
         fmi_opts['result_handler'] = 'ResultHandlerMemory'  # Prevents saving a result file
+        # fmi_opts['CVode_options']['verbosity'] = 50  # No output <- works only with CVode solver
 
         # Options (provided by the user)
         fmi_opts['ncp'] = com_points
 
         if (self.opts is not None) and (type(self.opts) is dict):
-            LOGGER.debug('User-defined FMI options found: {}'.format(self.opts))
+            self.logger.debug('User-defined FMI options found: {}'.format(self.opts))
             for k in self.opts:
                 if type(self.opts[k]) is not dict:
                     fmi_opts[k] = self.opts[k]
-                    LOGGER.debug("Setting FMI option: [{}] = {}".format(k, self.opts[k]))
+                    self.logger.debug("Setting FMI option: [{}] = {}".format(k, self.opts[k]))
                 elif type(self.opts[k]) is dict:
                     for subkey in self.opts[k]:
                         # It works only for single nested sub-dictionaries
                         fmi_opts[k][subkey] = self.opts[k][subkey]
-                        LOGGER.debug("Setting FMI option: [{}][{}] = {}".format(k, subkey, self.opts[k][subkey]))
+                        self.logger.debug("Setting FMI option: [{}][{}] = {}".format(k, subkey, self.opts[k][subkey]))
                 else:
                     raise TypeError("Wrong type of values in 'opts' dictionary")
 
         # Save all options to log
-        LOGGER.debug("All FMI options: {}".format(fmi_opts))
+        self.logger.debug("All FMI options: {}".format(fmi_opts))
 
         # Simulation
         tries = 0
@@ -188,8 +187,8 @@ class Model:
             try:
                 self.reset()
             except FMUException as e:
-                LOGGER.warning(e.message)
-                LOGGER.warning("If you try to simulate an EnergyPlus FMU, use reset=False")
+                self.logger.warning(e.message)
+                self.logger.warning("If you try to simulate an EnergyPlus FMU, use reset=False")
 
         # Return
         return df

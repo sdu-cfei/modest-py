@@ -11,10 +11,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from modestpy.log_init import LogInit
-LOG_INIT = LogInit(__name__)
-LOGGER = LOG_INIT.get_logger()
-
+import logging
 import random
 import pandas as pd
 import numpy as np
@@ -22,7 +19,7 @@ import copy
 from modestpy.estim.error import calc_err
 
 
-class Individual:
+class Individual(object):
 
     COM_POINTS = 500
 
@@ -39,6 +36,8 @@ class Individual:
         :param bool use_init_guess: If True, use initial guess from `est_objects`
         :param str ftype: Cost function type, 'RMSE' or 'NRMSE'
         """
+
+        self.logger = logging.getLogger(type(self).__name__)
 
         # Reference to the population object
         self.population = population
@@ -72,7 +71,7 @@ class Individual:
                 assert self.genes[p.name] >= 0. and self.genes[p.name] <= 1., 'Initial guess outside the bounds'
         else:
             msg = 'Either genes or parameters have to be None'
-            LOGGER.error(msg)
+            self.logger.error(msg)
             raise ValueError(msg)
 
         # Update parameters
@@ -94,7 +93,7 @@ class Individual:
         # Make sure the returned result is not empty
         assert self.result.empty is False, 'Empty result returned from simulation... (?)'
         # Calculate error
-        LOGGER.debug("Calculating error ({}) in individual {}".format(self.ftype, self.genes))
+        self.logger.debug("Calculating error ({}) in individual {}".format(self.ftype, self.genes))
         self.error = calc_err(self.result, self.ideal, ftype=self.ftype)
 
     def reset(self):

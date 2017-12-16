@@ -11,10 +11,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from modestpy.log_init import LogInit
-LOG_INIT = LogInit(__name__)
-LOGGER = LOG_INIT.get_logger()
-
+import logging
 from modestpy.estim.model import Model
 from modestpy.estim.error import calc_err
 import modestpy.estim.plots as plots
@@ -23,7 +20,7 @@ import copy
 import os
 from random import random
 
-class Grid:
+class Grid(object):
 
     def __init__(self, fmu_path, inp, known, est, ideal, opts=None, ftype='RMSE'):
         """
@@ -35,6 +32,8 @@ class Grid:
         :param dict opts: Additional FMI options to be passed to the simulator (consult FMI specification)
         :param string ftype: Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
         """
+        self.logger = logging.getLogger(type(self).__name__)
+        
         assert inp.index.equals(ideal.index), 'inp and ideal indexes are not matching'
         pass # TODO: To be completed
 
