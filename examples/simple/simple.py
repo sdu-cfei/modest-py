@@ -64,7 +64,8 @@ if __name__ == "__main__":
                          ga_opts={'maxiter': 5, 'tol': 0.001, 'lhs': True},
                          ps_opts={'maxiter': 500, 'tol': 1e-6},
                          sqp_opts={},
-                         ftype='RMSE', seed=1)  # seed is used to make the results repetitive in this example
+                         ftype='RMSE', seed=1,  # seed is used to make the results repetitive in this example
+                         default_log=True)
 
     estimates = session.estimate()
     err, res = session.validate()

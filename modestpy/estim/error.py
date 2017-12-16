@@ -11,10 +11,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from modestpy.log_init import LogInit
-LOG_INIT = LogInit(__name__)
-LOGGER = LOG_INIT.get_logger()
-
+import logging
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -86,7 +83,7 @@ def calc_err(result, ideal, forgetting=False, ftype='RMSE'):
         else:
             raise ValueError('Cost function type unknown: {}'.format(ftype))
 
-        LOGGER.debug('Calculated partial error ({}) = {}'.format(ftype, error[v]))
+        logging.debug('Calculated partial error ({}) = {}'.format(ftype, error[v]))
 
     # Calculate total error (sum of partial errors)
     assert 'tot' not in error, "'tot' is not an allowed name for output variables..."
@@ -94,7 +91,7 @@ def calc_err(result, ideal, forgetting=False, ftype='RMSE'):
     for v in variables:
         error['tot'] += error[v]
 
-    LOGGER.debug('Calculated total error ({}) = {}'.format(ftype, error['tot']))
+    logging.debug('Calculated total error ({}) = {}'.format(ftype, error['tot']))
 
     return error
 
@@ -109,10 +106,10 @@ class DivisionByZero:
     @staticmethod
     def warning(variable, period):
         if DivisionByZero.ACCEPT_ZERO_DIVISION is False:
-            LOGGER.warning("[WARNING] Ideal solution for variable '{}' in the period ({}, {}) is null, " \
+            logging.warning("[WARNING] Ideal solution for variable '{}' in the period ({}, {}) is null, " \
                   "so the error cannot be normalized. " \
                   "You can cancel or assume NRMSE=RMSE.".format(variable, period[0], period[1]))
-            LOGGER.warning("If you accpet NRMSE=RMSE, it will be assumed also in future cases during this simulation.")
+            logging.warning("If you accpet NRMSE=RMSE, it will be assumed also in future cases during this simulation.")
 
             decision = raw_input("Enter 'c' to cancel or any other key to continue with NRMSE=RMSE: ")
 

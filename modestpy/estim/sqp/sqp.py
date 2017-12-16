@@ -11,10 +11,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from modestpy.log_init import LogInit
-LOG_INIT = LogInit(__name__)
-LOGGER = LOG_INIT.get_logger()
-
+import logging
 import pandas as pd
 import numpy as np
 import copy
@@ -29,11 +26,10 @@ from modestpy.estim.error import calc_err
 import modestpy.estim.plots as plots
 
 
-class SQP:
+class SQP(object):
     """
     SQP (Sequential Quadratic Programmic) algorithm for FMU parameter estimation. Based on SLSQP solver from SciPy.
     """
-
     COM_POINTS = 500  # Default number of communication points, should be adjusted to the number of samples
     TMP_SUMMARY = pd.DataFrame()  # Summary placeholder
 
@@ -53,12 +49,14 @@ class SQP:
         :param dict fmi_opts: Additional FMI options to be passed to the simulator (consult FMI specification)
         :param string ftype: Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
         """
+        self.logger = logging.getLogger(type(self).__name__)
+
         assert inp.index.equals(ideal.index), 'inp and ideal indexes are not matching'
 
         # Warning regarding limited functionality of SQP
         warning_msg = "SQP solver chosen. SQP is not well tested yet and has a limited functionality. " + \
                       "While the final solution should be OK, the intermediate results obtained from SciPy seem to be incorrect... "
-        LOGGER.warning(warning_msg)
+        self.logger.warning(warning_msg)
 
         # SLSQP soler options
         self.scipy_opts = {'disp': True, 'iprint': 2, 'maxiter': 150, 'full_output': True}
@@ -112,7 +110,7 @@ class SQP:
         SQP.TMP_SUMMARY = pd.DataFrame(columns=self.summary_cols)
 
         # Log
-        LOGGER.info('SQP initialized... =========================')
+        self.logger.info('SQP initialized... =========================')
 
     def estimate(self):
 

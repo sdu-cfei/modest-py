@@ -11,11 +11,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-# Logger
-from modestpy.log_init import LogInit
-LOG_INIT = LogInit(__name__)
-LOGGER = LOG_INIT.get_logger()
-
 from modestpy.estim.ga.population import Population
 import random
 
@@ -52,7 +47,6 @@ def evolve(pop):
     if ELITISM:
         new_pop.add_individual(pop.get_fittest())
         elite_offset = 1
-        LOGGER.info('Elitism = True, best individual saved (index=0)')
 
     # Crossover
     for i in range(elite_offset, new_pop.size()):
@@ -72,11 +66,9 @@ def evolve(pop):
         for i in range(elite_offset, new_pop.size()):
             if random.random() < INC_MUT_PROP:
                 # Increased mutation rate, slightly changed values
-                LOGGER.info('Increased mutation, SLIGHT changes in genes, individual no. ' + str(i))
                 slight_mutation(new_pop.individuals[i], MUT_RATE_INC, MAX_CHANGE)
             else:
                 # Increased mutation rate, completely random new values
-                LOGGER.info('Increased mutation, RANDOM changes in genes, individual no. ' + str(i))
                 mutation(new_pop.individuals[i], MUT_RATE_INC)
 
     # # Standard mutation

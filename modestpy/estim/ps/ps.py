@@ -11,10 +11,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from modestpy.log_init import LogInit
-LOG_INIT = LogInit(__name__)
-LOGGER = LOG_INIT.get_logger()
-
+import logging
 from modestpy.estim.model import Model
 from modestpy.estim.estpar import estpars_2_df
 from modestpy.estim.estpar import EstPar
@@ -27,11 +24,10 @@ import os
 from random import random
 
 
-class PS:
+class PS(object):
     """
     Pattern search (Hooke-Jeeves) algorithm for FMU parameter estimation.
     """
-
     # Ploting settings
     FIG_DPI = 150
     FIG_SIZE = (10, 6)
@@ -61,6 +57,8 @@ class PS:
         :param dict fmi_opts: Additional FMI options to be passed to the simulator (consult FMI specification)
         :param string ftype: Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
         """
+        self.logger = logging.getLogger(type(self).__name__)
+
         assert inp.index.equals(ideal.index), 'inp and ideal indexes are not matching'
         assert rel_step > tol, 'Relative step must not be smaller than the stop criterion'
 
@@ -114,7 +112,7 @@ class PS:
         self.summary = pd.DataFrame()
         self.res = pd.DataFrame()
 
-        LOGGER.info('Pattern Search initialized... =========================')
+        self.logger.info('Pattern Search initialized... =========================')
 
     def estimate(self):
         """
@@ -207,7 +205,7 @@ class PS:
         # Search loop
         while (n_try < self.try_lim) and (iteration < self.max_iter) and (self.rel_step > self.tol):
             iteration += 1
-            LOGGER.info('Iteration no. {} ========================='.format(iteration))
+            self.logger.info('Iteration no. {} ========================='.format(iteration))
             improved = False
 
             # Iterate over all parameters
@@ -244,19 +242,19 @@ class PS:
             if not improved:
                 n_try += 1
                 self.rel_step /= PS.STEP_DEC
-                LOGGER.info('Solution did not improve...')
-                LOGGER.debug('Step reduced to {}'.format(self.rel_step))
-                LOGGER.debug('Tries left: {}'.format(self.try_lim - n_try))
+                self.logger.info('Solution did not improve...')
+                self.logger.debug('Step reduced to {}'.format(self.rel_step))
+                self.logger.debug('Tries left: {}'.format(self.try_lim - n_try))
             else:
                 # Solution improved, reset n_try counter
                 n_try = 0
                 self.rel_step *= PS.STEP_INC
                 if self.rel_step > PS.STEP_CEILING:
                     self.rel_step = PS.STEP_CEILING
-                LOGGER.info('Solution improved')
-                LOGGER.debug('Current step is {}'.format(self.rel_step))
-                LOGGER.info('New error: {}'.format(best_err))
-                LOGGER.debug('New estimates:\n{}'.format(estpars_2_df(current_estimates)))
+                self.logger.info('Solution improved')
+                self.logger.debug('Current step is {}'.format(self.rel_step))
+                self.logger.info('New error: {}'.format(best_err))
+                self.logger.debug('New estimates:\n{}'.format(estpars_2_df(current_estimates)))
 
         # Reorder columns in summary
         s_cols = summary.columns.tolist()
@@ -282,8 +280,8 @@ class PS:
         elif self.rel_step <= self.tol:
             reason = 'Relative step smaller than the stoping criterion'
 
-        LOGGER.info('Pattern search finished. Reason: {}'.format(reason))
-        LOGGER.info('Summary:\n{}'.format(summary))
+        self.logger.info('Pattern search finished. Reason: {}'.format(reason))
+        self.logger.info('Summary:\n{}'.format(summary))
 
         # Final assignments
         self.summary = summary

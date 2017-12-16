@@ -11,10 +11,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from modestpy.log_init import LogInit
-LOG_INIT = LogInit(__name__)
-LOGGER = LOG_INIT.get_logger()
-
+import logging
 import random
 import copy
 import os
@@ -34,8 +31,9 @@ from modestpy.estim.model import Model
 import modestpy.estim.error
 from modestpy.estim.plots import plot_comparison
 import modestpy.utilities.figures as figures
+from modestpy.loginit import config_logger
 
-class Estimation:
+class Estimation(object):
     """
     Public API of ``modestpy``.
 
@@ -84,7 +82,7 @@ class Estimation:
     def __init__(self, workdir, fmu_path, inp, known, est, ideal,
                  lp_n=None, lp_len=None, lp_frame=None, vp=None,
                  ic_param=None, methods=('GA', 'PS'), ga_opts={}, ps_opts={}, sqp_opts={},
-                 fmi_opts={}, ftype='RMSE', seed=None):
+                 fmi_opts={}, ftype='RMSE', seed=None, default_log=True):
         """
         Index in DataFrames ``inp`` and ``ideal`` must be named 'time'
         and given in seconds. The index name assertion check is
@@ -138,7 +136,15 @@ class Estimation:
             Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
         seed: None or int
             Random number seed. If None, current time or OS specific randomness is used.
+        default_log: bool
+            If true, use default logging settings. Use false if you want to use own logging.
         """
+        # Default logging configuration?
+        if default_log:
+            config_logger(filename='modestpy.log', level='DEBUG')
+
+        self.logger = logging.getLogger(type(self).__name__)
+
         # Sanity checks
         assert inp.index.equals(ideal.index), 'inp and ideal indexes are not matching'
 
@@ -150,7 +156,7 @@ class Estimation:
 
         # Random seed
         if seed is not None:
-            LOGGER.info('Setting random seed: {}'.format(seed))
+            self.logger.info('Setting random seed: {}'.format(seed))
             random.seed(seed)
             np.random.seed(seed)  # Important for other libraries, like pyDOE
 
@@ -390,7 +396,7 @@ class Estimation:
         est = self.final
         est.index = [0] # Reset index (needed by model.set_param())
 
-        LOGGER.info('Validation of parameters: {}'.format(str(est.iloc[0].to_dict())))
+        self.logger.info('Validation of parameters: {}'.format(str(est.iloc[0].to_dict())))
 
         # Slice data
         if vp is None:
@@ -420,7 +426,7 @@ class Estimation:
         except FMUException as e:
             msg = 'Problem found inside FMU. Did you set all parameters? Log:\n'
             msg += str(model.model.model.print_log())
-            LOGGER.error(msg)
+            self.logger.error(msg)
             raise FMUException(e)
 
         err = modestpy.estim.error.calc_err(result, ideal_slice)
@@ -466,9 +472,9 @@ class Estimation:
             for key in new_opts:
                 if key not in opts.keys():
                     msg = 'Unknown key: {}'.format(key)
-                    LOGGER.error(msg)
+                    self.logger.error(msg)
                     raise KeyError(msg)
-                LOGGER.info('User defined option ({}): {} = {}'.format(method, key, new_opts[key]))
+                self.logger.info('User defined option ({}): {} = {}'.format(method, key, new_opts[key]))
                 opts[key] = new_opts[key]
         return opts
 
@@ -613,11 +619,11 @@ class Estimation:
                     chosen_lp = True
                 else:
                     tries_left -= 1
-                    LOGGER.warning('Zero ideal solution not allowed, selecting another one...')
-                    LOGGER.warning('Number of tries left: {}'.format(tries_left))
+                    self.logger.warning('Zero ideal solution not allowed, selecting another one...')
+                    self.logger.warning('Number of tries left: {}'.format(tries_left))
 
             if tries_left == 0:
-                LOGGER.error('Nonzero ideal solution not found ({} attempts)'
+                self.logger.error('Nonzero ideal solution not found ({} attempts)'
                       .format(Estimation.NONZERO_ATTEMPTS))
                 raise Exception
 

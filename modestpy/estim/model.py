@@ -11,10 +11,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from modestpy.log_init import LogInit
-LOG_INIT = LogInit(__name__)
-LOGGER = LOG_INIT.get_logger()
-
+import logging
 from modestpy.fmi.model import Model as FmiModel
 import pandas as pd
 
@@ -35,17 +32,19 @@ FMI_ALL = 7
 VERBOSE = True
 
 
-class Model:
+class Model(object):
     """ Model for static parameter estimation """
     def __init__(self, fmu_path, opts=None):
+        self.logger = logging.getLogger(type(self).__name__)
+
         self.model = FmiModel(fmu_path, opts=opts)
 
         # Log level
         try:
             self.model.model.set_log_level(FMI_WARNING)
         except AttributeError as e:
-            LOGGER.error(e.message)
-            LOGGER.error('Proceeding with standard log level...')
+            self.logger.error(e.message)
+            self.logger.error('Proceeding with standard log level...')
 
         # Simulation count
         self.sim_count = 0
