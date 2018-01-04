@@ -1,3 +1,8 @@
+Changes in v. 0.0.7:
+====================
+- added SQP method
+- modified interface of the Estimation class to facilitate multi-algorithm pipelines
+
 Changes in v. 0.0.6:
 ====================
 - LHS initialization of GA
