@@ -62,6 +62,14 @@ To run tests:
     >>> from modestpy.test import run
     >>> run.tests()
 
+You can also run the tests using the script from `bin` folder:
+
+::
+
+    cd <project_directory>
+    python ./bin/test.py
+
+
 Usage
 -----
 
