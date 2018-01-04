@@ -62,7 +62,7 @@ To run tests:
     >>> from modestpy.test import run
     >>> run.tests()
 
-You can also run the tests using the script from `bin` folder:
+or
 
 ::
 
