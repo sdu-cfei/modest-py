@@ -87,7 +87,7 @@ usage is as follows:
     >>> err, res = session.validate()
 
 More control is possible via optional arguments, as discussed in the `documentation 
-https://github.com/sdu-cfei/modest-py/wiki/modestpy-API>`__.
+<https://github.com/sdu-cfei/modest-py/wiki/modestpy-API>`__.
 
 ``modestpy`` automatically saves results in the working
 directory including csv files with estimates and some useful plots,
