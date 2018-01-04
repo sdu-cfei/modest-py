@@ -36,40 +36,6 @@ from modestpy.loginit import config_logger
 class Estimation(object):
     """
     Public API of ``modestpy``.
-
-    This class allows to use multiple estimation methods in a single
-    estimation pipeline. The user needs only to instantiate this class,
-    define the desired sequence of estimation methods and call
-    ``estimate()``. All results are saved in the working directory 
-    ``workdir``.
-
-    .. note:: ``inp`` and ``ideal`` DataFrames **must have** index
-              named ``time``. This is to avoid a common user mistake 
-              of loading DataFrame from a csv and forgetting to set 
-              the right index. The index should be in seconds.
-              TODO: Is it still true?
-
-    Methods
-    -------
-    estimate(get='best')
-        Estimates parameters, saves results to ``workdir`` and
-        returns chosen type of estimates ('avg' or 'best').
-    validate()
-        Performs a validation of the model on the chosen validation period
-
-    Examples
-    --------
-    >>> from modestpy import Estimation
-    >>> session = Estimation(workdir, fmu_path, inp, known, est, ideal,
-                             lp_n=2, lp_len=25000, lp_frame=(0, 25000),
-                             vp = (150000, 215940), ic_param={'Tstart': 'T'},
-                             methods=('GA', 'PS'),
-                             ga_opts={'maxiter': 5, 'tol': 0.001},
-                             ps_opts={'maxiter': 20, 'tol': 0.0001},
-                             ftype='RMSE') 
-
-    >>> estimates = session.estimate()
-    >>> err, res = session.validate()
     """
 
     # Number of attempts to find nonzero learning data set
@@ -94,8 +60,7 @@ class Estimation(object):
         Currently available estimation methods:
             - GA - genetic algorithm
             - PS - pattern search (Hooke-Jeeves)
-
-        .. note:: Guess value of estimated parameters is not taken into account in GA.
+            - SQP - sequential quadratic programming (SciPy implementation)
 
         Parameters:
         -----------
