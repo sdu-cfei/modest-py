@@ -16,24 +16,24 @@ from Tkinter import *
 from tkFileDialog import askopenfilename
 import tkMessageBox
 
-class App():
-    def __init__(self, root):
-        # Main window
-        self.root = root
-
+class App(Frame):
+    def __init__(self, master=None):
+        Frame.__init__(self, master)
+        self.grid()
         self.create_widgets()
 
     def create_widgets(self):
         # Top menu
-        menu = Menu(self.root)
-        self.root.config(menu=menu)
+        menu = Menu(self)
+        self.master.config(menu=menu)
 
         # File menu
         filemenu = Menu(menu)
         menu.add_cascade(label="File", menu=filemenu)
+        filemenu.add_command(label="Load configuration", command=self.load_config)
         filemenu.add_command(label="Save configuration", command=self.save_config)
         filemenu.add_separator()
-        filemenu.add_command(label="Exit", command=self.root.quit)
+        filemenu.add_command(label="Exit", command=self.master.quit)
 
         # Run menu
         runmenu = Menu(menu)
@@ -46,12 +46,15 @@ class App():
         helpmenu.add_command(label="Help", command=self.help)
         helpmenu.add_command(label="About", command=self.about)
 
+    def load_config(self):
+        print("Nothing here yet")
+
     def save_config(self):
         print("Nothing here yet")
 
     def help(self):
-        help_root = Tk()
-        help_root.title("Help")
+        help_window = Tk()
+        help_window.title("Help")
         msg = \
 """
 Report a problem:
@@ -63,7 +66,7 @@ krza@mmmi.sdu.dk
 Contribute:
 https://github.com/sdu-cfei/modest-py
 """
-        label = Label(help_root, text=msg)
+        label = Label(help_window, text=msg)
         label.pack(ipadx=75, ipady=25)
 
     def about(self):
@@ -82,8 +85,7 @@ License: BSD 2-clause
         print("Nothing here yet")
 
 
-root = Tk()
-app = App(root=root)
-root.minsize(800, 500)
-root.title("ModestPy GUI")
-root.mainloop()
+app = App()
+app.master.minsize(800, 500)
+app.master.title("ModestPy GUI")
+app.master.mainloop()
