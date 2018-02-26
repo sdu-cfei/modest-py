@@ -23,7 +23,7 @@ from pyfmi.fmi import FMUException
 try:
     from pandas.plotting import scatter_matrix
 except ImportError:
-    from pandas.tools.plotting import scatter_matrix
+    from pandas.tools.plotting import scatter_matrix  # Old pandas version
 from modestpy.estim.ga.ga import GA
 from modestpy.estim.ps.ps import PS
 from modestpy.estim.sqp.sqp import SQP
@@ -32,6 +32,7 @@ import modestpy.estim.error
 from modestpy.estim.plots import plot_comparison
 import modestpy.utilities.figures as figures
 from modestpy.loginit import config_logger
+
 
 class Estimation(object):
     """
@@ -47,8 +48,8 @@ class Estimation(object):
 
     def __init__(self, workdir, fmu_path, inp, known, est, ideal,
                  lp_n=None, lp_len=None, lp_frame=None, vp=None,
-                 ic_param=None, methods=('GA', 'PS'), ga_opts={}, ps_opts={}, sqp_opts={},
-                 fmi_opts={}, ftype='RMSE', seed=None,
+                 ic_param=None, methods=('GA', 'PS'), ga_opts={}, ps_opts={},
+                 sqp_opts={}, fmi_opts={}, ftype='RMSE', seed=None,
                  default_log=True, logfile='modestpy.log'):
         """
         Index in DataFrames ``inp`` and ``ideal`` must be named 'time'
@@ -76,7 +77,7 @@ class Estimation(object):
             Dictionary defining estimated parameters,
             (``par_name: (guess value, lo limit, hi limit)``)
         ideal: pandas.DataFrame
-            Ideal solution (usually measurements), 
+            Ideal solution (usually measurements),
             index in seconds and named ``time``
         lp_n: int or None
             Number of learning periods, one if ``None``
@@ -87,7 +88,8 @@ class Estimation(object):
         vp: tuple(float, float) or None
             Validation period, entire data set if ``None``
         ic_param: dict(str, str) or None
-            Mapping between model parameters used for IC and variables from ``ideal``
+            Mapping between model parameters used for IC and variables from
+            ``ideal``
         methods: tuple(str, str)
             List of methods to be used in the pipeline
         ga_opts: dict
@@ -97,15 +99,20 @@ class Estimation(object):
         sqp_opts: dict
             SQP solver options
         fmi_opts: dict
-            Additional options to be passed to the FMI model (e.g. solver tolerance)
+            Additional options to be passed to the FMI model
+            (e.g. solver tolerance)
         ftype: string
-            Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
+            Cost function type. Currently 'NRMSE' (advised for multi-objective
+            estimation) or 'RMSE'.
         seed: None or int
-            Random number seed. If None, current time or OS specific randomness is used.
+            Random number seed. If None, current time or OS specific
+            randomness is used.
         default_log: bool
-            If true, use default logging settings. Use false if you want to use own logging.
+            If true, use default logging settings. Use false if you want to
+            use own logging.
         logfile: str
-            If default_log=True, this argument can be used to specify the log file name
+            If default_log=True, this argument can be used to specify the log
+            file name
         """
         # Default logging configuration?
         if default_log:
@@ -114,11 +121,12 @@ class Estimation(object):
         self.logger = logging.getLogger(type(self).__name__)
 
         # Sanity checks
-        assert inp.index.equals(ideal.index), 'inp and ideal indexes are not matching'
+        assert inp.index.equals(ideal.index), \
+            'inp and ideal indexes are not matching'
 
-        init, lo, hi = 0, 1 ,2  # Initial value, lower bound, upper bound indices
+        init, lo, hi = 0, 1, 2  # Init. value, lower bound, upper bound indices
         for v in est:
-            assert  (est[v][init] >= est[v][lo])  \
+            assert (est[v][init] >= est[v][lo])  \
                 and (est[v][init] <= est[v][hi]), \
                 'Initial value out of limits ({})'.format(v)
 
@@ -156,8 +164,11 @@ class Estimation(object):
             'ftype':        ftype,
             'fmi_opts':     fmi_opts
         }  # Default
-        self.GA_OPTS['trm_size'] = max(self.GA_OPTS['pop_size']//6, 2)  # Default
-        self.GA_OPTS = self._update_opts(self.GA_OPTS, ga_opts, 'GA')  # User options
+
+        # Default
+        self.GA_OPTS['trm_size'] = max(self.GA_OPTS['pop_size']//6, 2)
+        # User options
+        self.GA_OPTS = self._update_opts(self.GA_OPTS, ga_opts, 'GA')
 
         # PS options
         self.PS_OPTS = {
@@ -168,7 +179,9 @@ class Estimation(object):
             'ftype':    ftype,
             'fmi_opts': fmi_opts
         }  # Default
-        self.PS_OPTS = self._update_opts(self.PS_OPTS, ps_opts, 'PS')  # User options
+
+        # User options
+        self.PS_OPTS = self._update_opts(self.PS_OPTS, ps_opts, 'PS')
 
         # SQP options
         self.SQP_OPTS = {
@@ -178,8 +191,10 @@ class Estimation(object):
                            'full_output': True},
             'ftype': ftype,
             'fmi_opts': fmi_opts
-        } # Default
-        self.SQP_OPTS = self._update_opts(self.SQP_OPTS, sqp_opts, 'SQP')  # User options
+        }  # Default
+
+        # User options
+        self.SQP_OPTS = self._update_opts(self.SQP_OPTS, sqp_opts, 'SQP')
 
         # Method dictionary
         self.method_dict = {
@@ -215,7 +230,7 @@ class Estimation(object):
 
         The chosen estimates ('avg' or 'best') are saved
         in a csv file ``final.csv`` in the working directory.
-        In addition estimates and errors from all learning periods 
+        In addition estimates and errors from all learning periods
         are saved in ``best_per_run.csv``.
 
         Parameters
@@ -232,14 +247,20 @@ class Estimation(object):
         assert get in allowed_types, 'get={} is not allowed'.format(get)
 
         # (1) Initialize local variables
-        methods = self.methods      # Tuple with method names, e.g. ('GA', 'PS'), ('GA', 'SQP') or ('GA', )
-        plots = list()              # List of plots to saved
+        # Tuple with method names, e.g. ('GA', 'PS'), ('GA', 'SQP') or ('GA', )
+        methods = self.methods
+
+        # List of plots to be saved
+        plots = list()
 
         cols = ['_method_', '_error_'] + [par_name for par_name in self.est]
-        summary = pd.DataFrame(columns=cols)  # Estimates and errors from all iterations from all methods
+
+        # Estimates and errors from all iterations from all methods
+        summary = pd.DataFrame(columns=cols)
         summary.index.name = '_iter_'
 
-        summary_list = list()  # List of DataFrames with summaries from all runs
+        # List of DataFrames with summaries from all runs
+        summary_list = list()
 
         # (2) Double step estimation
         n = 1  # Learning period counter
@@ -266,13 +287,14 @@ class Estimation(object):
                 m_class = self.method_dict[m_name][0]
                 m_opts = self.method_dict[m_name][1]
 
-                m_inst = m_class(self.fmu_path, inp_slice, self.known, est, ideal_slice,
-                                 **m_opts)
+                m_inst = m_class(self.fmu_path, inp_slice, self.known, est,
+                                 ideal_slice, **m_opts)
 
                 # (2.4.2) Estimate
                 m_estimates = m_inst.estimate()
 
-                # (2.4.3) Update current estimates (stored in self.est dictionary)
+                # (2.4.3) Update current estimates
+                # (stored in self.est dictionary)
                 for key in est:
                     new_value = m_estimates[key].iloc[0]
                     est[key] = (new_value, est[key][1], est[key][2])
@@ -280,7 +302,8 @@ class Estimation(object):
                 # (2.4.4) Append summary
                 full_traj = m_inst.get_full_solution_trajectory()
                 if m > 0:
-                    full_traj.index += summary.index[-1]  # Add iterations from previous methods
+                    # Add iterations from previous methods
+                    full_traj.index += summary.index[-1]
                 summary = summary.append(full_traj, verify_integrity=True)
                 summary.index.rename('_iter_', inplace=True)
 
@@ -288,7 +311,8 @@ class Estimation(object):
                 plots = m_inst.get_plots()
                 for p in plots:
                     fig = figures.get_figure(p['axes'])
-                    fig_file = os.path.join(self.workdir, "{}_{}.png".format(p['name'], n))
+                    fig_file = os.path.join(self.workdir, "{}_{}.png"
+                                            .format(p['name'], n))
                     fig.set_size_inches(Estimation.FIG_SIZE)
                     fig.savefig(fig_file, dpi=Estimation.FIG_DPI)
                 plt.close('all')
@@ -309,7 +333,8 @@ class Estimation(object):
 
         if get == 'best':
             cond = best_per_run['_error_'] == best_per_run['_error_'].min()
-            final = best_per_run.loc[cond].iloc[0:1]  # Take only one if more than one present
+            # Take only one if more than one present
+            final = best_per_run.loc[cond].iloc[0:1]
             final = final.drop('_error_', axis=1)
         elif get == 'avg':
             final = best_per_run.drop('_error_', axis=1).mean().to_frame().T
@@ -351,7 +376,8 @@ class Estimation(object):
         Parameters
         ----------
         vp: tuple or None
-            Validation period given as a tuple of start and stop time in seconds.
+            Validation period given as a tuple of start and stop time in
+            seconds.
 
         Returns
         -------
@@ -362,9 +388,10 @@ class Estimation(object):
         """
         # Get estimates
         est = self.final
-        est.index = [0] # Reset index (needed by model.set_param())
+        est.index = [0]  # Reset index (needed by model.set_param())
 
-        self.logger.info('Validation of parameters: {}'.format(str(est.iloc[0].to_dict())))
+        self.logger.info('Validation of parameters: {}'.format(
+            str(est.iloc[0].to_dict())))
 
         # Slice data
         if vp is None:
@@ -392,7 +419,8 @@ class Estimation(object):
         try:
             result = model.simulate(com_points=com_points)
         except FMUException as e:
-            msg = 'Problem found inside FMU. Did you set all parameters? Log:\n'
+            msg = 'Problem found inside FMU. Did you set all parameters? ' + \
+                  'Log:\n'
             msg += str(model.model.model.print_log())
             self.logger.error(msg)
             raise FMUException(e)
@@ -400,11 +428,11 @@ class Estimation(object):
         err = modestpy.estim.error.calc_err(result, ideal_slice)
 
         # Create validation plot
-        plots = dict()
         ax = plot_comparison(result, ideal_slice, f=None)
         fig = figures.get_figure(ax)
         fig.set_size_inches(Estimation.FIG_SIZE)
-        fig.savefig(os.path.join(self.workdir, 'validation.png'), dpi=Estimation.FIG_DPI)
+        fig.savefig(os.path.join(self.workdir, 'validation.png'),
+                    dpi=Estimation.FIG_DPI)
 
         # Return
         return err, result
@@ -415,13 +443,16 @@ class Estimation(object):
         """
         Returns final estimates and errors from all learning periods
 
-        :param list(DataFrame) summary_list: List of all summaries from all runs
-        :param bool avg: If true, return average estimates, else return best estimates
+        :param list(DataFrame) summary_list: List of all summaries
+                                             from all runs
+        :param bool avg: If true, return average estimates, else return
+                         best estimates
         :return: DataFrame with final estimates
         """
         finals = pd.DataFrame()
         for s in summary_list:
-            finals = finals.append(s.drop('_method_', axis=1).iloc[-1:], ignore_index=True)
+            finals = finals.append(s.drop('_method_', axis=1).iloc[-1:],
+                                   ignore_index=True)
         finals.index += 1  # Start from 1
         finals.index.name = '_run_'
 
@@ -442,7 +473,8 @@ class Estimation(object):
                     msg = 'Unknown key: {}'.format(key)
                     self.logger.error(msg)
                     raise KeyError(msg)
-                self.logger.info('User defined option ({}): {} = {}'.format(method, key, new_opts[key]))
+                self.logger.info('User defined option ({}): {} = {}'
+                                 .format(method, key, new_opts[key]))
                 opts[key] = new_opts[key]
         return opts
 
@@ -454,12 +486,13 @@ class Estimation(object):
         """
         # Error evolution per estimation run
         err = pd.DataFrame()
-        for s, n in zip(summary_list, range(1, len(summary_list) +1)):
+        for s, n in zip(summary_list, range(1, len(summary_list) + 1)):
             next_err = pd.Series(data=s['_error_'], name='error #{}'.format(n))
             err = pd.concat([err, next_err], axis=1)
 
         # Plot
-        fig, ax = plt.subplots(1, 1, figsize=Estimation.FIG_SIZE, dpi=Estimation.FIG_DPI)
+        fig, ax = plt.subplots(1, 1, figsize=Estimation.FIG_SIZE,
+                               dpi=Estimation.FIG_DPI)
         err.plot(ax=ax)
 
         # Get line colors
@@ -469,7 +502,9 @@ class Estimation(object):
         # Method switch marks
         xloc, yloc = self._get_method_switch_xy(summary_list)
 
-        mltp = len(xloc) // len(colors)  # In cases there is more switches than lines
+        # In cases there is more switches than lines
+        mltp = len(xloc) // len(colors)
+
         if mltp > 1:
             colors_copy = copy.copy(colors)
             colors = list()
@@ -478,7 +513,8 @@ class Estimation(object):
                     colors.append(c)
 
         for x, y, c in zip(xloc, yloc, colors * mltp):
-            ax.scatter(x, y, marker='o', c='white', edgecolors=c, lw=1.5, zorder=10)
+            ax.scatter(x, y, marker='o', c='white', edgecolors=c, lw=1.5,
+                       zorder=10)
 
         # Formatting
         ax.set_xlabel("Iterations")
@@ -492,8 +528,9 @@ class Estimation(object):
         Returns a tuple with two lists describing x, y coordinates
         marking when there was a switch to a next method in the estimation.
 
-        The first list contains x coordinates, the second list contains y coordinates.
-        x coordinates represent iterations. y coordinates represent simulation error.
+        The first list contains x coordinates, the second list contains
+        y coordinates. x coordinates represent iterations. y coordinates
+        represent simulation error.
 
         :param list(DataFrame) summary_list: List of DataFrames with summary
         :return: tuple(list(int), list(int))
@@ -539,8 +576,8 @@ class Estimation(object):
         Selects random learning periods within ``lp_frame``.
 
         Each learning period has the length of ``lp_len``. Periods may overlap.
-        Ensures that a period with null data for any ``ideal`` variable is not selected.
-        If ``None`` is given for any of
+        Ensures that a period with null data for any ``ideal`` variable is not
+        selected.
 
         Parameters
         ----------
@@ -549,7 +586,8 @@ class Estimation(object):
         lp_len: int, optional
             Period length in seconds, default: all data
         lp_frame: tuple of floats or ints, optional
-            Learning periods are selected within this time frame (start, end), default: all data
+            Learning periods are selected within this time frame (start, end),
+            default: all data
 
         Returns
         -------
@@ -566,8 +604,8 @@ class Estimation(object):
         # Assign time frame
         t0 = lp_frame[0]
         tend = lp_frame[1]
-        assert lp_len <= tend - t0, 'Learning period length cannot be longer than data length!'
-        # lp_len = int(lp_len)  # TODO: figure out if this line is needed
+        assert lp_len <= tend - t0, 'Learning period length cannot be ' \
+                                    'longer than data length!'
 
         # Return variable
         lp = []
@@ -580,19 +618,24 @@ class Estimation(object):
                 new_t0 = random.randint(t0, tend - lp_len)
                 new_tend = new_t0 + lp_len
 
-                ideal_nonzero = self._all_columns_nonzero(self.ideal.loc[new_t0:new_tend])
+                ideal_nonzero = self._all_columns_nonzero(
+                    self.ideal.loc[new_t0:new_tend]
+                    )
 
                 if ideal_nonzero:
                     lp.append((new_t0, new_tend))
                     chosen_lp = True
                 else:
                     tries_left -= 1
-                    self.logger.warning('Zero ideal solution not allowed, selecting another one...')
-                    self.logger.warning('Number of tries left: {}'.format(tries_left))
+                    self.logger.warning('Zero ideal solution not allowed, '
+                                        'selecting another one...')
+                    self.logger.warning('Number of tries left: {}'
+                                        .format(tries_left))
 
             if tries_left == 0:
-                self.logger.error('Nonzero ideal solution not found ({} attempts)'
-                      .format(Estimation.NONZERO_ATTEMPTS))
+                self.logger.error('Nonzero ideal solution not found '
+                                  '({} attempts)'
+                                  .format(Estimation.NONZERO_ATTEMPTS))
                 raise Exception
 
         return lp
@@ -609,7 +652,8 @@ class Estimation(object):
         -------
         boolean
         """
-        assert df.empty is False, 'This DataFrame should not be empty. Something is wrong.'
+        assert df.empty is False, 'This DataFrame should not be empty. ' \
+                                  'Something is wrong.'
         is_zero = (df == 0).all()
         for col in is_zero:
             if col == True:  # Never use ``is`` with numpy.bool objects
