@@ -35,7 +35,8 @@ class Parameters:
 
     def assign(self, **kwargs):
         """
-        Assigns new parameters from **kwargs. Does not automatically save the file.
+        Assigns new parameters from **kwargs.
+        Does not automatically save the file.
 
         :param kwargs: name = value
         :return: None
@@ -45,7 +46,8 @@ class Parameters:
 
     def update_and_save(self, new_par):
         """
-        Updates csv with parameters with new parameters from new_par DataFrame. Automatically saves the file.
+        Updates csv with parameters with new parameters from
+        new_par DataFrame. Automatically saves the file.
 
         :param new_par: DataFrame
         :return: None

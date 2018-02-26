@@ -23,17 +23,20 @@ class Individual(object):
 
     COM_POINTS = 500
 
-    def __init__(self, est_objects, population, genes=None, use_init_guess=False, ftype='NRMSE'):
+    def __init__(self, est_objects, population, genes=None,
+                 use_init_guess=False, ftype='NRMSE'):
         """
-        Individual can be initialized using `genes` OR initial guess in `est_objects`
-        (genes are inferred from parameters and vice versa). Otherwise, random genes are assumed.
+        Individual can be initialized using `genes` OR initial guess
+        in `est_objects` (genes are inferred from parameters and vice versa).
+        Otherwise, random genes are assumed.
 
-        :param est_objects: List of EstPar objects defining estimated parameters
+        :param est_objects: List of EstPar objects with estimated parameters
         :type est_objects: list(EstPar)
         :param Population population: Population instance
         :param genes: Genes (can be also inferred from `parameters`)
         :type genes: dict(str: float)
-        :param bool use_init_guess: If True, use initial guess from `est_objects`
+        :param bool use_init_guess: If True, use initial guess from
+                                    `est_objects`
         :param str ftype: Cost function type, 'RMSE' or 'NRMSE'
         """
 
@@ -50,7 +53,8 @@ class Individual(object):
         self.ftype = ftype
 
         # Adjust COM_POINTS
-        Individual.COM_POINTS = len(self.ideal) - 1 # CVODE solver complained without "-1"
+        # CVODE solver complains without "-1"
+        Individual.COM_POINTS = len(self.ideal) - 1
 
         # Deep copy EstPar instances to avoid sharing between individuals
         self.est_par_objects = copy.deepcopy(est_objects)
@@ -68,7 +72,8 @@ class Individual(object):
             self.genes = dict()
             for p in self.est_par_objects:
                 self.genes[p.name] = (p.value - p.lo) / (p.hi - p.lo)
-                assert self.genes[p.name] >= 0. and self.genes[p.name] <= 1., 'Initial guess outside the bounds'
+                assert self.genes[p.name] >= 0. and self.genes[p.name] <= 1., \
+                    'Initial guess outside the bounds'
         else:
             msg = 'Either genes or parameters have to be None'
             self.logger.error(msg)
@@ -83,7 +88,8 @@ class Individual(object):
 
     # Main methods ------------------------------
     def calculate(self):
-        # Just in case, individual result and error are cleared before simulation
+        # Just in case, individual result and error
+        # are cleared before simulation
         self.reset()
         # Important to set estimated parameters just before simulation,
         # because all individuals share the same model instance
@@ -91,9 +97,11 @@ class Individual(object):
         # Simulation
         self.result = self.model.simulate(Individual.COM_POINTS)
         # Make sure the returned result is not empty
-        assert self.result.empty is False, 'Empty result returned from simulation... (?)'
+        assert self.result.empty is False, \
+            'Empty result returned from simulation... (?)'
         # Calculate error
-        self.logger.debug("Calculating error ({}) in individual {}".format(self.ftype, self.genes))
+        self.logger.debug("Calculating error ({}) in individual {}"
+                          .format(self.ftype, self.genes))
         self.error = calc_err(self.result, self.ideal, ftype=self.ftype)
 
     def reset(self):
@@ -127,7 +135,8 @@ class Individual(object):
         return estimates
 
     def get_clone(self):
-        clone = Individual(self.est_par_objects, self.population, self.genes, ftype=self.ftype)
+        clone = Individual(self.est_par_objects, self.population,
+                           self.genes, ftype=self.ftype)
         return clone
 
     # Private methods ---------------------------
@@ -151,7 +160,7 @@ class Individual(object):
         """
         for par in self.est_par_objects:
             gene = genes[par.name]
-            par.value = par.lo + gene * (par.hi - par.lo)  # TODO: This is bad practice (but works here)
+            par.value = par.lo + gene * (par.hi - par.lo)
         return self.est_par_objects
 
     @staticmethod
@@ -189,5 +198,3 @@ class Individual(object):
         else:
             s += 'None'
         return s
-
-

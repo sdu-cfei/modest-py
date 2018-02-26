@@ -21,7 +21,6 @@ def delete_logs(directory=os.getcwd()):
     :param directory: string, path to the directory
     :return: None
     """
-    pardir = directory.split(os.sep)[-1]
     content = os.listdir(directory)
     for el in content:
         if el.split('.')[-1] == 'log':

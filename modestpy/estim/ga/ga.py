@@ -24,11 +24,11 @@ from modestpy.estim.estpar import EstPar
 from modestpy.estim.ga.population import Population
 
 
-
 class GA(object):
     """
     Genetic algorithm for FMU parameter estimation.
-    This is the main class of the package, containing the high-level algorithm and some result plotting methods.
+    This is the main class of the package, containing the high-level
+    algorithm and some result plotting methods.
     """
 
     # Ploting settings
@@ -42,38 +42,57 @@ class GA(object):
 
     def __init__(self, fmu_path, inp, known, est, ideal,
                  maxiter=100, tol=0.001, look_back=10,
-                 pop_size=40, uniformity=0.5, mut=0.05, mut_inc=0.3, trm_size=6, fmi_opts=None,
+                 pop_size=40, uniformity=0.5, mut=0.05, mut_inc=0.3,
+                 trm_size=6, fmi_opts=None,
                  ftype='RMSE', init_pop=None, lhs=False):
         """
         The population can be initialized in various ways:
-        - if `init_pop` is None, one individual is initialized using initial guess from `est`
-        - if `init_pop` contains less individuals than `pop_size`, then the rest is random
+        - if `init_pop` is None, one individual is initialized using
+          initial guess from `est`
+        - if `init_pop` contains less individuals than `pop_size`,
+          then the rest is random
         - if `init_pop` == `pop_size` then no random individuals are generated
 
         :param fmu_path: string, absolute path to the FMU
         :param inp: DataFrame, columns with input timeseries, index in seconds
         :param known: Dictionary, key=parameter_name, value=value
-        :param est: Dictionary, key=parameter_name, value=tuple (guess value, lo limit, hi limit), guess can be None
-        :param ideal: DataFrame, ideal solution to be compared with model outputs (variable names must match)
+        :param est: Dictionary, key=parameter_name, value=tuple
+                    (guess value, lo limit, hi limit), guess can be None
+        :param ideal: DataFrame, ideal solution to be compared with model
+                      outputs (variable names must match)
         :param maxiter: int, maximum number of generations
-        :param tol: float, when error does not decrease by more than ``tol`` for the last ``lookback``
-               generations, simulation stops
-        :param look_back: int, number of past generations to track the error decrease (see ``tol``)
+        :param tol: float, when error does not decrease by more than
+                    ``tol`` for the last ``lookback`` generations,
+                    simulation stops
+        :param look_back: int, number of past generations to track
+                          the error decrease (see ``tol``)
         :param pop_size: int, size of the population
-        :param uniformity: float (0.-1.), uniformity rate, affects gene exchange in the crossover operation
-        :param mut: float (0.-1.), mutation rate, specifies how often genes are to be mutated to a random value,
-               helps to reach the global optimum
-        :param mut_inc: float (0.-1.), increased mutation rate, specifies how often genes are to be mutated by a
-               small amount, used when the population diversity is low, helps to reach a local optimum
+        :param uniformity: float (0.-1.), uniformity rate, affects gene
+                           exchange in the crossover operation
+        :param mut: float (0.-1.), mutation rate, specifies how often genes
+                    are to be mutated to a random value,
+                    helps to reach the global optimum
+        :param mut_inc: float (0.-1.), increased mutation rate, specifies
+                        how often genes are to be mutated by a
+                        small amount, used when the population diversity
+                        is low, helps to reach a local optimum
         :param trm_size: int, size of the tournament
-        :param dict fmi_opts: Additional FMI options to be passed to the simulator (consult FMI specification)
-        :param string ftype: Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
-        :param DataFrame init_pop: Initial population. DataFrame with estimated parameters. If None, takes initial guess from est.
-        :param bool lhs: If True, init_pop and initial guess in est are neglected, and the population is chosen using Lating Hypercube Sampling.
+        :param dict fmi_opts: Additional FMI options to be passed
+                              to the simulator (consult FMI specification)
+        :param string ftype: Cost function type. Currently 'NRMSE'
+                             (advised for multi-objective estimation)
+                             or 'RMSE'.
+        :param DataFrame init_pop: Initial population. DataFrame with
+                                   estimated parameters. If None, takes
+                                   initial guess from est.
+        :param bool lhs: If True, init_pop and initial guess in est are
+                         neglected, and the population is chosen using
+                         Lating Hypercube Sampling.
         """
         self.logger = logging.getLogger(type(self).__name__)
 
-        assert inp.index.equals(ideal.index), 'inp and ideal indexes are not matching'
+        assert inp.index.equals(ideal.index), \
+            'inp and ideal indexes are not matching'
 
         # Evolution parameters
         algorithm.UNIFORM_RATE = uniformity
@@ -85,19 +104,26 @@ class GA(object):
         self.tol = tol
         self.look_back = look_back
 
-        # Results
-        self.fittest_errors = list()  # history of fittest errors from each generation (list of floats)
-        self.all_estim_and_err = pd.DataFrame()  # history of all estimates and errors from all individuals
+        # History of fittest errors from each generation (list of floats)
+        self.fittest_errors = list()
+
+        # History of all estimates and errors from all individuals
+        self.all_estim_and_err = pd.DataFrame()
 
         # Initiliaze EstPar objects
         estpars = list()
         for key in est:
-            estpars.append(EstPar(name=key, value=est[key][0], lo=est[key][1], hi=est[key][2]))
+            estpars.append(EstPar(name=key,
+                                  value=est[key][0],
+                                  lo=est[key][1],
+                                  hi=est[key][2]))
 
         # Put known into DataFrame
         known_df = pd.DataFrame()
         for key in known:
-            assert known[key] is not None, 'None is not allowed in known parameters (parameter {})'.format(key)
+            assert known[key] is not None, \
+                'None is not allowed in known parameters (parameter {})' \
+                .format(key)
             known_df[key] = [known[key]]
 
         # If LHS initialization, init_pop is disregarded
@@ -106,18 +132,22 @@ class GA(object):
                                     bounds=[(p.lo, p.hi) for p in estpars],
                                     samples=pop_size,
                                     criterion='c')
-        # Else, if no init_pop provided, generate one individual based on initial guess from `est`
+        # Else, if no init_pop provided, generate one individual
+        # based on initial guess from `est`
         elif init_pop is None:
             init_pop = pd.DataFrame({k: [est[k][0]] for k in est})
 
-        # Take individuals from init_pop and add random individuals until pop_size == len(init_pop)
-        # (the number of individuals in init_pop can be lower than the desired pop_size)
+        # Take individuals from init_pop and add random individuals
+        # until pop_size == len(init_pop)
+        # (the number of individuals in init_pop can be lower than
+        # the desired pop_size)
         if init_pop is not None:
             missing = pop_size - init_pop.index.size
             if missing > 0:
                 while missing > 0:
                     init_pop = init_pop.append({
-                        n: random.random() * (est[n][2] - est[n][1]) + est[n][1] for n in est
+                        n: random.random() * (est[n][2] - est[n][1])
+                        + est[n][1] for n in est
                     }, ignore_index=True)
                     missing -= 1
 
@@ -137,7 +167,8 @@ class GA(object):
 
     def estimate(self):
         """
-        Proxy method. Each algorithm from ``estim`` package should have this method
+        Proxy method. Each algorithm from ``estim``
+        package should have this method
 
         :return: DataFrame
         """
@@ -177,18 +208,22 @@ class GA(object):
                 err_now = self.fittest_errors[-1]
                 err_decrease = err_past - err_now
                 if err_decrease < self.tol:
-                    self.logger.info('Error decrease smaller than tol: {0:.5f} < {1:.5f}'
-                              .format(err_decrease, self.tol))
+                    self.logger.info(
+                        'Error decrease smaller than tol: {0:.5f} < {1:.5f}'
+                        .format(err_decrease, self.tol))
                     self.logger.info('Stopping evolution...')
                     err_decreasing = False
                 else:
-                    self.logger.info("'Look back' error decrease = {0:.5f} > tol = {1:.5f}\n"
-                              .format(err_decrease, self.tol))
+                    self.logger.info(
+                        "'Look back' error decrease = {0:.5f} > "
+                        "tol = {1:.5f}\n"
+                        .format(err_decrease, self.tol))
             # Increase generation count
             gen_count += 1
 
         # Print summary
-        self.logger.info('FITTEST PARAMETERS:\n{}'.format(self.get_estimates()))
+        self.logger.info('FITTEST PARAMETERS:\n{}'
+                         .format(self.get_estimates()))
 
         # Return
         return self.pop.get_fittest()
@@ -279,7 +314,8 @@ class GA(object):
 
     def plot_comparison(self, file=None):
         """
-        Creates a plot with a comparison of simulation results (fittest individual) vs. measured result.
+        Creates a plot with a comparison of simulation results
+        (fittest individual) vs. measured result.
 
         :param file: string, path to the file. If ``None``, file not created.
         :return: Axes
@@ -311,8 +347,9 @@ class GA(object):
 
     def plot_pop_evo(self, file=None):
         """
-        Creates a plot with the evolution of all parameters as a scatter plot. Can be interpreted as the
-        *population diversity*. The color of the points is darker for higher accuracy.
+        Creates a plot with the evolution of all parameters as a scatter plot.
+        Can be interpreted as the *population diversity*.
+        The color of the points is darker for higher accuracy.
 
         :param file: string, path to the file. If ``None``, file not created.
         :return: Axes
@@ -333,10 +370,17 @@ class GA(object):
 
         for v in pars:
             ax = axes[i]
-            scatter = ax.scatter(x=estimates[GA.ITER], y=estimates[v], c=estimates[GA.ERR],
-                                 cmap='viridis', edgecolors='none', vmin=last_err, vmax=first_err, alpha=0.25)
+            scatter = ax.scatter(x=estimates[GA.ITER],
+                                 y=estimates[v],
+                                 c=estimates[GA.ERR],
+                                 cmap='viridis',
+                                 edgecolors='none',
+                                 vmin=last_err,
+                                 vmax=first_err,
+                                 alpha=0.25)
             ax.set_xlim([0, estimates[GA.ITER].max() + 1])
-            ax.text(x=1.05, y=0.5, s=v, transform=ax.transAxes, fontweight='bold',
+            ax.text(x=1.05, y=0.5, s=v,
+                    transform=ax.transAxes, fontweight='bold',
                     horizontalalignment='center', verticalalignment='center')
             i += 1
         axes[-1].set_xlabel('Generation')
@@ -354,7 +398,8 @@ class GA(object):
         # Save estimates
         generation_estimates = self.pop.get_all_estimates_and_errors()
         generation_estimates[GA.ITER] = gen_count
-        self.all_estim_and_err = pd.concat([self.all_estim_and_err, generation_estimates])
+        self.all_estim_and_err = pd.concat([self.all_estim_and_err,
+                                           generation_estimates])
 
         # Append error lists
         self.fittest_errors.append(self.pop.get_fittest_error())
@@ -369,7 +414,10 @@ class GA(object):
         df = self.all_estim_and_err.copy()
         df.index = df[GA.ITER]
         # Select individuals with minimum error from the chosen individuals
-        fittest = df.loc[df[GA.ERR] == df.loc[generation][GA.ERR].min()].loc[generation]
+        fittest = (
+            df.loc[df[GA.ERR] == df.loc[generation][GA.ERR].min()]
+            .loc[generation]
+        )
         # Check how many individuals found
         if isinstance(fittest, pd.DataFrame):
             # More than 1 found...
@@ -398,18 +446,20 @@ class GA(object):
 
         :param par_names: List of parameter names
         :type par_names: list(str)
-        :param bounds: List of lower/upper bounds, must be of the same length as par_names
+        :param bounds: List of lower/upper bounds,
+                       must be of the same length as par_names
         :type bounds: list(tuple(float, float))
         :param int samples: Number of samples
-        :param str criterion: A string that tells lhs how to sample the points. See docs for pyDOE.lhs().
+        :param str criterion: A string that tells lhs how to sample the
+                              points. See docs for pyDOE.lhs().
         :return: DataFrame
         """
-        lhs = doe.lhs(len(par_names), samples=samples, criterion='c');
+        lhs = doe.lhs(len(par_names), samples=samples, criterion='c')
         par_vals = {}
         for par, i in zip(par_names, range(len(par_names))):
             par_min = bounds[i][0]
             par_max = bounds[i][1]
-            par_vals[par] = lhs[:,i] * (par_max - par_min) + par_min
+            par_vals[par] = lhs[:, i] * (par_max - par_min) + par_min
 
         # Convert dict(str: np.ndarray) to pd.DataFrame
         par_df = pd.DataFrame(columns=par_names, index=np.arange(samples))

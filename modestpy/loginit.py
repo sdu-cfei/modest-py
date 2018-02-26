@@ -11,7 +11,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import os
 
 def config_logger(filename='modestpy.log', level='DEBUG'):
     """
@@ -23,4 +22,5 @@ def config_logger(filename='modestpy.log', level='DEBUG'):
     import logging
 
     logging.basicConfig(filename=filename, filemode='w', level=level,
-                        format='[%(asctime)s][%(name)s][%(levelname)s] %(message)s')
+                        format='[%(asctime)s][%(name)s][%(levelname)s] '
+                               '%(message)s')

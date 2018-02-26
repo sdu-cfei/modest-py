@@ -37,30 +37,44 @@ class PS(object):
     ITER = '_iter_'
     ERR = '_error_'
 
-    COM_POINTS = 500  # Default number of communication points, should be adjusted to the number of samples
-    STEP_CEILING = 1.00  # Maximum allowed relative step
-    STEP_INC = 1.0  # Step is multiplied by this factor if solution improves
-    STEP_DEC = 1.5  # Step is divided by this factor if solution does not improve
+    # Default number of communication points, should be adjusted
+    # to the number of samples
+    COM_POINTS = 500
 
-    def __init__(self, fmu_path, inp, known, est, ideal, rel_step=0.01, tol=0.0001, try_lim=30, maxiter=300,
+    # Maximum allowed relative step
+    STEP_CEILING = 1.00
+
+    # Step is multiplied by this factor if solution improves
+    STEP_INC = 1.0
+
+    # Step is divided by this factor if solution does not improve
+    STEP_DEC = 1.5
+
+    def __init__(self, fmu_path, inp, known, est, ideal, rel_step=0.01,
+                 tol=0.0001, try_lim=30, maxiter=300,
                  fmi_opts=None, ftype='RMSE'):
         """
         :param fmu_path: string, absolute path to the FMU
         :param inp: DataFrame, columns with input timeseries, index in seconds
         :param known: Dictionary, key=parameter_name, value=value
-        :param est: Dictionary, key=parameter_name, value=tuple (guess value, lo limit, hi limit), guess can be None
-        :param ideal: DataFrame, ideal solution to be compared with model outputs (variable names must match)
+        :param est: Dictionary, key=parameter_name, value=tuple
+                    (guess value, lo limit, hi limit), guess can be None
+        :param ideal: DataFrame, ideal solution to be compared
+                      with model outputs (variable names must match)
         :param rel_step: float, initial relative step when modifying parameters
-        :param tol: float, stopping criterion, when rel_step becomes smaller than tol algorithm stops
+        :param tol: float, stopping criterion, when rel_step
+                    becomes smaller than tol algorithm stops
         :param try_lim: integer, maximum number of tries to decrease rel_step
         :param maxiter: integer, maximum number of iterations
-        :param dict fmi_opts: Additional FMI options to be passed to the simulator (consult FMI specification)
-        :param string ftype: Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
+        :param dict fmi_opts: Additional FMI options
+        :param string ftype: Cost function type. Currently 'NRMSE' or 'RMSE'
         """
         self.logger = logging.getLogger(type(self).__name__)
 
-        assert inp.index.equals(ideal.index), 'inp and ideal indexes are not matching'
-        assert rel_step > tol, 'Relative step must not be smaller than the stop criterion'
+        assert inp.index.equals(ideal.index), \
+            'inp and ideal indexes are not matching'
+        assert rel_step > tol, \
+            'Relative step must not be smaller than the stop criterion'
 
         # Cost function type
         self.ftype = ftype
@@ -69,7 +83,8 @@ class PS(object):
         self.ideal = ideal
 
         # Adjust COM_POINTS
-        PS.COM_POINTS = len(self.ideal) - 1  # CVODE solver complained without "-1"
+        # CVODE solver complains without "-1"
+        PS.COM_POINTS = len(self.ideal) - 1
 
         # Inputs
         self.inputs = inp
@@ -77,7 +92,9 @@ class PS(object):
         # Known parameters to DataFrame
         known_df = pd.DataFrame()
         for key in known:
-            assert known[key] is not None, 'None is not allowed in known parameters (parameter {})'.format(key)
+            assert known[key] is not None, \
+                'None is not allowed in known parameters ' \
+                '(parameter {})'.format(key)
             known_df[key] = [known[key]]
 
         # est: dictionary to a list with EstPar instances
@@ -94,12 +111,14 @@ class PS(object):
 
         # Model
         output_names = [var for var in ideal]
-        self.model = PS._get_model_instance(fmu_path, inp, known_df, est, output_names, fmi_opts)
+        self.model = PS._get_model_instance(fmu_path, inp, known_df,
+                                            est, output_names, fmi_opts)
 
         # Initial value for relative parameter step (0-1)
         self.rel_step = rel_step
 
-        # Min. allowed relative parameter change (0-1) - PS stops when self.max_change < tol
+        # Min. allowed relative parameter change (0-1)
+        # PS stops when self.max_change < tol
         self.tol = tol
 
         # Max. number of iterations without moving to a new point
@@ -112,11 +131,14 @@ class PS(object):
         self.summary = pd.DataFrame()
         self.res = pd.DataFrame()
 
-        self.logger.info('Pattern Search initialized... =========================')
+        self.logger.info(
+            'Pattern Search initialized... ========================='
+            )
 
     def estimate(self):
         """
-        Proxy method. Each algorithm from ``estim`` package should have this method
+        Proxy method. Each algorithm from ``estim`` package should
+        have this method.
 
         :return: DataFrame
         """
@@ -159,13 +181,13 @@ class PS(object):
 
     def plot_parameter_evo(self, file=None):
         par_df = self.summary.drop([PS.METHOD], axis=1)
-        par_df = par_df.rename(columns={x: 'error' if x == PS.ERR else x for x in par_df.columns})
+        par_df = par_df.rename(columns={
+            x: 'error' if x == PS.ERR else x for x in par_df.columns
+            })
 
         # Get axes
         axes = par_df.plot(subplots=True)
         fig = figures.get_figure(axes)
-        ## Extend y lim
-        #axes = _extend_ylim(axes, par_df)  # Not needed?
         # x label
         axes[-1].set_xlabel('Iteration')
         # ylim for error
@@ -191,7 +213,9 @@ class PS(object):
 
         initial_result = self.model.simulate(com_points=PS.COM_POINTS)
         self.res = initial_result
-        initial_error = calc_err(initial_result, self.ideal, ftype=self.ftype)['tot']
+        initial_error = calc_err(initial_result,
+                                 self.ideal,
+                                 ftype=self.ftype)['tot']
         best_err = initial_error
 
         # First line of the summary
@@ -203,9 +227,13 @@ class PS(object):
         iteration = 0
 
         # Search loop
-        while (n_try < self.try_lim) and (iteration < self.max_iter) and (self.rel_step > self.tol):
+        while ((n_try < self.try_lim)
+                and (iteration < self.max_iter)
+                and (self.rel_step > self.tol)):
             iteration += 1
-            self.logger.info('Iteration no. {} ========================='.format(iteration))
+            self.logger.info('Iteration no. {} '
+                             '========================='
+                             .format(iteration))
             improved = False
 
             # Iterate over all parameters
@@ -223,8 +251,15 @@ class PS(object):
                     if err < best_err:
                         self.res = result
                         best_err = err
-                        # best_estimates = PS._replace_par(best_estimates, new_par)  # Shortest path search
-                        best_estimates = PS._replace_par(current_estimates, new_par)  # Orthogonal search
+                        
+                        # Shortest path search
+                        # best_estimates = PS._replace_par(best_estimates,
+                        #                                  new_par)
+
+                        # Orthogonal search
+                        best_estimates = PS._replace_par(current_estimates,
+                                                         new_par)
+
                         improved = True
 
                     # Reset model parameters
@@ -244,7 +279,8 @@ class PS(object):
                 self.rel_step /= PS.STEP_DEC
                 self.logger.info('Solution did not improve...')
                 self.logger.debug('Step reduced to {}'.format(self.rel_step))
-                self.logger.debug('Tries left: {}'.format(self.try_lim - n_try))
+                self.logger.debug('Tries left: {}'
+                                  .format(self.try_lim - n_try))
             else:
                 # Solution improved, reset n_try counter
                 n_try = 0
@@ -254,7 +290,8 @@ class PS(object):
                 self.logger.info('Solution improved')
                 self.logger.debug('Current step is {}'.format(self.rel_step))
                 self.logger.info('New error: {}'.format(best_err))
-                self.logger.debug('New estimates:\n{}'.format(estpars_2_df(current_estimates)))
+                self.logger.debug('New estimates:\n{}'
+                                  .format(estpars_2_df(current_estimates)))
 
         # Reorder columns in summary
         s_cols = summary.columns.tolist()
@@ -303,7 +340,8 @@ class PS(object):
 
     def _get_new_estpar(self, estpar, rel_step, sign):
         """
-        Returns new ``EstPar`` object with modified value, according to ``sign`` and ``max_change``.
+        Returns new ``EstPar`` object with modified value,
+        according to ``sign`` and ``max_change``.
 
         :param estpar: EstPar
         :param rel_step: float, (0-1)
@@ -328,7 +366,8 @@ class PS(object):
         return EstPar(estpar.name, estpar.lo, estpar.hi, new_value)
 
     @staticmethod
-    def _get_model_instance(fmu_path, inputs, known_pars, est, output_names, fmi_opts=None):
+    def _get_model_instance(fmu_path, inputs, known_pars, est,
+                            output_names, fmi_opts=None):
         model = Model(fmu_path, fmi_opts)
         model.set_input(inputs)
         model.set_param(known_pars)
@@ -339,7 +378,8 @@ class PS(object):
     @staticmethod
     def _replace_par(estpar_list, estpar):
         """
-        Puts ``estpar`` in ``estpar_list``, replacing object with the same ``name``.
+        Puts ``estpar`` in ``estpar_list``, replacing object
+        with the same ``name``.
 
         :param estpar_list: list of EstPar objects
         :param estpar: EstPar

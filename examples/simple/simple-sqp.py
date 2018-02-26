@@ -14,7 +14,6 @@ from __future__ import print_function
 import json
 import os
 import pandas as pd
-from modestpy import Estimation
 from modestpy.utilities.sysarch import get_sys_arch
 from modestpy.estim.sqp.sqp import SQP
 import matplotlib.pyplot as plt
@@ -35,8 +34,10 @@ if __name__ == "__main__":
     fmu_path = os.path.join('examples', 'simple', 'resources', fmu_file)
     inp_path = os.path.join('examples', 'simple', 'resources', 'inputs.csv')
     ideal_path = os.path.join('examples', 'simple', 'resources', 'result.csv')
-    est_path = os.path.join('examples', 'simple', 'resources', 'est_validate_hj.json')
-    known_path = os.path.join('examples', 'simple', 'resources', 'known_validate_hj.json')
+    est_path = os.path.join('examples', 'simple', 'resources',
+                            'est_validate_hj.json')
+    known_path = os.path.join('examples', 'simple', 'resources',
+                              'known_validate_hj.json')
 
     # Working directory
     workdir = os.path.join('examples', 'simple', 'workdir')
@@ -62,8 +63,8 @@ if __name__ == "__main__":
     # session = Estimation(workdir, fmu_path, inp, known, est, ideal,
     #                      lp_n=3, lp_len=25000, lp_frame=(0, 25000),
     #                      vp = (150000, 215940), ic_param={'Tstart': 'T'},
-    #                      ga_pop=20, ga_iter=20, ps_iter=30, ga_tol=0.001, ps_tol=0.0001,
-    #                      seed=1, ftype='RMSE', lhs=True)  # seed is used to make the results repetitive in this example
+    #                      ga_pop=20, ga_iter=20, ps_iter=30, ga_tol=0.001,
+    #                      ps_tol=0.0001, seed=1, ftype='RMSE', lhs=True)
 
     # estimates = session.estimate()
     # err, res = session.validate()

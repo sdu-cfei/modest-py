@@ -19,10 +19,10 @@ UNIFORM_RATE = 0.5  # affects crossover
 MUT_RATE = 0.10  # standard mutation rate
 MUT_RATE_INC = 0.33  # increased mutation rate when population diversity is low
 INC_MUT_PROP = 0.33  # proportion of population undergoing increased mutation
-MAX_CHANGE = 10  # [%] maximum change of gene in increased mutation (change in parameter depends on lo/hi limits)
+MAX_CHANGE = 10  # [%] maximum change of gene in increased mutation
 TOURNAMENT_SIZE = 10  # number of individuals in the tournament
-DIVERSITY_LIM = 0.33  # if DIVERSITY_LIM * 100% of individuals is the same, increased mutation is turned on
-ELITISM = True  # if True, the fittest individuals always goes to the next generation
+DIVERSITY_LIM = 0.33  # controls increased mutation activation
+ELITISM = True  # if True, saves the fittest individual
 
 # Printing on the screen
 VERBOSE = True
@@ -66,7 +66,9 @@ def evolve(pop):
         for i in range(elite_offset, new_pop.size()):
             if random.random() < INC_MUT_PROP:
                 # Increased mutation rate, slightly changed values
-                slight_mutation(new_pop.individuals[i], MUT_RATE_INC, MAX_CHANGE)
+                slight_mutation(new_pop.individuals[i],
+                                MUT_RATE_INC,
+                                MAX_CHANGE)
             else:
                 # Increased mutation rate, completely random new values
                 mutation(new_pop.individuals[i], MUT_RATE_INC)
@@ -84,11 +86,13 @@ def evolve(pop):
 
 def is_population_diverse(pop, diversity_lim):
     """
-    Check if the population is diverse. Returns true if the share of identical individuals
-    in the population is higher than ``diversity_lim``.
+    Check if the population is diverse. Returns true if the share
+    of identical individuals in the population is higher than
+    ``diversity_lim``.
 
     :param pop: Population
-    :param diversity_lim: float (0-1), minimum share of identical individuals defining non-diverse population
+    :param diversity_lim: float (0-1), minimum share of identical individuals
+                          defining non-diverse population
     :return: boolean
     """
     identical_count = 0
@@ -114,7 +118,6 @@ def is_population_diverse(pop, diversity_lim):
 def crossover(ind1, ind2, uniformity):
     """
     Crossover operation. The child takes genes from both parents.
-    If ``uniformity`` =0.5 then on average the child's gene pool is composed from 50%/50% of ``ind1``/``ind2``.
 
     :param ind1: Individual (parent 1)
     :param ind2: Individual (parent 2)
@@ -158,7 +161,8 @@ def slight_mutation(ind, mut_rate, max_change):
 
     :param ind: Individual
     :param mut_rate: float, mutation rate
-    :param max_change: float (0-100), maximum allowed percentage change of the gene
+    :param max_change: float (0-100), maximum allowed percentage
+                       change of genes
     :return: None
     """
     for g_name in ind.genes:
@@ -174,8 +178,8 @@ def slight_mutation(ind, mut_rate, max_change):
 
 def tournament_selection(pop, tournament_size):
     # Create tournament population
-    t_pop = Population(pop.fmu_path, tournament_size, pop.inputs, pop.known_pars,
-                       pop.est_obj, pop.ideal, init=False)
+    t_pop = Population(pop.fmu_path, tournament_size, pop.inputs,
+                       pop.known_pars, pop.est_obj, pop.ideal, init=False)
     # For each place in the tournament get a random individual
     for i in range(tournament_size):
         rand_index = random.randint(0, pop.size()-1)

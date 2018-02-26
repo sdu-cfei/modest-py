@@ -38,11 +38,15 @@ class TestGA(unittest.TestCase):
         parent = os.path.dirname(__file__)
 
         # Resources
-        self.fmu_path = os.path.join(parent, 'resources', 'simple2R1C', 'Simple2R1C_{}.fmu'.format(platform))
-        inp_path = os.path.join(parent, 'resources', 'simple2R1C', 'inputs.csv')
-        ideal_path = os.path.join(parent, 'resources', 'simple2R1C', 'result.csv')
+        self.fmu_path = os.path.join(parent, 'resources', 'simple2R1C',
+                                     'Simple2R1C_{}.fmu'.format(platform))
+        inp_path = os.path.join(parent, 'resources', 'simple2R1C',
+                                'inputs.csv')
+        ideal_path = os.path.join(parent, 'resources', 'simple2R1C',
+                                  'result.csv')
         est_path = os.path.join(parent, 'resources', 'simple2R1C', 'est.json')
-        known_path = os.path.join(parent, 'resources', 'simple2R1C', 'known.json')
+        known_path = os.path.join(parent, 'resources', 'simple2R1C',
+                                  'known.json')
 
         self.inp = pd.read_csv(inp_path).set_index('time')
         self.ideal = pd.read_csv(ideal_path).set_index('time')
@@ -63,12 +67,12 @@ class TestGA(unittest.TestCase):
     def test_ga(self):
         random.seed(1)
         ga = GA(self.fmu_path, self.inp, self.known,
-                     self.est, self.ideal, maxiter=self.gen,
-                     pop_size=self.pop, trm_size=self.trm)
+                self.est, self.ideal, maxiter=self.gen,
+                pop_size=self.pop, trm_size=self.trm)
         self.estimates = ga.estimate()
 
         # Generate plot
-        plot_path = file=os.path.join(self.tmpdir, 'popevo.png')
+        plot_path = os.path.join(self.tmpdir, 'popevo.png')
         ga.plot_pop_evo(plot_path)
 
         # Make sure plot is created
@@ -83,11 +87,13 @@ class TestGA(unittest.TestCase):
 
     def test_init_pop(self):
         random.seed(1)
-        init_pop = pd.DataFrame({'R1': [0.1, 0.2, 0.3], 'R2': [0.15, 0.25, 0.35], 'C': [1000., 1100., 1200.]})
+        init_pop = pd.DataFrame({'R1': [0.1, 0.2, 0.3],
+                                 'R2': [0.15, 0.25, 0.35],
+                                 'C': [1000., 1100., 1200.]})
         pop_size = 3
         ga = GA(self.fmu_path, self.inp, self.known,
-                     self.est, self.ideal, maxiter=self.gen,
-                     pop_size=pop_size, trm_size=self.trm, init_pop=init_pop)
+                self.est, self.ideal, maxiter=self.gen,
+                pop_size=pop_size, trm_size=self.trm, init_pop=init_pop)
         i1 = ga.pop.individuals[0]
         i2 = ga.pop.individuals[1]
         i3 = ga.pop.individuals[2]
@@ -98,22 +104,24 @@ class TestGA(unittest.TestCase):
         C_lo = self.est['C'][1]
         C_hi = self.est['C'][2]
         assert i1.genes == {'C':  (1000. - C_lo) / (C_hi - C_lo),
-                            'R1': (0.1 - R1_lo)  / (R1_hi - R1_lo),
+                            'R1': (0.1 - R1_lo) / (R1_hi - R1_lo),
                             'R2': (0.15 - R2_lo) / (R2_hi - R2_lo)}
         assert i2.genes == {'C':  (1100. - C_lo) / (C_hi - C_lo),
-                            'R1': (0.2 - R1_lo)  / (R1_hi - R1_lo),
+                            'R1': (0.2 - R1_lo) / (R1_hi - R1_lo),
                             'R2': (0.25 - R2_lo) / (R2_hi - R2_lo)}
         assert i3.genes == {'C':  (1200. - C_lo) / (C_hi - C_lo),
-                            'R1': (0.3 - R1_lo)  / (R1_hi - R1_lo),
+                            'R1': (0.3 - R1_lo) / (R1_hi - R1_lo),
                             'R2': (0.35 - R2_lo) / (R2_hi - R2_lo)}
 
     def test_lhs(self):
         """
-        Tests if populations of two instances with lhs=True and the same seed are identical.
+        Tests if populations of two instances with lhs=True
+        and the same seed are identical.
         """
         random.seed(1)
         np.random.seed(1)
-        ga = GA(self.fmu_path, self.inp, self.known, self.est, self.ideal, maxiter=self.gen, lhs=True)
+        ga = GA(self.fmu_path, self.inp, self.known, self.est, self.ideal,
+                maxiter=self.gen, lhs=True)
         indiv = ga.pop.individuals
         par1 = list()
         for i in indiv:
@@ -121,7 +129,8 @@ class TestGA(unittest.TestCase):
 
         random.seed(1)
         np.random.seed(1)
-        ga = GA(self.fmu_path, self.inp, self.known, self.est, self.ideal, maxiter=self.gen, lhs=True)
+        ga = GA(self.fmu_path, self.inp, self.known, self.est, self.ideal,
+                maxiter=self.gen, lhs=True)
         indiv = ga.pop.individuals
         par2 = list()
         for i in indiv:

@@ -13,7 +13,6 @@ from __future__ import print_function
 
 import logging
 from modestpy.fmi.model import Model as FmiModel
-import pandas as pd
 
 # PyFmi log level (controls the amount of information saved to the log file)
 # (watch out for the file writing overhead)
@@ -25,8 +24,6 @@ FMI_INFO = 4
 FMI_VERBOSE = 5
 FMI_DEBUG = 6
 FMI_ALL = 7
-
-
 
 # Printing on the screen
 VERBOSE = True
@@ -53,7 +50,7 @@ class Model(object):
         """ Sets inputs.
 
         :param df: Dataframe, time given in seconds
-        :param exclude: list of strings, names of columns to be excluded (if any)
+        :param exclude: list of strings, names of columns to be excluded
         :return: None
         """
         self.model.inputs_from_df(df, exclude)

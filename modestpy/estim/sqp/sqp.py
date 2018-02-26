@@ -14,52 +14,64 @@ from __future__ import print_function
 import logging
 import pandas as pd
 import numpy as np
-import copy
-import os
 from random import random
 from scipy.optimize import minimize
-from scipy.optimize import fmin_slsqp
 from modestpy.estim.model import Model
 from modestpy.estim.estpar import EstPar
 from modestpy.estim.estpar import estpars_2_df
 from modestpy.estim.error import calc_err
-import modestpy.estim.plots as plots
 
 
 class SQP(object):
     """
-    SQP (Sequential Quadratic Programmic) algorithm for FMU parameter estimation. Based on SLSQP solver from SciPy.
+    SQP (Sequential Quadratic Programmic) algorithm for FMU parameter
+    estimation. Based on SLSQP solver from SciPy.
     """
-    COM_POINTS = 500  # Default number of communication points, should be adjusted to the number of samples
-    TMP_SUMMARY = pd.DataFrame()  # Summary placeholder
+    # Default number of communication points, should be adjusted
+    # to the number of samples
+    COM_POINTS = 500
+
+    # Summary placeholder
+    TMP_SUMMARY = pd.DataFrame()
 
     NAME = 'SQP'
     METHOD = '_method_'
     ITER = '_iter_'
     ERR = '_error_'
 
-    def __init__(self, fmu_path, inp, known, est, ideal, scipy_opts={}, fmi_opts=None, ftype='RMSE'):
+    def __init__(self, fmu_path, inp, known, est, ideal, scipy_opts={},
+                 fmi_opts=None, ftype='RMSE'):
         """
         :param fmu_path: string, absolute path to the FMU
         :param inp: DataFrame, columns with input timeseries, index in seconds
         :param known: Dictionary, key=parameter_name, value=value
-        :param est: Dictionary, key=parameter_name, value=tuple (guess value, lo limit, hi limit), guess can be None
-        :param ideal: DataFrame, ideal solution to be compared with model outputs (variable names must match)
-        :param dict scipy_opts: Additional options passed to the SLSQP solver in SciPy
-        :param dict fmi_opts: Additional FMI options to be passed to the simulator (consult FMI specification)
-        :param string ftype: Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
+        :param est: Dictionary, key=parameter_name, value=tuple
+                    (guess value, lo limit, hi limit), guess can be None
+        :param ideal: DataFrame, ideal solution to be compared with model
+                      outputs (variable names must match)
+        :param dict scipy_opts: Additional options passed to the SLSQP solver
+                                in SciPy
+        :param dict fmi_opts: Additional FMI options to be passed to
+                              the simulator (consult FMI specification)
+        :param string ftype: Cost function type. Currently 'NRMSE' (advised
+                             for multi-objective estimation) or 'RMSE'.
         """
         self.logger = logging.getLogger(type(self).__name__)
 
-        assert inp.index.equals(ideal.index), 'inp and ideal indexes are not matching'
+        assert inp.index.equals(ideal.index), \
+            'inp and ideal indexes are not matching'
 
         # Warning regarding limited functionality of SQP
-        warning_msg = "SQP solver chosen. SQP is not well tested yet and has a limited functionality. " + \
-                      "While the final solution should be OK, the intermediate results obtained from SciPy seem to be incorrect... "
+        warning_msg = "SQP solver chosen. SQP is not well tested yet and " \
+                      "has a limited functionality. " \
+                      "While the final solution should be OK, the " \
+                      "intermediate results obtained from SciPy seem to " \
+                      "be incorrect... "
         self.logger.warning(warning_msg)
 
         # SLSQP soler options
-        self.scipy_opts = {'disp': True, 'iprint': 2, 'maxiter': 150, 'full_output': True}
+        self.scipy_opts = {'disp': True, 'iprint': 2, 'maxiter': 150,
+                           'full_output': True}
         if len(scipy_opts) > 0:
             for key in scipy_opts:
                 self.scipy_opts[key] = scipy_opts[key]
@@ -71,7 +83,8 @@ class SQP(object):
         self.ideal = ideal
 
         # Adjust COM_POINTS
-        SQP.COM_POINTS = len(self.ideal) - 1  # CVODE solver complained without "-1"
+        # CVODE solver complains without "-1"
+        SQP.COM_POINTS = len(self.ideal) - 1
 
         # Inputs
         self.inputs = inp
@@ -79,7 +92,9 @@ class SQP(object):
         # Known parameters to DataFrame
         known_df = pd.DataFrame()
         for key in known:
-            assert known[key] is not None, 'None is not allowed in known parameters (parameter {})'.format(key)
+            assert known[key] is not None, \
+                'None is not allowed in known parameters (parameter {})' \
+                .format(key)
             known_df[key] = [known[key]]
 
         # est: dictionary to a list with EstPar instances
@@ -96,7 +111,8 @@ class SQP(object):
 
         # Model
         output_names = [var for var in ideal]
-        self.model = SQP._get_model_instance(fmu_path, inp, known_df, est, output_names, fmi_opts)
+        self.model = SQP._get_model_instance(fmu_path, inp, known_df, est,
+                                             output_names, fmi_opts)
 
         # Outputs
         self.summary = pd.DataFrame()
@@ -117,7 +133,8 @@ class SQP(object):
         # Initial error
         initial_result = self.model.simulate(com_points=SQP.COM_POINTS)
         self.res = initial_result
-        initial_error = calc_err(initial_result, self.ideal, ftype=self.ftype)['tot']
+        initial_error = calc_err(initial_result, self.ideal,
+                                 ftype=self.ftype)['tot']
         self.best_err = initial_error
 
         def objective(x):
@@ -140,24 +157,36 @@ class SQP(object):
 
             return err
 
-        x0 = [SQP.scale(x.value, x.lo, x.hi) for x in self.est]  # Initial guess
-        b = [(0, 1) for x in self.est]  # Parameter bounds
+        # Initial guess
+        x0 = [SQP.scale(x.value, x.lo, x.hi) for x in self.est]
+
+        # Parameter bounds
+        b = [(0, 1) for x in self.est]
 
         out = minimize(objective, x0, bounds=b, constraints=[],
                        method='SLSQP', callback=SQP._callback,
                        options=self.scipy_opts)
 
-        outx = [SQP.rescale(x, ep.lo, ep.hi) for x, ep in zip(out.x.tolist(), self.est)]
+        outx = [SQP.rescale(x, ep.lo, ep.hi) for x, ep in
+                zip(out.x.tolist(), self.est)]
 
         # Update summary
         self.summary = SQP.TMP_SUMMARY.copy()
         self.summary.index += 1  # Adjust iteration counter
         self.summary.index.name = SQP.ITER  # Rename index
-        self.summary[SQP.ERR] = map(objective, self.summary[[x.name for x in self.est]].values)  # Update error
+
+        # Update error
+        self.summary[SQP.ERR] = map(objective,
+                                    self.summary[[x.name for x
+                                                  in self.est]].values)
+
         for ep in self.est:
             name = ep.name
-            self.summary[name] = map(lambda x: SQP.rescale(x, ep.lo, ep.hi), self.summary[name])  # Rescale
-        SQP.TMP_SUMMARY = pd.DataFrame(columns=self.summary_cols) # Reset temp placeholder
+            self.summary[name] = map(lambda x: SQP.rescale(x, ep.lo, ep.hi),
+                                     self.summary[name])  # Rescale
+
+        # Reset temp placeholder
+        SQP.TMP_SUMMARY = pd.DataFrame(columns=self.summary_cols)
 
         # Return DataFrame with estimates
         par_vec = outx
@@ -214,7 +243,8 @@ class SQP(object):
         SQP.TMP_SUMMARY = SQP.TMP_SUMMARY.append(row, ignore_index=True)
 
     @staticmethod
-    def _get_model_instance(fmu_path, inputs, known_pars, est, output_names, fmi_opts=None):
+    def _get_model_instance(fmu_path, inputs, known_pars, est, output_names,
+                            fmi_opts=None):
         model = Model(fmu_path, fmi_opts)
         model.set_input(inputs)
         model.set_param(known_pars)

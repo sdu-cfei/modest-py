@@ -26,7 +26,8 @@ class EstPar:
         self.hi = hi  # Upper limit
 
     def __str__(self):
-        s = self.name + '={:.4f}'.format(self.value) + ' (' + str(self.lo) + '-' + str(self.hi) + ')'
+        s = self.name + '={:.4f}'.format(self.value) + \
+             ' (' + str(self.lo) + '-' + str(self.hi) + ')'
         return s
 
 

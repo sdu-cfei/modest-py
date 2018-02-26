@@ -33,8 +33,10 @@ if __name__ == "__main__":
     fmu_path = os.path.join('examples', 'simple', 'resources', fmu_file)
     inp_path = os.path.join('examples', 'simple', 'resources', 'inputs.csv')
     ideal_path = os.path.join('examples', 'simple', 'resources', 'result.csv')
-    est_path = os.path.join('examples', 'simple', 'resources', 'est_validate_hj.json')
-    known_path = os.path.join('examples', 'simple', 'resources', 'known_validate_hj.json')
+    est_path = os.path.join('examples', 'simple', 'resources',
+                            'est_validate_hj.json')
+    known_path = os.path.join('examples', 'simple', 'resources',
+                              'known_validate_hj.json')
 
     # Working directory
     workdir = os.path.join('examples', 'simple', 'workdir')
@@ -59,10 +61,10 @@ if __name__ == "__main__":
     # MODEL IDENTIFICATION ==========================================
     session = Estimation(workdir, fmu_path, inp, known, est, ideal,
                          lp_n=2, lp_len=25000, lp_frame=(0, 25000),
-                         vp = (150000, 215940), ic_param={'Tstart': 'T'},
+                         vp=(150000, 215940), ic_param={'Tstart': 'T'},
                          methods=('PS', ),
                          ps_opts={'maxiter': 300, 'tol': 1e-6},
-                         ftype='RMSE', seed=1)  # seed is used to make the results repetitive in this example
+                         ftype='RMSE', seed=1)
 
     estimates = session.estimate()
     err, res = session.validate()

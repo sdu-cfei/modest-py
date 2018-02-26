@@ -20,8 +20,8 @@ import copy
 
 class Population(object):
 
-    def __init__(self, fmu_path, pop_size, inp, known, est, ideal, init=True, opts=None,
-                 ftype='NRMSE', init_pop=None):
+    def __init__(self, fmu_path, pop_size, inp, known, est, ideal,
+                 init=True, opts=None, ftype='NRMSE', init_pop=None):
         """
         :param fmu_path: string
         :param pop_size: int
@@ -30,9 +30,10 @@ class Population(object):
         :param est: dict
         :param ideal: DataFrame
         :param init: bool
-        :param dict opts: Additional FMI options to be passed to the simulator (consult FMI specification),
-        :param string ftype: Cost function type. Currently 'NRMSE' (advised for multi-objective estimation) or 'RMSE'.
-        :param DataFrame init_pop: Initial population, DataFrame with initial guesses for estimated parameters
+        :param dict opts: Additional FMI options to be passed to the simulator
+        :param string ftype: Cost function type. Currently 'NRMSE' or 'RMSE'.
+        :param DataFrame init_pop: Initial population, DataFrame with initial
+                                   guesses for estimated parameters
         """
         self.logger = logging.getLogger(type(self).__name__)
 
@@ -53,7 +54,8 @@ class Population(object):
         self.model = None
 
         if init:
-            self.instantiate_model(opts=opts)  # Must be done before initialization of individuals
+            # Instiate individuals before initialization
+            self.instantiate_model(opts=opts)
             self._initialize(init_pop)
             self.calculate()
 
@@ -64,7 +66,8 @@ class Population(object):
         self.model.set_outputs(self.outputs)
 
     def add_individual(self, indiv):
-        assert isinstance(indiv, Individual), 'Only Individual instances allowed...'
+        assert isinstance(indiv, Individual), \
+            'Only Individual instances allowed...'
         indiv.reset()
         self.individuals.append(indiv)
 
@@ -110,7 +113,9 @@ class Population(object):
 
         # How to initialize? Random or explicit initial guess?
         if init_pop is not None:
-            assert len(init_pop.index) == self.pop_size, "Population size does not match initial guess {} != {}".format(init_pop.index.size, self.pop_size)
+            assert len(init_pop.index) == self.pop_size, \
+                "Population size does not match initial guess {} != {}" \
+                .format(init_pop.index.size, self.pop_size)
             init_guess = True
         else:
             init_guess = False
@@ -119,11 +124,16 @@ class Population(object):
             if init_guess:
                 # Update value in EstPar objects with the next initial guess
                 for n in range(len(self.est_obj)):
-                    self.est_obj[n].value = init_pop.loc[i, self.est_obj[n].name]
-                self.logger.debug('Initial value provided externally: {}'.format(self.est_obj[n]))
+                    self.est_obj[n].value = \
+                        init_pop.loc[i, self.est_obj[n].name]
+                self.logger.debug(
+                    'Initial value provided externally: {}'
+                    .format(self.est_obj[n]))
 
-            self.add_individual(Individual(est_objects=self.est_obj, population=self,
-                                           ftype=self.ftype, use_init_guess=init_guess))
+            self.add_individual(
+                Individual(est_objects=self.est_obj, population=self,
+                           ftype=self.ftype, use_init_guess=init_guess)
+                )
 
     def __str__(self):
         fittest = self.get_fittest()

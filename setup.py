@@ -25,7 +25,7 @@ setup(name='modestpy',
           'numpy>=1.13.0',
           'pyDOE'
       ],
-      classifiers = [
+      classifiers=[
           'Programming Language :: Python :: 2.7',
       ]
       )

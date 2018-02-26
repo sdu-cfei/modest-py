@@ -11,13 +11,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import json
 import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from modestpy import Estimation
 from modestpy.utilities.sysarch import get_sys_arch
 from modestpy.fmi.compiler import mo_2_fmu
 from modestpy.fmi.model import Model
@@ -32,7 +30,8 @@ if __name__ == "__main__":
     # Compile FMU =====================================================
     platform = get_sys_arch()
     mo_path = os.path.join('examples', 'sin', 'resources', 'sin_model.mo')
-    fmu_path = os.path.join('examples', 'sin', 'resources', 'sin_model_{}.fmu'.format(platform))
+    fmu_path = os.path.join('examples', 'sin', 'resources',
+                            'sin_model_{}.fmu'.format(platform))
     model_name = "sin_model"
 
     print('Compiling FMU for this platform')
@@ -47,7 +46,7 @@ if __name__ == "__main__":
     inp['time'] = time
     inp['u'] = np.full(time.shape, 10.)
     inp = inp.set_index('time')
-    #inp.to_csv(os.path.join('examples', 'sin', 'resources', 'input.csv'))
+    # inp.to_csv(os.path.join('examples', 'sin', 'resources', 'input.csv'))
 
     # True parameters
     a = 3.
@@ -55,13 +54,14 @@ if __name__ == "__main__":
     par = pd.DataFrame(index=[0])
     par['a'] = a
     par['b'] = b
-    #par.to_csv(os.path.join('examples', 'sin', 'resources', 'true_parameters.csv'), index=False)
+    # par.to_csv(os.path.join('examples', 'sin', 'resources',
+    #                         'true_parameters.csv'), index=False)
 
     model.inputs_from_df(inp)
     model.parameters_from_df(par)
     model.specify_outputs(['y'])
     ideal = model.simulate(com_points=inp.index.size - 1)
-    #ideal.to_csv(os.path.join('examples', 'sin', 'resources', 'ideal.csv'))
+    # ideal.to_csv(os.path.join('examples', 'sin', 'resources', 'ideal.csv'))
 
     # Grid search ==============================================
 
@@ -79,7 +79,8 @@ if __name__ == "__main__":
     a_grid = np.arange(a_bounds[0], a_bounds[1], a_step)
     b_grid = np.arange(b_bounds[0], b_bounds[1], b_step)
 
-    rmse = pd.DataFrame(index=pd.Index(a_grid, name='a'), columns=pd.Series(b_grid, name='b'))
+    rmse = pd.DataFrame(index=pd.Index(a_grid, name='a'),
+                        columns=pd.Series(b_grid, name='b'))
 
     # Cost function shape
     for ai in a_grid:
@@ -95,7 +96,7 @@ if __name__ == "__main__":
 
     rmse.to_csv(os.path.join(workdir, 'rmse.csv'))
     rmse = rmse.astype(float)
-    ax = sns.heatmap(rmse.iloc[::-1]) # Use reversed index
+    ax = sns.heatmap(rmse.iloc[::-1])  # Use reversed index
     ax.set_title('RMSE')
     fig = ax.get_figure()
     fig.set_size_inches(10, 7)
@@ -103,7 +104,8 @@ if __name__ == "__main__":
 
     # Search path
     fig, ax = plt.subplots(1, 1, figsize=(10, 7))
-    ab = pd.read_csv(os.path.join(workdir, 'summary_1.csv')).set_index('_iter_')
+    ab = pd.read_csv(os.path.join(workdir, 'summary_1.csv')) \
+        .set_index('_iter_')
     ax.set_xlabel('b')
     ax.set_ylabel('a')
 

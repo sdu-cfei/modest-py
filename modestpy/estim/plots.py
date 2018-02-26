@@ -11,10 +11,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-
 
 
 def plot_comparison(sim_res, ideal_res, f=None):
@@ -40,7 +38,8 @@ def plot_comparison(sim_res, ideal_res, f=None):
         else:
             ax = axes
         var_meas = var + '_meas'
-        ax.plot(measured.index / 3600., measured[var_meas], label='$' + var + '_{meas}$')
+        ax.plot(measured.index / 3600., measured[var_meas],
+                label='$' + var + '_{meas}$')
         ax.plot(simulated.index / 3600., simulated[var], label='$' + var + '$')
         ax.legend()
         ax.set_xlim(measured.index[0] / 3600)
@@ -124,11 +123,14 @@ def _extend_ylim(axes, df):
             ext = y_range * 0.2
             y_ext_range = y_range + 2 * ext
             axes[i].set_ylim([minimum - ext, maximum + ext])
-            axes[i].set_yticks(np.arange(minimum - ext, maximum + ext * 1.1, y_ext_range / 2))
+            axes[i].set_yticks(np.arange(minimum - ext, maximum + ext * 1.1,
+                               y_ext_range / 2))
         else:
             # Probably constant value
-            avg = (maximum + minimum) / 2  # ...but just in case take the average
-            if avg != 0.:  # set_ylim and set_yticks wouldn't work if average == 0
+            # ...but just in case take the average
+            avg = (maximum + minimum) / 2
+            # set_ylim and set_yticks wouldn't work if average == 0
+            if avg != 0.:
                 ext = avg * 0.2
                 axes[i].set_ylim([minimum - ext, maximum + ext])
                 axes[i].set_yticks(np.arange(avg - ext, avg + ext * 1.1, ext))

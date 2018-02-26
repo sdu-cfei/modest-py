@@ -16,12 +16,12 @@ from pyfmi import load_fmu
 from pyfmi.fmi import FMUException
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 
 class Model(object):
     """
-    FMU model to be simulated with inputs and parameters provided from files or dataframes.
+    FMU model to be simulated with inputs and parameters provided from
+    files or dataframes.
     """
 
     # Number of tries to simulate a model
@@ -55,8 +55,8 @@ class Model(object):
 
     def inputs_from_csv(self, csv, sep=',', exclude=list()):
         """
-        Reads inputs from a CSV file (format of the standard input file in ModelManager).
-        It is assumed that time is given in seconds.
+        Reads inputs from a CSV file (format of the standard input file
+        in ModelManager). It is assumed that time is given in seconds.
         :param csv: Path to the CSV file
         :param exclude: list of strings, columns to be excluded
         :return: None
@@ -80,7 +80,8 @@ class Model(object):
         :param exclude: list of strings, names of columns to be omitted
         :return:
         """
-        assert df.index.name == 'time', "Index name ('{}') different than 'time'! " \
+        assert df.index.name == 'time', "Index name ('{}') different " \
+                                        "than 'time'! " \
                                         "Are you sure you assigned index " \
                                         "correctly?".format(df.index.name)
         self.timeline = df.index.values
@@ -116,14 +117,18 @@ class Model(object):
     def simulate(self, com_points=None, reset=True):
         """
         Performs a simulation.
-        :param int com_points: number of communication points, if None, standard value is used (500)
-        :param bool reset: if True, the model will be resetted after simulation (use False with E+ FMU)
-        :param dict opts: Additional FMI options to be passed to the simulator (consult FMI specification)
+        :param int com_points: number of communication points, if None,
+                               standard value is used (500)
+        :param bool reset: if True, the model will be resetted after
+                           simulation (use False with E+ FMU)
+        :param dict opts: Additional FMI options to be passed to the simulator
+                          (consult FMI specification)
         :return: Dataframe with results
         """
 
         if com_points is None:
-            self.logger.warning('[fmi\\model] Warning! Default number of communication points assumed (500)')
+            self.logger.warning('[fmi\\model] Warning! Default number '
+                                'of communication points assumed (500)')
             com_points = 500
 
         # IC
@@ -142,26 +147,35 @@ class Model(object):
 
         # Options (fixed)
         fmi_opts = self.model.simulate_options()
-        fmi_opts['result_handling'] = 'memory'              # Prevents saving a result file
-        fmi_opts['result_handler'] = 'ResultHandlerMemory'  # Prevents saving a result file
-        # fmi_opts['CVode_options']['verbosity'] = 50  # No output <- works only with CVode solver
+
+        # Prevents saving results to a file
+        fmi_opts['result_handling'] = 'memory'
+        fmi_opts['result_handler'] = 'ResultHandlerMemory'
+
+        # No output <- works only with CVode solver
+        # fmi_opts['CVode_options']['verbosity'] = 50
 
         # Options (provided by the user)
         fmi_opts['ncp'] = com_points
 
         if (self.opts is not None) and (type(self.opts) is dict):
-            self.logger.debug('User-defined FMI options found: {}'.format(self.opts))
+            self.logger.debug('User-defined FMI options found: {}'
+                              .format(self.opts))
             for k in self.opts:
                 if type(self.opts[k]) is not dict:
                     fmi_opts[k] = self.opts[k]
-                    self.logger.debug("Setting FMI option: [{}] = {}".format(k, self.opts[k]))
+                    self.logger.debug("Setting FMI option: [{}] = {}"
+                                      .format(k, self.opts[k]))
                 elif type(self.opts[k]) is dict:
                     for subkey in self.opts[k]:
                         # It works only for single nested sub-dictionaries
                         fmi_opts[k][subkey] = self.opts[k][subkey]
-                        self.logger.debug("Setting FMI option: [{}][{}] = {}".format(k, subkey, self.opts[k][subkey]))
+                        self.logger.debug("Setting FMI option: [{}][{}] = {}"
+                                          .format(k, subkey,
+                                                  self.opts[k][subkey]))
                 else:
-                    raise TypeError("Wrong type of values in 'opts' dictionary")
+                    raise TypeError(
+                        "Wrong type of values in 'opts' dictionary")
 
         # Save all options to log
         self.logger.debug("All FMI options: {}".format(fmi_opts))
@@ -170,7 +184,8 @@ class Model(object):
         tries = 0
         while tries < Model.TRIES:
             try:
-                assert (self.start is not None) and (self.end is not None), 'start and stop cannot be None'  # Shouldn't it be OR?
+                assert (self.start is not None) and (self.end is not None), \
+                    'start and stop cannot be None'  # Shouldn't it be OR?
                 self.logger.debug("Starting simulation")
                 self.res = self.model.simulate(start_time=self.start,
                                                final_time=self.end,
@@ -179,14 +194,15 @@ class Model(object):
                 break
             except FMUException as e:
                 tries += 1
-                self.logger.warning("Simulation failed, failure no. {}".format(tries))
+                self.logger.warning("Simulation failed, failure no. {}"
+                                    .format(tries))
                 self.logger.warning(type(e).__name__)
                 self.logger.warning(e.message)
                 if tries >= Model.TRIES:
-                    self.logger.error("Maximum number of failures reached ({}). "\
+                    self.logger.error("Maximum number of failures "
+                                      "reached ({}). "
                                       "Won't try again...".format(Model.TRIES))
                     raise e
-
 
         # Convert result to dataframe
         df = pd.DataFrame()
@@ -201,14 +217,18 @@ class Model(object):
                 self.reset()
             except FMUException as e:
                 self.logger.warning(e.message)
-                self.logger.warning("If you try to simulate an EnergyPlus FMU, use reset=False")
+                self.logger.warning(
+                    "If you try to simulate an EnergyPlus FMU, "
+                    "use reset=False"
+                    )
 
         # Return
         return df
 
     def reset(self):
         """
-        Resets model. After resetting inputs, parameters and outputs must be set again!
+        Resets model. After resetting inputs, parameters and outputs
+        must be set again!
         :return: None
         """
         self.model.reset()
@@ -239,22 +259,3 @@ class Model(object):
     def _create_timeline(end, intervals):
         t = np.linspace(0, end, intervals+1)
         return t
-
-
-if __name__ == "__main__":
-
-    # Exemplary code
-    model = Model('C:\\Users\\krza\\Documents\\GitLab\\modelica-models\\fmu\\occ\\TCO2_occ.fmu')
-
-    model.specify_outputs(['T', 'CO2'])
-    model.inputs_from_csv('C:\\Users\\krza\\Documents\\GitLab\\modelica-models\\resources\\input\\22_511_2\\input.csv',
-                          exclude=['T', 'CO2'])
-    model.parameters_from_csv('C:\\Users\\krza\\Documents\\GitLab\\modelica-models\\resources\\input\\22_511_2\\'
-                              'parameters.csv')
-
-    res = model.simulate(500)
-    # full = model.get_full_result()
-    res.plot(subplots=True)
-    print(res)
-    # print full
-    plt.show()

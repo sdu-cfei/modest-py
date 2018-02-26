@@ -29,8 +29,8 @@ class TestUtilities(unittest.TestCase):
     def tearDown(self):
         try:
             os.remove(self.log_path)
-        except OSError as e:
-            pass # File already removed
+        except OSError:
+            pass  # File already removed
         os.rmdir(self.temp_dir)
 
     def test_delete_logs(self):

@@ -16,7 +16,6 @@ import os
 import pandas as pd
 from modestpy import Estimation
 from modestpy.utilities.sysarch import get_sys_arch
-from modestpy.fmi.compiler import mo_2_fmu
 
 
 if __name__ == "__main__":
@@ -40,7 +39,8 @@ if __name__ == "__main__":
     rmse = list()
     for i in range(3):
         # Working directory
-        workdir = os.path.join('examples', 'simple', 'workdir', 'simple-{}'.format(i))
+        workdir = os.path.join('examples', 'simple', 'workdir',
+                               'simple-{}'.format(i))
         if not os.path.exists(workdir):
             os.makedirs(workdir)
             assert os.path.exists(workdir), "Work directory does not exist"
@@ -61,13 +61,13 @@ if __name__ == "__main__":
 
         # MODEL IDENTIFICATION ==========================================
         session = Estimation(workdir, fmu_path, inp, known, est, ideal,
-                            lp_n=1, lp_len=50000, lp_frame=(0, 50000),
-                            vp = (0, 50000), ic_param={'Tstart': 'T'},
-                            methods=('GA', 'PS'),
-                            ga_opts={'maxiter': 5, 'tol': 0.001, 'lhs': True},
-                            ps_opts={'maxiter': 5, 'tol': 1e-6},
-                            sqp_opts={},
-                            ftype='RMSE', seed=1)  # seed is used to make the results repetitive in this example
+                             lp_n=1, lp_len=50000, lp_frame=(0, 50000),
+                             vp=(0, 50000), ic_param={'Tstart': 'T'},
+                             methods=('GA', 'PS'),
+                             ga_opts={'maxiter': 5, 'tol': 0.001, 'lhs': True},
+                             ps_opts={'maxiter': 5, 'tol': 1e-6},
+                             sqp_opts={},
+                             ftype='RMSE', seed=1)
 
         estimates = session.estimate()
         err, res = session.validate()

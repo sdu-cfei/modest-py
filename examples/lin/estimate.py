@@ -15,7 +15,6 @@ import time
 import os
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 from modestpy import Estimation
 from modestpy.utilities.sysarch import get_sys_arch
 from modestpy.fmi.compiler import mo_2_fmu
@@ -31,7 +30,8 @@ if __name__ == "__main__":
     # Compile FMU =====================================================
     platform = get_sys_arch()
     mo_path = os.path.join('examples', 'lin', 'resources', 'lin_model.mo')
-    fmu_path = os.path.join('examples', 'lin', 'resources', 'lin_model_{}.fmu'.format(platform))
+    fmu_path = os.path.join('examples', 'lin', 'resources',
+                            'lin_model_{}.fmu'.format(platform))
     model_name = "lin_model"
 
     print('Compiling FMU for this platform')
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     inp['u1'] = np.full(t.shape, 2.)
     inp['u2'] = np.sin(t / 3000.)
     inp = inp.set_index('time')
-    #inp.to_csv(os.path.join('examples', 'lin', 'resources', 'input.csv'))
+    # inp.to_csv(os.path.join('examples', 'lin', 'resources', 'input.csv'))
 
     # True parameters
     a = 4.0
@@ -55,13 +55,14 @@ if __name__ == "__main__":
     par = pd.DataFrame(index=[0])
     par['a'] = a
     par['b'] = b
-    #par.to_csv(os.path.join('examples', 'lin', 'resources', 'true_parameters.csv'), index=False)
+    # par.to_csv(os.path.join('examples', 'lin', 'resources',
+    #            'true_parameters.csv'), index=False)
 
     model.inputs_from_df(inp)
     model.parameters_from_df(par)
     model.specify_outputs(['y'])
     ideal = model.simulate(com_points=inp.index.size - 1)
-    #ideal.to_csv(os.path.join('examples', 'lin', 'resources', 'ideal.csv'))
+    # ideal.to_csv(os.path.join('examples', 'lin', 'resources', 'ideal.csv'))
 
     # Estimation ==============================================
 
@@ -77,7 +78,8 @@ if __name__ == "__main__":
 
     # Session
     session = Estimation(workdir, fmu_path, inp, known, est, ideal,
-                         lp_n=1, lp_len=86400/2, lp_frame=(0, 86400/2), vp = (86400/2, 86400),
+                         lp_n=1, lp_len=86400/2, lp_frame=(0, 86400/2),
+                         vp=(86400/2, 86400),
                          methods=('SQP',),
                          ga_opts={'maxiter': 200, 'tol': 1e-6, 'lhs': True},
                          ps_opts={'maxiter': 500, 'tol': 1e-8},
@@ -96,9 +98,11 @@ if __name__ == "__main__":
     a_err = abs(estimates['a'] - a)
     b_err = abs(estimates['b'] - b)
     if a_err < epsilon and b_err < epsilon:
-        print("ESTIMATED PARAMETERS ARE CORRECT: a_err={}, b_err={} < {}".format(a_err, b_err, epsilon))
+        print("ESTIMATED PARAMETERS ARE CORRECT: a_err={}, b_err={} < {}"
+              .format(a_err, b_err, epsilon))
     else:
-        print("ESTIMATED PARAMETERS INCORRECT: a_err={}, b_err={} > {}".format(a_err, b_err, epsilon))
+        print("ESTIMATED PARAMETERS INCORRECT: a_err={}, b_err={} > {}"
+              .format(a_err, b_err, epsilon))
 
     # Delete FMU ==============================================
     os.remove(fmu_path)

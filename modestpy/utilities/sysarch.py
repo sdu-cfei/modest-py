@@ -40,7 +40,10 @@ def get_sys_arch():
 
     if ('win' in sys_type) or ('Win' in sys_type) or ('WIN' in sys_type):
         sys = 'win'
-    elif ('linux' in sys_type) or ('Linux' in sys_type) or ('LINUX' in sys_type):
+    elif (('linux' in sys_type)
+            or ('Linux' in sys_type)
+            or ('LINUX' in sys_type)):
+
         sys = 'linux'
 
     if '32' in bit_arch:

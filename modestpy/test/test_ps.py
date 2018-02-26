@@ -36,11 +36,15 @@ class TestPS(unittest.TestCase):
         parent = os.path.dirname(__file__)
 
         # Resources
-        self.fmu_path = os.path.join(parent, 'resources', 'simple2R1C', 'Simple2R1C_{}.fmu'.format(platform))
-        inp_path = os.path.join(parent, 'resources', 'simple2R1C', 'inputs.csv')
-        ideal_path = os.path.join(parent, 'resources', 'simple2R1C', 'result.csv')
+        self.fmu_path = os.path.join(parent, 'resources', 'simple2R1C',
+                                     'Simple2R1C_{}.fmu'.format(platform))
+        inp_path = os.path.join(parent, 'resources', 'simple2R1C',
+                                'inputs.csv')
+        ideal_path = os.path.join(parent, 'resources', 'simple2R1C',
+                                  'result.csv')
         est_path = os.path.join(parent, 'resources', 'simple2R1C', 'est.json')
-        known_path = os.path.join(parent, 'resources', 'simple2R1C', 'known.json')
+        known_path = os.path.join(parent, 'resources', 'simple2R1C',
+                                  'known.json')
 
         self.inp = pd.read_csv(inp_path).set_index('time')
         self.ideal = pd.read_csv(ideal_path).set_index('time')
@@ -64,14 +68,20 @@ class TestPS(unittest.TestCase):
         self.estimates = self.ps.estimate()
 
         # Generate plots
-        self.ps.plot_comparison(os.path.join(self.tmpdir, 'ps_comparison.png'))
-        self.ps.plot_error_evo(os.path.join(self.tmpdir, 'ps_error_evo.png'))
-        self.ps.plot_parameter_evo(os.path.join(self.tmpdir, 'ps_param_evo.png'))
+        self.ps.plot_comparison(os.path.join(self.tmpdir,
+                                             'ps_comparison.png'))
+        self.ps.plot_error_evo(os.path.join(self.tmpdir,
+                                            'ps_error_evo.png'))
+        self.ps.plot_parameter_evo(os.path.join(self.tmpdir,
+                                                'ps_param_evo.png'))
 
         # Make sure plots are created
-        self.assertTrue(os.path.exists(os.path.join(self.tmpdir, 'ps_comparison.png')))
-        self.assertTrue(os.path.exists(os.path.join(self.tmpdir, 'ps_error_evo.png')))
-        self.assertTrue(os.path.exists(os.path.join(self.tmpdir, 'ps_param_evo.png')))
+        self.assertTrue(os.path.exists(os.path.join(self.tmpdir,
+                                                    'ps_comparison.png')))
+        self.assertTrue(os.path.exists(os.path.join(self.tmpdir,
+                                                    'ps_error_evo.png')))
+        self.assertTrue(os.path.exists(os.path.join(self.tmpdir,
+                                                    'ps_param_evo.png')))
 
         # Make sure errors do not increase
         errors = self.ps.get_errors()

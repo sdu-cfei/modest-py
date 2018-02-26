@@ -19,7 +19,8 @@ def make_param_file(est, known, path):
     """
     Saves parameter file from ``est`` and ``known`` dictionaries.
 
-    :param est: Dictionary, key=parameter_name, value=tuple (guess value, lo limit, hi limit), guess can be None
+    :param est: Dictionary, key=parameter_name, value=tuple
+                (guess value, lo limit, hi limit), guess can be None
     :param known: Dictionary, key=parameter_name, value=value
     :param path: string, path to the file
     :return: None
