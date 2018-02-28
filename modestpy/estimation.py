@@ -20,10 +20,6 @@ import matplotlib.ticker
 import pandas as pd
 import numpy as np
 from pyfmi.fmi import FMUException
-try:
-    from pandas.plotting import scatter_matrix
-except ImportError:
-    from pandas.tools.plotting import scatter_matrix  # Old pandas version
 from modestpy.estim.ga.ga import GA
 from modestpy.estim.ps.ps import PS
 from modestpy.estim.sqp.sqp import SQP
