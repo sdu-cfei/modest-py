@@ -116,6 +116,9 @@ class Individual(object):
     def get_gene(self, name):
         return self.genes[name]
 
+    def get_sorted_gene_names(self):
+        return sorted(self.genes.keys())
+
     def get_estimates(self, as_dict=False):
         """
         :param as_dict: boolean (True to get dictionary instead DataFrame)

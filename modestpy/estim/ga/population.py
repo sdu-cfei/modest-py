@@ -27,7 +27,7 @@ class Population(object):
         :param pop_size: int
         :param inp: DataFrame
         :param known: DataFrame
-        :param est: dict
+        :param est: List of EstPar objects
         :param ideal: DataFrame
         :param init: bool
         :param dict opts: Additional FMI options to be passed to the simulator
@@ -45,7 +45,7 @@ class Population(object):
         self.pop_size = pop_size
         self.inputs = inp
         self.known_pars = known
-        self.est_obj = est
+        self.estpar = est
         self.outputs = [var for var in ideal]
         self.ideal = ideal
         self.ftype = ftype
@@ -108,7 +108,14 @@ class Population(object):
             i += 1
         return all_estim
 
+    def get_estpars(self):
+        """Returns EstPar list"""
+        return self.estpar
+
     def _initialize(self, init_pop=None):
+        self.logger.debug('Initialize population with init_pop=\n{}'
+                          .format(init_pop))
+
         self.individuals = list()
 
         # How to initialize? Random or explicit initial guess?
@@ -121,19 +128,21 @@ class Population(object):
             init_guess = False
 
         for i in range(self.pop_size):
+            # --------------------------------------------------> BUG HERE
             if init_guess:
                 # Update value in EstPar objects with the next initial guess
-                for n in range(len(self.est_obj)):
-                    self.est_obj[n].value = \
-                        init_pop.loc[i, self.est_obj[n].name]
-                self.logger.debug(
-                    'Initial value provided externally: {}'
-                    .format(self.est_obj[n]))
+                for n in range(len(self.estpar)):
+                    self.estpar[n].value = \
+                        init_pop.loc[i, self.estpar[n].name]
+                    self.logger.debug(
+                        'Individual #{} <- {}'
+                        .format(i, self.estpar[n]))
 
             self.add_individual(
-                Individual(est_objects=self.est_obj, population=self,
+                Individual(est_objects=self.estpar, population=self,
                            ftype=self.ftype, use_init_guess=init_guess)
                 )
+            # <-------------------------------------------------- BUG HERE
 
     def __str__(self):
         fittest = self.get_fittest()

@@ -103,7 +103,7 @@ class TestEstimation(unittest.TestCase):
         self.assertEqual(session.lp[0][1], 3600)
         # Enabling next line triggers the Matplotlib error (issue #20)
         # raw_input('Continue...')
-        self.assertLess(err['tot'], 1.65)  # NRMSE
+        self.assertLess(err['tot'], 1.7)  # NRMSE
 
     def test_estimation_rmse(self):
         ga_opts = {'maxiter': 3, 'pop_size': 8, 'trm_size': 3}
@@ -140,6 +140,37 @@ class TestEstimation(unittest.TestCase):
                              seed=1, ftype='RMSE')
         session.estimate()
 
+    def test_seed(self):
+        ga_opts = {'maxiter': 10}
+        ps_opts = {'maxiter': 5}
+        # Run 1
+        session1 = Estimation(self.tmpdir, self.fmu_path, self.inp,
+                              self.known, self.est, self.ideal,
+                              lp_n=1, lp_len=3600, lp_frame=(0, 3600),
+                              vp=(20000, 40000), ic_param={'Tstart': 'T'},
+                              methods=('GA', ),
+                              ga_opts=ga_opts, ps_opts=ps_opts,
+                              seed=1, ftype='RMSE')
+        estimates1 = session1.estimate()
+        # Run 2
+        session2 = Estimation(self.tmpdir, self.fmu_path, self.inp,
+                              self.known, self.est, self.ideal,
+                              lp_n=1, lp_len=3600, lp_frame=(0, 3600),
+                              vp=(20000, 40000), ic_param={'Tstart': 'T'},
+                              methods=('GA', ),
+                              ga_opts=ga_opts, ps_opts=ps_opts,
+                              seed=1, ftype='RMSE')
+        estimates2 = session2.estimate()
+        # Check if estimates are the same
+        same = True
+        for key in estimates1:
+            if estimates1[key] != estimates2[key]:
+                same = False
+        self.assertTrue(
+            same,
+            "Different estimates obtained despite the same seed"
+            )
+
     def test_ps_only(self):
         ga_opts = {'maxiter': 0}
         ps_opts = {'maxiter': 1}
@@ -173,6 +204,7 @@ def suite():
     suite.addTest(TestEstimation('test_ga_only'))
     suite.addTest(TestEstimation('test_ps_only'))
     suite.addTest(TestEstimation('test_opts'))
+    suite.addTest(TestEstimation('test_seed'))
 
     return suite
 

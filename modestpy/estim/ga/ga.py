@@ -90,6 +90,7 @@ class GA(object):
                          Lating Hypercube Sampling.
         """
         self.logger = logging.getLogger(type(self).__name__)
+        self.logger.info('GA constructor invoked')
 
         assert inp.index.equals(ideal.index), \
             'inp and ideal indexes are not matching'
@@ -112,7 +113,11 @@ class GA(object):
 
         # Initiliaze EstPar objects
         estpars = list()
-        for key in est:
+        for key in sorted(est.keys()):
+            self.logger.info(
+                'Add {} (initial guess={}) to estimated parameters'
+                .format(key, est[key][0])
+                )
             estpars.append(EstPar(name=key,
                                   value=est[key][0],
                                   lo=est[key][1],
@@ -125,17 +130,25 @@ class GA(object):
                 'None is not allowed in known parameters (parameter {})' \
                 .format(key)
             known_df[key] = [known[key]]
+            self.logger.info('Known parameters:\n{}'.format(str(known_df)))
 
         # If LHS initialization, init_pop is disregarded
         if lhs:
+            self.logger.info('LHS initialization')
             init_pop = GA._lhs_init(par_names=[p.name for p in estpars],
                                     bounds=[(p.lo, p.hi) for p in estpars],
                                     samples=pop_size,
                                     criterion='c')
+            self.logger.debug('Current population:\n{}'.format(str(init_pop)))
         # Else, if no init_pop provided, generate one individual
         # based on initial guess from `est`
         elif init_pop is None:
+            self.logger.info(
+                'No initial population provided, one individual will be based '
+                'on the initial guess and the other will be random'
+                )
             init_pop = pd.DataFrame({k: [est[k][0]] for k in est})
+            self.logger.debug('Current population:\n{}'.format(str(init_pop)))
 
         # Take individuals from init_pop and add random individuals
         # until pop_size == len(init_pop)
@@ -143,17 +156,19 @@ class GA(object):
         # the desired pop_size)
         if init_pop is not None:
             missing = pop_size - init_pop.index.size
+            self.logger.debug('Missing individuals = {}'.format(missing))
             if missing > 0:
+                self.logger.debug('Add missing individuals (random)...')
                 while missing > 0:
                     init_pop = init_pop.append({
-                        n: random.random() * (est[n][2] - est[n][1])
-                        + est[n][1] for n in est
+                        key: random.random() * (est[key][2] - est[key][1])
+                        + est[key][1] for key in sorted(est.keys())
                     }, ignore_index=True)
                     missing -= 1
+            self.logger.debug('Current population:\n{}'.format(str(init_pop)))
 
         # Initialize population
-        self.logger.info('GENETIC ALGORITHM INSTANCE CREATED...')
-        self.logger.info('Initializing the population...')
+        self.logger.debug('Instantiate Population ')
         self.pop = Population(fmu_path=fmu_path,
                               pop_size=pop_size,
                               inp=inp,
