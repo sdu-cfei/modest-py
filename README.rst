@@ -8,7 +8,9 @@ Description
 -----------
 
 **modestpy** facilitates parameter estimation in physical models compliant with
-`Functional Mock-up Interface <https://fmi-standard.org/>`__. Features:
+`Functional Mock-up Interface <https://fmi-standard.org/>`__.
+
+Features:
 
 - combination of global and local search methods (genetic algorithm, pattern search),
 - suitable also for non-continuous and non-differentiable models,
