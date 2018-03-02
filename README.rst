@@ -7,53 +7,61 @@ FMI-compliant Model Estimation in Python
 Description
 -----------
 
-**modestpy** facilitates parameter estimation in models compliant with
-`Functional Mock-up Interface <https://fmi-standard.org/>`__. The
-estimation can be performed on a single or multiple random learning
-periods (to avoid overfitting). Currently the estimation is based on
-`genetic algorithm <https://en.wikipedia.org/wiki/Genetic_algorithm>`__
-(GA) and `pattern
-search <https://en.wikipedia.org/wiki/Pattern_search_(optimization)>`__
-(PS) methods. The user is free to choose whether to use GA, PS or
-combined GA+PS. Both methods can deal with non-continuous and
-non-differentiable models.
+**modestpy** facilitates parameter estimation in physical models compliant with
+`Functional Mock-up Interface <https://fmi-standard.org/>`__. Features:
 
-The package is compatible with Python 2.7 due to its reliance on
-`PyFMI <https://pypi.python.org/pypi/PyFMI>`__.
+- combination of global and local search methods (genetic algorithm, pattern search),
+- suitable also for non-continuous and non-differentiable models,
+- compatible with both Python 2.7 and 3.
 
-Installation
-------------
+Installation with conda
+-----------------------
 
-The package can be installed from PyPI:
+It is advised to use ``conda`` to install the required dependencies.
+``modestpy`` itself still has to be installed using ``pip``
+(a ``conda`` package is planned in the future), but it can be installed
+in the ``conda`` environment.
+
+Create separate environment (optional):
+
+::
+
+    conda create --name modestpy
+    conda activate modestpy
+
+Install dependencies:
+
+::
+
+    conda install pandas numpy matplotlib
+    conda install -c chria pyfmi
+    conda install -c conda-forge pydoe
+
+Install ``modestpy``:
 
 ::
 
     python -m pip install modestpy
 
-On Ubuntu 16.04 or newer, if you get a permission error, you might have to install in the user local directory:
+Installation with pip
+---------------------
+
+Alternatively, ``pyfmi`` can be installed as part of `JModelica <http://www.jmodelica.org/>`__.
+
+To install ``modestpy`` use ``pip`` (other dependencies will be installed automatically):
 
 ::
 
-    python -m pip install --user modestpy
+    python -m pip install modestpy
 
 To get the latest development version download directly from GitHub repository:
 
 ::
 
-    git clone https://github.com/sdu-cfei/modest-py modestpy
-    cd modestpy
-    python -m pip install .
-
-or 
-
-::
-
     python -m pip install https://github.com/sdu-cfei/modest-py/archive/master.zip
-    
-**modestpy** relies on `PyFMI <https://pypi.python.org/pypi/PyFMI>`__
-for FMU simulation, which is advised to be installed as part of
-`JModelica <http://jmodelica.org/>`__ (current version 2.0). Other
-dependencies will be installed automatically.
+
+Test your installation
+----------------------
 
 To run tests:
 
@@ -101,16 +109,15 @@ e.g.:
 3) Scatter matrix plot for interdependencies between parameters:
    |Intedependencies|
 
-Author
-------
+Credits
+-------
 
-`Krzysztof Arendt <https://github.com/krzysztofarendt>`__, Center for
-Energy Informatics, University of Southern Denmark
+- 2017-2018: `Krzysztof Arendt <https://github.com/krzysztofarendt>`__, Center for Energy Informatics, University of Southern Denmark
 
 License
 -------
 
-Copyright (c) 2017, University of Southern Denmark. All rights reserved.
+Copyright (c) 2017-2018, University of Southern Denmark. All rights reserved.
 
 This code is licensed under BSD 2-clause license. See
 `LICENSE </LICENSE>`__ file in the project root for license terms.

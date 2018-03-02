@@ -13,6 +13,7 @@ from __future__ import print_function
 
 from modestpy.estim.ga.population import Population
 import random
+import logging
 
 # Constants controlling the evolution
 UNIFORM_RATE = 0.5  # affects crossover
@@ -35,11 +36,13 @@ def evolve(pop):
     :param pop: Population
     :return: Population
     """
+    logger = logging.getLogger("ga.algorithm.evolve")
+
     new_pop = Population(fmu_path=pop.fmu_path,
                          pop_size=pop.size(),
                          inp=pop.inputs,
                          known=pop.known_pars,
-                         est=pop.est_obj,
+                         est=pop.get_estpars(),
                          ideal=pop.ideal,
                          init=False)
 
@@ -54,15 +57,19 @@ def evolve(pop):
         ind2 = tournament_selection(pop, TOURNAMENT_SIZE)
         child = crossover(ind1, ind2, UNIFORM_RATE)
         new_pop.add_individual(child)
+        logger.debug('Crossover: ({}) x ({}) -> ({})'
+                     .format(ind1, ind2, child))
 
     # Mutation
     # Check population diversity
     if is_population_diverse(new_pop, DIVERSITY_LIM):
         # Low mutation rate, completely random new values
+        logger.debug("Population diversity is OK -> standard mutation")
         for i in range(elite_offset, new_pop.size()):
             mutation(new_pop.individuals[i], MUT_RATE)
     else:
         # Population is not diverse
+        logger.debug("Population diversity is LOW -> increased mutation")
         for i in range(elite_offset, new_pop.size()):
             if random.random() < INC_MUT_PROP:
                 # Increased mutation rate, slightly changed values
@@ -72,10 +79,6 @@ def evolve(pop):
             else:
                 # Increased mutation rate, completely random new values
                 mutation(new_pop.individuals[i], MUT_RATE_INC)
-
-    # # Standard mutation
-    # for i in range(elite_offset, new_pop.size()):
-    #         mutation(new_pop.individuals[i], MUT_RATE)
 
     # Calculate
     new_pop.calculate()
@@ -97,7 +100,7 @@ def is_population_diverse(pop, diversity_lim):
     """
     identical_count = 0
     total_count = len(pop.individuals)
-    genes = []
+    genes = list()
 
     for ind in pop.individuals:
         genes.append(ind.genes)
@@ -124,6 +127,8 @@ def crossover(ind1, ind2, uniformity):
     :param uniformity: float, uniformity rate
     :return: Individual (child)
     """
+    logger = logging.getLogger("ga.algorithm.crossover")
+
     # Avoid working on the same objects!
     # Otherwise, changing child's genes
     # affects parent's genes (since genes are stored in a dict).
@@ -133,10 +138,16 @@ def crossover(ind1, ind2, uniformity):
     i1_clone = ind1.get_clone()
     i2_clone = ind2.get_clone()
 
-    for name in child.genes:
-        if random.random() <= uniformity:
+    logger.debug('Ind1: {}'.format(i1_clone))
+    logger.debug('Ind2: {}'.format(i2_clone))
+
+    for name in child.get_sorted_gene_names():
+        randnum = random.random()
+        if randnum <= uniformity:
+            logger.debug("Take '{}' from ind1".format(name))
             child.set_gene(name, i1_clone.genes[name])
         else:
+            logger.debug("Take '{}' from ind2".format(name))
             child.set_gene(name, i2_clone.genes[name])
 
     return child
@@ -150,8 +161,11 @@ def mutation(ind, mut_rate):
     :param mut_rate: mutation rate
     :return: None
     """
-    for g_name in ind.genes:
+    logger = logging.getLogger("ga.algorithm.mutation")
+
+    for g_name in ind.get_sorted_gene_names():
         if random.random() < mut_rate:
+            logger.debug('Mutate gene for parameter {}'.format(g_name))
             ind.set_gene(g_name, random.random())
 
 
@@ -165,8 +179,11 @@ def slight_mutation(ind, mut_rate, max_change):
                        change of genes
     :return: None
     """
-    for g_name in ind.genes:
+    logger = logging.getLogger("ga.algorithm.slight_mutation")
+
+    for g_name in ind.get_sorted_gene_names():
         if random.random() < mut_rate:
+            logger.debug('Mutate gene for parameter {}'.format(g_name))
             value = ind.genes[g_name]
             new_value = value + random.uniform(-1., 1.) * max_change / 100.
             if new_value > 1.:
@@ -179,7 +196,8 @@ def slight_mutation(ind, mut_rate, max_change):
 def tournament_selection(pop, tournament_size):
     # Create tournament population
     t_pop = Population(pop.fmu_path, tournament_size, pop.inputs,
-                       pop.known_pars, pop.est_obj, pop.ideal, init=False)
+                       pop.known_pars, pop.get_estpars(), pop.ideal,
+                       init=False)
     # For each place in the tournament get a random individual
     for i in range(tournament_size):
         rand_index = random.randint(0, pop.size()-1)
