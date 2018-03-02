@@ -112,8 +112,7 @@ e.g.:
 Credits
 -------
 
-- `Krzysztof Arendt <https://github.com/krzysztofarendt>`__, Center for
-Energy Informatics, University of Southern Denmark
+- 2017-2018: `Krzysztof Arendt <https://github.com/krzysztofarendt>`__, Center for Energy Informatics, University of Southern Denmark
 
 License
 -------
