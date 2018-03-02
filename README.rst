@@ -39,6 +39,8 @@ Install dependencies:
 
 Install ``modestpy``:
 
+::
+
     python -m pip install modestpy
 
 Installation with pip
