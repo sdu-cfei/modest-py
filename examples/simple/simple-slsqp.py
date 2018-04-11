@@ -15,7 +15,7 @@ import json
 import os
 import pandas as pd
 from modestpy.utilities.sysarch import get_sys_arch
-from modestpy.estim.sqp.sqp import SQP
+from modestpy.estim.slsqp.slsqp import SLSQP
 import matplotlib.pyplot as plt
 
 
@@ -68,14 +68,14 @@ if __name__ == "__main__":
 
     # estimates = session.estimate()
     # err, res = session.validate()
-    sqp = SQP(fmu_path, inp, known, est, ideal, ftype='RMSE')
+    slsqp = SLSQP(fmu_path, inp, known, est, ideal, ftype='RMSE')
 
-    par = sqp.estimate()
+    par = slsqp.estimate()
     print(par)
 
-    res = sqp.res
+    res = slsqp.res
     res['ideal'] = ideal['T']
     res.plot()
     plt.show()
 
-    print('ERROR={}'.format(sqp.best_err))
+    print('ERROR={}'.format(slsqp.best_err))

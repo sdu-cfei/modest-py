@@ -81,7 +81,7 @@ if __name__ == "__main__":
                          ga_opts={'maxiter': 200, 'tol': 1e-6, 'lhs': False,
                                   'pop_size': 5, 'trm_size': 2},
                          ps_opts={'maxiter': 500, 'tol': 1e-8},
-                         sqp_opts={'scipy_opts': {'eps': 1e-12}},
+                         slsqp_opts={'scipy_opts': {'eps': 1e-12}},
                          ftype='RMSE', seed=1)
 
     t0 = time.time()

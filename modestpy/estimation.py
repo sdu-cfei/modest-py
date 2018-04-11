@@ -22,7 +22,7 @@ import numpy as np
 from pyfmi.fmi import FMUException
 from modestpy.estim.ga.ga import GA
 from modestpy.estim.ps.ps import PS
-from modestpy.estim.sqp.sqp import SQP
+from modestpy.estim.slsqp.slsqp import SLSQP
 from modestpy.estim.model import Model
 import modestpy.estim.error
 from modestpy.estim.plots import plot_comparison
@@ -57,7 +57,7 @@ class Estimation(object):
         Currently available estimation methods:
             - GA - genetic algorithm
             - PS - pattern search (Hooke-Jeeves)
-            - SQP - sequential quadratic programming (SciPy implementation)
+            - SLSQP - sequential least squares programming (SciPy)
 
         Parameters:
         -----------
@@ -93,7 +93,7 @@ class Estimation(object):
         ps_opts: dict
             Pattern search options
         sqp_opts: dict
-            SQP solver options
+            SLSQP solver options
         fmi_opts: dict
             Additional options to be passed to the FMI model
             (e.g. solver tolerance)
@@ -179,8 +179,8 @@ class Estimation(object):
         # User options
         self.PS_OPTS = self._update_opts(self.PS_OPTS, ps_opts, 'PS')
 
-        # SQP options
-        self.SQP_OPTS = {
+        # SLSQP options
+        self.SLSQP_OPTS = {
             'scipy_opts': {'disp': True,
                            'iprint': 2,
                            'maxiter': 150,
@@ -190,13 +190,13 @@ class Estimation(object):
         }  # Default
 
         # User options
-        self.SQP_OPTS = self._update_opts(self.SQP_OPTS, sqp_opts, 'SQP')
+        self.SLSQP_OPTS = self._update_opts(self.SLSQP_OPTS, sqp_opts, 'SLSQP')
 
         # Method dictionary
         self.method_dict = {
             'GA': (GA, self.GA_OPTS),
             'PS': (PS, self.PS_OPTS),
-            'SQP': (SQP, self.SQP_OPTS)
+            'SLSQP': (SLSQP, self.SLSQP_OPTS)
         }  # Key -> method name, value -> (method class, method options)
 
         # List of learning periods (tuples with start, stop)
@@ -243,7 +243,8 @@ class Estimation(object):
         assert get in allowed_types, 'get={} is not allowed'.format(get)
 
         # (1) Initialize local variables
-        # Tuple with method names, e.g. ('GA', 'PS'), ('GA', 'SQP') or ('GA', )
+        # Tuple with method names
+        # e.g. ('GA', 'PS'), ('GA', 'SLSQP') or ('GA', )
         methods = self.methods
 
         # List of plots to be saved

@@ -22,10 +22,10 @@ from modestpy.estim.estpar import estpars_2_df
 from modestpy.estim.error import calc_err
 
 
-class SQP(object):
+class SLSQP(object):
     """
-    SQP (Sequential Quadratic Programmic) algorithm for FMU parameter
-    estimation. Based on SLSQP solver from SciPy.
+    SLSQP (Sequential Least Squares Programming) algorithm for FMU parameter
+    estimation (from SciPy).
     """
     # Default number of communication points, should be adjusted
     # to the number of samples
@@ -34,7 +34,7 @@ class SQP(object):
     # Summary placeholder
     TMP_SUMMARY = pd.DataFrame()
 
-    NAME = 'SQP'
+    NAME = 'SLSQP'
     METHOD = '_method_'
     ITER = '_iter_'
     ERR = '_error_'
@@ -61,8 +61,9 @@ class SQP(object):
         assert inp.index.equals(ideal.index), \
             'inp and ideal indexes are not matching'
 
-        # Warning regarding limited functionality of SQP
-        warning_msg = "SQP solver chosen. SQP is not well tested yet and " \
+        # Warning regarding limited functionality of SLSQP
+        warning_msg = "SLSQP solver chosen. SLSQP is not well tested " \
+                      "with ModestPy yet and " \
                       "has a limited functionality. " \
                       "While the final solution should be OK, the " \
                       "intermediate results obtained from SciPy seem to " \
@@ -84,7 +85,7 @@ class SQP(object):
 
         # Adjust COM_POINTS
         # CVODE solver complains without "-1"
-        SQP.COM_POINTS = len(self.ideal) - 1
+        SLSQP.COM_POINTS = len(self.ideal) - 1
 
         # Inputs
         self.inputs = inp
@@ -111,8 +112,8 @@ class SQP(object):
 
         # Model
         output_names = [var for var in ideal]
-        self.model = SQP._get_model_instance(fmu_path, inp, known_df, est,
-                                             output_names, fmi_opts)
+        self.model = SLSQP._get_model_instance(fmu_path, inp, known_df, est,
+                                               output_names, fmi_opts)
 
         # Outputs
         self.summary = pd.DataFrame()
@@ -122,16 +123,17 @@ class SQP(object):
         # Temporary placeholder for summary
         # It needs to be stored as class variable, because it has to be updated
         # from a static method used as callback
-        self.summary_cols = [x.name for x in self.est] + [SQP.ERR, SQP.METHOD]
-        SQP.TMP_SUMMARY = pd.DataFrame(columns=self.summary_cols)
+        self.summary_cols = \
+            [x.name for x in self.est] + [SLSQP.ERR, SLSQP.METHOD]
+        SLSQP.TMP_SUMMARY = pd.DataFrame(columns=self.summary_cols)
 
         # Log
-        self.logger.info('SQP initialized... =========================')
+        self.logger.info('SLSQP initialized... =========================')
 
     def estimate(self):
 
         # Initial error
-        initial_result = self.model.simulate(com_points=SQP.COM_POINTS)
+        initial_result = self.model.simulate(com_points=SLSQP.COM_POINTS)
         self.res = initial_result
         initial_error = calc_err(initial_result, self.ideal,
                                  ftype=self.ftype)['tot']
@@ -143,12 +145,12 @@ class SQP(object):
             parameters = pd.DataFrame(index=[0])
             try:
                 for v, ep in zip(x, self.est):
-                    parameters[ep.name] = SQP.rescale(v, ep.lo, ep.hi)
+                    parameters[ep.name] = SLSQP.rescale(v, ep.lo, ep.hi)
             except TypeError as e:
                 print(x)
                 raise e
             self.model.set_param(parameters)
-            result = self.model.simulate(com_points=SQP.COM_POINTS)
+            result = self.model.simulate(com_points=SLSQP.COM_POINTS)
             err = calc_err(result, self.ideal, ftype=self.ftype)['tot']
             # Update best error and result
             if err < self.best_err:
@@ -158,35 +160,35 @@ class SQP(object):
             return err
 
         # Initial guess
-        x0 = [SQP.scale(x.value, x.lo, x.hi) for x in self.est]
+        x0 = [SLSQP.scale(x.value, x.lo, x.hi) for x in self.est]
 
         # Parameter bounds
         b = [(0, 1) for x in self.est]
 
         out = minimize(objective, x0, bounds=b, constraints=[],
-                       method='SLSQP', callback=SQP._callback,
+                       method='SLSQP', callback=SLSQP._callback,
                        options=self.scipy_opts)
 
-        outx = [SQP.rescale(x, ep.lo, ep.hi) for x, ep in
+        outx = [SLSQP.rescale(x, ep.lo, ep.hi) for x, ep in
                 zip(out.x.tolist(), self.est)]
 
         # Update summary
-        self.summary = SQP.TMP_SUMMARY.copy()
+        self.summary = SLSQP.TMP_SUMMARY.copy()
         self.summary.index += 1  # Adjust iteration counter
-        self.summary.index.name = SQP.ITER  # Rename index
+        self.summary.index.name = SLSQP.ITER  # Rename index
 
         # Update error
-        self.summary[SQP.ERR] = map(objective,
-                                    self.summary[[x.name for x
-                                                  in self.est]].values)
+        self.summary[SLSQP.ERR] = map(objective,
+                                      self.summary[[x.name for x
+                                                    in self.est]].values)
 
         for ep in self.est:
             name = ep.name
-            self.summary[name] = map(lambda x: SQP.rescale(x, ep.lo, ep.hi),
+            self.summary[name] = map(lambda x: SLSQP.rescale(x, ep.lo, ep.hi),
                                      self.summary[name])  # Rescale
 
         # Reset temp placeholder
-        SQP.TMP_SUMMARY = pd.DataFrame(columns=self.summary_cols)
+        SLSQP.TMP_SUMMARY = pd.DataFrame(columns=self.summary_cols)
 
         # Return DataFrame with estimates
         par_vec = outx
@@ -233,14 +235,14 @@ class SQP(object):
     def _callback(xk):
         # New row
         row = pd.DataFrame(index=[0])
-        for x, c in zip(xk, SQP.TMP_SUMMARY.columns):
+        for x, c in zip(xk, SLSQP.TMP_SUMMARY.columns):
             row[c] = x
 
-        row[SQP.ERR] = np.nan
-        row[SQP.METHOD] = SQP.NAME
+        row[SLSQP.ERR] = np.nan
+        row[SLSQP.METHOD] = SLSQP.NAME
 
         # Append
-        SQP.TMP_SUMMARY = SQP.TMP_SUMMARY.append(row, ignore_index=True)
+        SLSQP.TMP_SUMMARY = SLSQP.TMP_SUMMARY.append(row, ignore_index=True)
 
     @staticmethod
     def _get_model_instance(fmu_path, inputs, known_pars, est, output_names,

@@ -80,10 +80,10 @@ if __name__ == "__main__":
     session = Estimation(workdir, fmu_path, inp, known, est, ideal,
                          lp_n=1, lp_len=86400/2, lp_frame=(0, 86400/2),
                          vp=(86400/2, 86400),
-                         methods=('SQP',),
+                         methods=('SLSQP',),
                          ga_opts={'maxiter': 200, 'tol': 1e-6, 'lhs': True},
                          ps_opts={'maxiter': 500, 'tol': 1e-8},
-                         sqp_opts={},
+                         slsqp_opts={},
                          ftype='RMSE', seed=1)
 
     t0 = time.time()

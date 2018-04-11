@@ -66,7 +66,7 @@ if __name__ == "__main__":
                              methods=('GA', 'PS'),
                              ga_opts={'maxiter': 5, 'tol': 0.001, 'lhs': True},
                              ps_opts={'maxiter': 5, 'tol': 1e-6},
-                             sqp_opts={},
+                             slsqp_opts={},
                              ftype='RMSE', seed=1)
 
         estimates = session.estimate()
