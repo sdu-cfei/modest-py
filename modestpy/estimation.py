@@ -649,9 +649,9 @@ class Estimation(object):
         boolean
         """
         assert df.empty is False, 'This DataFrame should not be empty. ' \
-                                  'Something is wrong.'
-        is_zero = (df == 0).all()
-        for col in is_zero:
-            if col == True:  # Never use ``is`` with numpy.bool objects
-                return False
-        return True
+                                  'Something went wrong.'
+        all_zero = (df == 0).all().all()
+        if all_zero:
+            return False
+        else:
+            return True
