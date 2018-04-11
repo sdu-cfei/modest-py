@@ -142,6 +142,8 @@ class SLSQP(object):
         def objective(x):
             """Returns model error"""
             # Updated parameters are stored in x. Need to update the model.
+            self.logger.debug('objective(x={})'.format(x))
+
             parameters = pd.DataFrame(index=[0])
             try:
                 for v, ep in zip(x, self.est):
@@ -161,16 +163,27 @@ class SLSQP(object):
 
         # Initial guess
         x0 = [SLSQP.scale(x.value, x.lo, x.hi) for x in self.est]
+        self.logger.debug('SciPy x0 = {}'.format(x0))
+
+        # Save initial guess in summary
+        row = pd.DataFrame(index=[0])
+        for x, c in zip(x0, SLSQP.TMP_SUMMARY.columns):
+            row[c] = x
+        row[SLSQP.ERR] = np.nan
+        row[SLSQP.METHOD] = SLSQP.NAME
+        SLSQP.TMP_SUMMARY = SLSQP.TMP_SUMMARY.append(row, ignore_index=True)
 
         # Parameter bounds
-        b = [(0, 1) for x in self.est]
+        b = [(0., 1.) for x in self.est]
 
         out = minimize(objective, x0, bounds=b, constraints=[],
-                       method='SLSQP', callback=SLSQP._callback,
+                       method='TNC', callback=SLSQP._callback,
                        options=self.scipy_opts)
 
         outx = [SLSQP.rescale(x, ep.lo, ep.hi) for x, ep in
                 zip(out.x.tolist(), self.est)]
+
+        self.logger.debug('SciPy x = {}'.format(outx))
 
         # Update summary
         self.summary = SLSQP.TMP_SUMMARY.copy()

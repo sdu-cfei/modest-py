@@ -1,4 +1,4 @@
-# Simple example: estimation of 3 parameters in 2R1C thermal network
+# Simple example: estimation of 3 parameters in R2C1 thermal network
 
 This example shows how to set up a learning session using ``Estimation`` class.
 

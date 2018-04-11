@@ -45,7 +45,7 @@ class Estimation(object):
     def __init__(self, workdir, fmu_path, inp, known, est, ideal,
                  lp_n=None, lp_len=None, lp_frame=None, vp=None,
                  ic_param=None, methods=('GA', 'PS'), ga_opts={}, ps_opts={},
-                 sqp_opts={}, fmi_opts={}, ftype='RMSE', seed=None,
+                 slsqp_opts={}, fmi_opts={}, ftype='RMSE', seed=None,
                  default_log=True, logfile='modestpy.log'):
         """
         Index in DataFrames ``inp`` and ``ideal`` must be named 'time'
@@ -92,7 +92,7 @@ class Estimation(object):
             Genetic algorithm options
         ps_opts: dict
             Pattern search options
-        sqp_opts: dict
+        slsqp_opts: dict
             SLSQP solver options
         fmi_opts: dict
             Additional options to be passed to the FMI model
@@ -190,7 +190,9 @@ class Estimation(object):
         }  # Default
 
         # User options
-        self.SLSQP_OPTS = self._update_opts(self.SLSQP_OPTS, sqp_opts, 'SLSQP')
+        self.SLSQP_OPTS = self._update_opts(self.SLSQP_OPTS,
+                                            slsqp_opts,
+                                            'SLSQP')
 
         # Method dictionary
         self.method_dict = {

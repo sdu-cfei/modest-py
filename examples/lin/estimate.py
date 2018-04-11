@@ -80,10 +80,10 @@ if __name__ == "__main__":
     session = Estimation(workdir, fmu_path, inp, known, est, ideal,
                          lp_n=1, lp_len=86400/2, lp_frame=(0, 86400/2),
                          vp=(86400/2, 86400),
-                         methods=('SLSQP',),
-                         ga_opts={'maxiter': 200, 'tol': 1e-6, 'lhs': True},
-                         ps_opts={'maxiter': 500, 'tol': 1e-8},
-                         slsqp_opts={},
+                         methods=('SLSQP', ),  # Try also with ('GA', 'PS')
+                         ga_opts={'maxiter': 500, 'tol': 1e-8, 'lhs': True},
+                         ps_opts={'maxiter': 1000, 'tol': 1e-12},
+                         slsqp_opts={'scipy_opts': {'eps': 1e-12}},
                          ftype='RMSE', seed=1)
 
     t0 = time.time()
@@ -94,7 +94,7 @@ if __name__ == "__main__":
     print("ELAPSED TIME: {}".format(t1 - t0))
 
     # Check estimates =========================================
-    epsilon = 1e-2
+    epsilon = 1e-3
     a_err = abs(estimates['a'] - a)
     b_err = abs(estimates['b'] - b)
     if a_err < epsilon and b_err < epsilon:

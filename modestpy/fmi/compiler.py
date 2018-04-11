@@ -13,8 +13,11 @@ from __future__ import print_function
 
 import os
 import shutil
-# from pymodelica import compile_fmu
 from modestpy.utilities.sysarch import get_sys_arch
+try:
+    from pymodelica import compile_fmu
+except ImportError as e:
+    raise ImportError("pymodelica is required to run this script!")
 
 
 def mo_2_fmu(model_name, mo_path, fmu_path=None):
@@ -27,6 +30,14 @@ def mo_2_fmu(model_name, mo_path, fmu_path=None):
                      "CWD/model_name.fmu" if None
     :return: string, path to the resulting FMU
     """
+    # opts = {'nle_solver_min_tol': 1e-10}
+    opts = {}
+
+    compile_fmu(model_name,
+                mo_path,
+                target='cs',
+                version='2.0',
+                compiler_options=opts)
 
     std_fmu_path = os.path.join(os.getcwd(), model_name.replace('.', '_') +
                                 '.fmu')
