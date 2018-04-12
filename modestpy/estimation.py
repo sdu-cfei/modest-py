@@ -22,7 +22,7 @@ import numpy as np
 from pyfmi.fmi import FMUException
 from modestpy.estim.ga.ga import GA
 from modestpy.estim.ps.ps import PS
-from modestpy.estim.slsqp.slsqp import SLSQP
+from modestpy.estim.scipy.scipy import SCIPY
 from modestpy.estim.model import Model
 import modestpy.estim.error
 from modestpy.estim.plots import plot_comparison
@@ -45,7 +45,7 @@ class Estimation(object):
     def __init__(self, workdir, fmu_path, inp, known, est, ideal,
                  lp_n=None, lp_len=None, lp_frame=None, vp=None,
                  ic_param=None, methods=('GA', 'PS'), ga_opts={}, ps_opts={},
-                 slsqp_opts={}, fmi_opts={}, ftype='RMSE', seed=None,
+                 scipy_opts={}, fmi_opts={}, ftype='RMSE', seed=None,
                  default_log=True, logfile='modestpy.log'):
         """
         Index in DataFrames ``inp`` and ``ideal`` must be named 'time'
@@ -55,9 +55,10 @@ class Estimation(object):
         (it happens quite often...). TODO: Check index name assertion.
 
         Currently available estimation methods:
-            - GA - genetic algorithm
-            - PS - pattern search (Hooke-Jeeves)
-            - SLSQP - sequential least squares programming (SciPy)
+            - GA    - genetic algorithm
+            - PS    - pattern search (Hooke-Jeeves)
+            - SCIPY - interface to algorithms available through
+                      scipy.optimize.minimize()
 
         Parameters:
         -----------
@@ -92,8 +93,8 @@ class Estimation(object):
             Genetic algorithm options
         ps_opts: dict
             Pattern search options
-        slsqp_opts: dict
-            SLSQP solver options
+        scipy_opts: dict
+            SciPy solver options
         fmi_opts: dict
             Additional options to be passed to the FMI model
             (e.g. solver tolerance)
@@ -179,26 +180,26 @@ class Estimation(object):
         # User options
         self.PS_OPTS = self._update_opts(self.PS_OPTS, ps_opts, 'PS')
 
-        # SLSQP options
-        self.SLSQP_OPTS = {
-            'scipy_opts': {'disp': True,
-                           'iprint': 2,
-                           'maxiter': 150,
-                           'full_output': True},
+        # SCIPY options
+        self.SCIPY_OPTS = {
+            'solver': 'L-BFGS-B',
+            'options': {'disp': True,
+                        'iprint': 2,
+                        'maxiter': 150,
+                        'full_output': True},
             'ftype': ftype,
             'fmi_opts': fmi_opts
         }  # Default
 
         # User options
-        self.SLSQP_OPTS = self._update_opts(self.SLSQP_OPTS,
-                                            slsqp_opts,
-                                            'SLSQP')
+        self.SCIPY_OPTS = \
+            self._update_opts(self.SCIPY_OPTS, scipy_opts, 'SCIPY')
 
         # Method dictionary
         self.method_dict = {
             'GA': (GA, self.GA_OPTS),
             'PS': (PS, self.PS_OPTS),
-            'SLSQP': (SLSQP, self.SLSQP_OPTS)
+            'SCIPY': (SCIPY, self.SCIPY_OPTS)
         }  # Key -> method name, value -> (method class, method options)
 
         # List of learning periods (tuples with start, stop)
@@ -246,7 +247,7 @@ class Estimation(object):
 
         # (1) Initialize local variables
         # Tuple with method names
-        # e.g. ('GA', 'PS'), ('GA', 'SLSQP') or ('GA', )
+        # e.g. ('GA', 'PS'), ('GA', 'SCIPY') or ('GA', )
         methods = self.methods
 
         # List of plots to be saved

@@ -77,11 +77,11 @@ if __name__ == "__main__":
 
     # Session
     session = Estimation(workdir, fmu_path, inp, known, est, ideal,
-                         methods=('GA', 'PS'),  # 'SLSQP' will have problems
+                         methods=('GA', 'PS'),
                          ga_opts={'maxiter': 20, 'tol': 1e-6, 'lhs': False,
                                   'pop_size': 8, 'trm_size': 3},
                          ps_opts={'maxiter': 500, 'tol': 1e-8},
-                         slsqp_opts={'scipy_opts': {'tol': 1e-6}},
+                         scipy_opts={'scipy_opts': {'tol': 1e-6}},
                          ftype='RMSE', seed=1)
 
     t0 = time.time()

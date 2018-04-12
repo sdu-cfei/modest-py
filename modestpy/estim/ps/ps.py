@@ -251,7 +251,7 @@ class PS(object):
                     if err < best_err:
                         self.res = result
                         best_err = err
-                        
+
                         # Shortest path search
                         # best_estimates = PS._replace_par(best_estimates,
                         #                                  new_par)
@@ -390,4 +390,3 @@ class PS(object):
             if new_list[i].name == estpar.name:
                 new_list[i] = copy.deepcopy(estpar)
         return new_list
-

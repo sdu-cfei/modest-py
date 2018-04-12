@@ -14,6 +14,7 @@ from __future__ import print_function
 import unittest
 from modestpy.test import test_ga
 from modestpy.test import test_ps
+from modestpy.test import test_scipy
 from modestpy.test import test_estimation
 from modestpy.test import test_utilities
 
@@ -23,6 +24,7 @@ def all_suites():
     suites = [
         test_ga.suite(),
         test_ps.suite(),
+        test_scipy.suite(),
         test_estimation.suite(),
         test_utilities.suite()
     ]

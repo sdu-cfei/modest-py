@@ -63,7 +63,7 @@ if __name__ == "__main__":
                          methods=('GA', 'PS'),
                          ga_opts={'maxiter': 5, 'tol': 0.001, 'lhs': True},
                          ps_opts={'maxiter': 500, 'tol': 1e-6},
-                         slsqp_opts={},
+                         scipy_opts={},
                          ftype='RMSE', seed=1,
                          default_log=True, logfile='simple.log')
 
