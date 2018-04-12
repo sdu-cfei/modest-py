@@ -69,11 +69,11 @@ class TestSCIPY(unittest.TestCase):
 
         # Generate plots
         self.scipy.plot_comparison(os.path.join(self.tmpdir,
-                                             'scipy_comparison.png'))
+                                                'scipy_comparison.png'))
         self.scipy.plot_error_evo(os.path.join(self.tmpdir,
-                                            'scipy_error_evo.png'))
+                                               'scipy_error_evo.png'))
         self.scipy.plot_parameter_evo(os.path.join(self.tmpdir,
-                                                'scipy_param_evo.png'))
+                                                   'scipy_param_evo.png'))
 
         # Make sure plots are created
         self.assertTrue(os.path.exists(os.path.join(self.tmpdir,

@@ -191,14 +191,16 @@ class SCIPY(object):
         self.summary.index.name = SCIPY.ITER  # Rename index
 
         # Update error
-        self.summary[SCIPY.ERR] = map(objective,
-                                      self.summary[[x.name for x
-                                                    in self.est]].values)
+        self.summary[SCIPY.ERR] = \
+            list(map(objective,
+                     self.summary[[x.name for x in self.est]].values))
 
         for ep in self.est:
             name = ep.name
-            self.summary[name] = map(lambda x: SCIPY.rescale(x, ep.lo, ep.hi),
-                                     self.summary[name])  # Rescale
+            # list(map(...)) - for Python 2/3 compatibility
+            self.summary[name] = \
+                list(map(lambda x: SCIPY.rescale(x, ep.lo, ep.hi),
+                         self.summary[name]))  # Rescale
 
         # Add solver name to column `method`
         self.summary[SCIPY.METHOD] += '[' + self.solver + ']'
