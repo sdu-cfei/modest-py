@@ -197,7 +197,7 @@ class Model(object):
                 self.logger.warning("Simulation failed, failure no. {}"
                                     .format(tries))
                 self.logger.warning(type(e).__name__)
-                self.logger.warning(e.message)
+                self.logger.warning(str(e))
                 if tries >= Model.TRIES:
                     self.logger.error("Maximum number of failures "
                                       "reached ({}). "

@@ -596,16 +596,17 @@ class Estimation(object):
         # Defaults
         if lp_n is None:
             lp_n = 1
-        if lp_len is None:
-            lp_len = self.ideal.index[-1] - self.ideal.index[0]
         if lp_frame is None:
             lp_frame = (self.ideal.index[0], self.ideal.index[-1])
+        if lp_len is None:
+            lp_len = lp_frame[1] - lp_frame[0]
 
         # Assign time frame
         t0 = lp_frame[0]
         tend = lp_frame[1]
-        assert lp_len <= tend - t0, 'Learning period length cannot be ' \
-                                    'longer than data length!'
+        assert lp_len <= tend - t0, \
+            'Learning period length cannot be ' \
+            'longer than data length!'
 
         # Return variable
         lp = []
