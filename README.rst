@@ -35,7 +35,7 @@ Install dependencies:
 
 ::
 
-    conda install pandas numpy matplotlib
+    conda install scipy pandas numpy matplotlib
     conda install -c chria pyfmi
     conda install -c conda-forge pydoe
 

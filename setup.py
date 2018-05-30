@@ -20,6 +20,7 @@ setup(name='modestpy',
           'modestpy.test'],
       include_package_data=True,
       install_requires=[
+	  'scipy',
           'pandas>=0.17.1',
           'matplotlib',
           'numpy>=1.13.0',
