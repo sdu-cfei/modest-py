@@ -16,8 +16,10 @@ Features:
 - suitable also for non-continuous and non-differentiable models,
 - compatible with both Python 2.7 and 3.
 
-Installation with conda
------------------------
+Installation with conda (recommended)
+-------------------------------------
+
+This procedure has been tested on Debian 9 and Ubuntu 16.04 with Python 3.
 
 It is advised to use ``conda`` to install the required dependencies.
 ``modestpy`` itself still has to be installed using ``pip``
@@ -48,7 +50,9 @@ Install ``modestpy``:
 Installation with pip
 ---------------------
 
-Alternatively, ``pyfmi`` can be installed as part of `JModelica <http://www.jmodelica.org/>`__.
+This procedure has been tested on Windows 7 with Python 2.
+
+Install ``pyfmi`` as part of `JModelica <http://www.jmodelica.org/>`__.
 
 To install ``modestpy`` use ``pip`` (other dependencies will be installed automatically):
 
@@ -61,6 +65,8 @@ To get the latest development version download directly from GitHub repository:
 ::
 
     python -m pip install https://github.com/sdu-cfei/modest-py/archive/master.zip
+
+Note, that JModelica installs Python and libraries in a separate directory than the standard Python distribution. Therefore either the path to those libraries needs to be added to PYTHONPATH or ModestPy needs to be installed inside the JModelica distribution.
 
 Test your installation
 ----------------------
