@@ -19,12 +19,19 @@ Features:
 Installation with conda (recommended)
 -------------------------------------
 
+Thanks to `Julien Schueller <https://github.com/jschueller>`_ it is now possible to install ModestPy through ``conda``:
+
+::
+
+   conda install -c conda-forge modestpy
+
+Installation with conda and pip
+-------------------------------
+
 This procedure has been tested on Debian 9 and Ubuntu 16.04 with Python 3.
 
 It is advised to use ``conda`` to install the required dependencies.
-``modestpy`` itself still has to be installed using ``pip``
-(a ``conda`` package is planned in the future), but it can be installed
-in the ``conda`` environment.
+``modestpy`` itself can be installed using ``pip`` inside the ``conda`` environment.
 
 Create separate environment (optional):
 
@@ -71,7 +78,7 @@ Note, that JModelica installs Python and libraries in a separate directory than 
 Test your installation
 ----------------------
 
-To run tests:
+The unit tests will work only if you cloned the project from GitHub. To run tests:
 
 .. code:: python
 
