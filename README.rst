@@ -19,11 +19,12 @@ Features:
 Installation with conda (recommended)
 -------------------------------------
 
-Thanks to `Julien Schueller <https://github.com/jschueller>`_ it is now possible to install ModestPy through ``conda``:
+It is now possible to install ModestPy through ``conda``:
 
 ::
 
-   conda install -c conda-forge modestpy
+   conda config --add channels conda-forge
+   conda install modestpy
 
 Installation with conda and pip
 -------------------------------
