@@ -7,7 +7,7 @@ FMI-compliant Model Estimation in Python
 Description
 -----------
 
-**modestpy** facilitates parameter estimation in physical models compliant with
+**modestpy** facilitates parameter estimation in models compliant with
 `Functional Mock-up Interface <https://fmi-standard.org/>`__.
 
 Features:
