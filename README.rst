@@ -125,11 +125,6 @@ e.g.:
 3) Scatter matrix plot for interdependencies between parameters:
    |Intedependencies|
 
-Credits
--------
-
-- 2017-2018: `Krzysztof Arendt <https://github.com/krzysztofarendt>`__, Center for Energy Informatics, University of Southern Denmark
-
 License
 -------
 
