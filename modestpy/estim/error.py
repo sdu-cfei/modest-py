@@ -50,7 +50,7 @@ def calc_err(result, ideal, forgetting=False, ftype='RMSE'):
     result = result.rename(columns=lambda x: x + '_model')
 
     # Concatenate and interpolate
-    comp = pd.concat([ideal, result])
+    comp = pd.concat([ideal, result], sort=False)
     comp = comp.sort_index().interpolate().bfill()
 
     if forgetting:
