@@ -46,6 +46,11 @@ class TestSCIPY(unittest.TestCase):
         known_path = os.path.join(parent, 'resources', 'simple2R1C',
                                   'known.json')
 
+        # Assert there is an FMU for this platform
+        assert os.path.exists(self.fmu_path), \
+            "FMU for this platform ({}) doesn't exist.\n".format(platform) + \
+            "No such file: {}".format(self.fmu_path)
+
         self.inp = pd.read_csv(inp_path).set_index('time')
         self.ideal = pd.read_csv(ideal_path).set_index('time')
 
