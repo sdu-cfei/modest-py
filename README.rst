@@ -133,7 +133,7 @@ To cite ModestPy, please use:
 \K. Arendt, M. Jradi, M. Wetter, C.T. Veje, ModestPy: An Open-Source Python Tool for Parameter Estimation in Functional Mock-up Units, *Proceedings of the American Modelica Conference 2018*, Cambridge, MA, USA, October 9-10, 2018.
 
 The preprint version of the conference paper presenting ModestPy is available `here
-<http://findresearcher.sdu.dk/portal/files/143377618/ModestPy_preprint_2018.pdf>`__.
+<http://findresearcher.sdu.dk/portal/files/143377618/ModestPy_preprint_2018.pdf>`__. The paper was based on v.0.0.8.
 
 License
 -------
