@@ -7,7 +7,7 @@ FMI-compliant Model Estimation in Python
 Description
 -----------
 
-**modestpy** facilitates parameter estimation in physical models compliant with
+**modestpy** facilitates parameter estimation in models compliant with
 `Functional Mock-up Interface <https://fmi-standard.org/>`__.
 
 Features:
@@ -16,13 +16,23 @@ Features:
 - suitable also for non-continuous and non-differentiable models,
 - compatible with both Python 2.7 and 3.
 
-Installation with conda
------------------------
+Installation with conda (recommended)
+-------------------------------------
+
+It is now possible to install ModestPy through ``conda``:
+
+::
+
+   conda config --add channels conda-forge
+   conda install modestpy
+
+Installation with conda and pip
+-------------------------------
+
+This procedure has been tested on Debian 9 and Ubuntu 16.04 with Python 3.
 
 It is advised to use ``conda`` to install the required dependencies.
-``modestpy`` itself still has to be installed using ``pip``
-(a ``conda`` package is planned in the future), but it can be installed
-in the ``conda`` environment.
+``modestpy`` itself can be installed using ``pip`` inside the ``conda`` environment.
 
 Create separate environment (optional):
 
@@ -48,7 +58,9 @@ Install ``modestpy``:
 Installation with pip
 ---------------------
 
-Alternatively, ``pyfmi`` can be installed as part of `JModelica <http://www.jmodelica.org/>`__.
+This procedure has been tested on Windows 7 with Python 2.
+
+Install ``pyfmi`` as part of `JModelica <http://www.jmodelica.org/>`__.
 
 To install ``modestpy`` use ``pip`` (other dependencies will be installed automatically):
 
@@ -62,10 +74,12 @@ To get the latest development version download directly from GitHub repository:
 
     python -m pip install https://github.com/sdu-cfei/modest-py/archive/master.zip
 
+Note, that JModelica installs Python and libraries in a separate directory than the standard Python distribution. Therefore either the path to those libraries needs to be added to PYTHONPATH or ModestPy needs to be installed inside the JModelica distribution.
+
 Test your installation
 ----------------------
 
-To run tests:
+The unit tests will work only if you cloned the project from GitHub. To run tests:
 
 .. code:: python
 
@@ -111,10 +125,15 @@ e.g.:
 3) Scatter matrix plot for interdependencies between parameters:
    |Intedependencies|
 
-Credits
--------
+Cite
+----
 
-- 2017-2018: `Krzysztof Arendt <https://github.com/krzysztofarendt>`__, Center for Energy Informatics, University of Southern Denmark
+To cite ModestPy, please use:
+
+\K. Arendt, M. Jradi, M. Wetter, C.T. Veje, ModestPy: An Open-Source Python Tool for Parameter Estimation in Functional Mock-up Units, *Proceedings of the American Modelica Conference 2018*, Cambridge, MA, USA, October 9-10, 2018.
+
+The preprint version of the conference paper presenting ModestPy is available `here
+<http://findresearcher.sdu.dk/portal/files/143377618/ModestPy_preprint_2018.pdf>`__.
 
 License
 -------
