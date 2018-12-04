@@ -79,7 +79,7 @@ Note, that JModelica installs Python and libraries in a separate directory than 
 Test your installation
 ----------------------
 
-The unit tests will work only if you cloned the project from GitHub. To run tests:
+The unit tests will work only if you installed modestpy with conda or cloned the project from GitHub. To run tests:
 
 .. code:: python
 
