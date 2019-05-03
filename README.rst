@@ -138,7 +138,7 @@ The preprint version of the conference paper presenting ModestPy is available `h
 License
 -------
 
-Copyright (c) 2017-2018, University of Southern Denmark. All rights reserved.
+Copyright (c) 2017-2019, University of Southern Denmark. All rights reserved.
 
 This code is licensed under BSD 2-clause license. See
 `LICENSE </LICENSE>`__ file in the project root for license terms.
