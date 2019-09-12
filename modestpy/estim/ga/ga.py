@@ -376,7 +376,7 @@ class GA(object):
         pars.remove(GA.ERR)
         assert len(pars) > 0, 'No parameters found'
 
-        fig, axes = plt.subplots(nrows=len(pars), sharex=True)
+        fig, axes = plt.subplots(nrows=len(pars), sharex=True, squeeze=False)
         fig.subplots_adjust(right=0.75)
         i = 0
 
@@ -384,7 +384,7 @@ class GA(object):
         first_err = self.fittest_errors[0]
 
         for v in pars:
-            ax = axes[i]
+            ax = axes[i,0]
             scatter = ax.scatter(x=estimates[GA.ITER],
                                  y=estimates[v],
                                  c=estimates[GA.ERR],
@@ -398,7 +398,7 @@ class GA(object):
                     transform=ax.transAxes, fontweight='bold',
                     horizontalalignment='center', verticalalignment='center')
             i += 1
-        axes[-1].set_xlabel('Generation')
+        axes[-1,0].set_xlabel('Generation')
 
         # Color bar on the side
         cbar_ax = fig.add_axes([0.85, 0.10, 0.05, 0.8])
