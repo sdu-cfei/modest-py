@@ -1,3 +1,12 @@
+Changes in v. 0.0.9:
+====================
+- it is possible now to estimate just 1 parameter (fixed bug in plot_pop_evo())
+
+Changes in v. 0.0.8:
+====================
+- Version used in the ModestPy paper
+- Added interface to SciPy algorithms
+
 Changes in v. 0.0.7:
 ====================
 - added SQP method

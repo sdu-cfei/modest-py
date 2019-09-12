@@ -14,7 +14,7 @@ Features:
 
 - combination of global and local search methods (genetic algorithm, pattern search, truncated Newton method, L-BFGS-B, sequential least squares),
 - suitable also for non-continuous and non-differentiable models,
-- compatible with both Python 2.7 and 3.
+- compatible with both Python 2.7 and 3 (tested up to 3.5).
 
 Installation with conda (recommended)
 -------------------------------------
