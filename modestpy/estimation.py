@@ -7,9 +7,9 @@ This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import  # TODO: Drop Python 2 support
+from __future__ import division         # TODO: Drop Python 2 support
+from __future__ import print_function   # TODO: Drop Python 2 support
 
 import logging
 import random
@@ -23,6 +23,7 @@ from pyfmi.fmi import FMUException
 from modestpy.estim.ga.ga import GA
 from modestpy.estim.ps.ps import PS
 from modestpy.estim.scipy.scipy import SCIPY
+from modestpy.estim.ga_parallel.ga_parallel import MODESTGA
 from modestpy.estim.model import Model
 import modestpy.estim.error
 from modestpy.estim.plots import plot_comparison
@@ -45,7 +46,7 @@ class Estimation(object):
     def __init__(self, workdir, fmu_path, inp, known, est, ideal,
                  lp_n=None, lp_len=None, lp_frame=None, vp=None,
                  ic_param=None, methods=('GA', 'PS'), ga_opts={}, ps_opts={},
-                 scipy_opts={}, fmi_opts={}, ftype='RMSE', seed=None,
+                 scipy_opts={}, modestga_opts={}, fmi_opts={}, ftype='RMSE', seed=None,
                  default_log=True, logfile='modestpy.log'):
         """
         Index in DataFrames ``inp`` and ``ideal`` must be named 'time'
@@ -59,6 +60,7 @@ class Estimation(object):
             - PS    - pattern search (Hooke-Jeeves)
             - SCIPY - interface to algorithms available through
                       scipy.optimize.minimize()
+            - MODESTGA - parallel genetic algorithm
 
         Parameters:
         -----------
@@ -195,11 +197,23 @@ class Estimation(object):
         self.SCIPY_OPTS = \
             self._update_opts(self.SCIPY_OPTS, scipy_opts, 'SCIPY')
 
+        # MODESTGA options
+        self.MODESTGA_OPTS = {
+            'options': {},
+            'ftype': ftype,
+            'fmi_opts': fmi_opts
+        }  # Default
+
+        # User options
+        self.MODESTGA_OPTS = \
+            self._update_opts(self.MODESTGA_OPTS, modestga_opts, 'MODESTGA')
+
         # Method dictionary
         self.method_dict = {
             'GA': (GA, self.GA_OPTS),
             'PS': (PS, self.PS_OPTS),
-            'SCIPY': (SCIPY, self.SCIPY_OPTS)
+            'SCIPY': (SCIPY, self.SCIPY_OPTS),
+            'MODESTGA': (MODESTGA, self.MODESTGA_OPTS)
         }  # Key -> method name, value -> (method class, method options)
 
         # List of learning periods (tuples with start, stop)

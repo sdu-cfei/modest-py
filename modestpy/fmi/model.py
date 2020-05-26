@@ -109,10 +109,12 @@ class Model(object):
         self.parameters_from_df(df)
 
     def parameters_from_df(self, df):
+        self.logger.debug(f'parameters_from_df = {df}')
         if df is not None:
             df = df.copy()
             for col in df:
                 self.parameter_df[col] = df[col]
+        self.logger.debug(f'Updated parameters: {self.parameter_df}')
 
     def simulate(self, com_points=None, reset=True):
         """

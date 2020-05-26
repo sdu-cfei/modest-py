@@ -38,7 +38,7 @@ class Model(object):
 
         # Log level
         try:
-            self.model.model.set_log_level(FMI_WARNING)
+            self.model.model.set_log_level(FMI_DEBUG)
         except AttributeError as e:
             self.logger.error(e.message)
             self.logger.error('Proceeding with standard log level...')
