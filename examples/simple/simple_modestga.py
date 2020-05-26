@@ -66,7 +66,7 @@ if __name__ == "__main__":
                          ga_opts={'maxiter': 5, 'tol': 0.001, 'lhs': True},
                          ps_opts={'maxiter': 500, 'tol': 1e-6},
                          scipy_opts={},
-                         modestga_opts={'generations': 50},
+                         modestga_opts={'generations': 5, 'tol': 1e-3},
                          ftype='RMSE', seed=1,
                          default_log=True, logfile='simple.log')
 

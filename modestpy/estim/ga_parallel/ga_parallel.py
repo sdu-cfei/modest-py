@@ -137,7 +137,9 @@ class MODESTGA(object):
     ERR = '_error_'
 
     def __init__(self, fmu_path, inp, known, est, ideal,
-                 options={}, fmi_opts=None, ftype='RMSE'):
+                 options={}, fmi_opts=None, ftype='RMSE',
+                 generations=None, pop_size=None, mut_rate=None,
+                 trm_size=None, tol=None, inertia=None):
         """
         :param fmu_path: string, absolute path to the FMU
         :param inp: DataFrame, columns with input timeseries, index in seconds
@@ -176,9 +178,20 @@ class MODESTGA(object):
             'inertia': 100,             # Max. number of non-improving generations
             'xover_ratio': 0.5          # Crossover ratio
         }
-        if len(options) > 0:
-            for key in options:
-                self.options[key] = options[key]
+
+        # User options
+        if generations is not None:
+            self.options['generations'] = generations
+        if pop_size is not None:
+            self.options['pop_size'] = pop_size
+        if mut_rate is not None:
+            self.options['mut_rate'] = mut_rate
+        if trm_size is not None:
+            self.options['trm_size'] = trm_size
+        if tol is not None:
+            self.options['tol'] = tol
+        if inertia is not None:
+            self.options['inertia'] = inertia
 
         # Known parameters to DataFrame
         known_df = pd.DataFrame()
