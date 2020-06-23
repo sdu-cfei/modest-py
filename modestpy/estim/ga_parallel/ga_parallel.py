@@ -236,35 +236,6 @@ class MODESTGA(object):
         self.logger.info('MODESTGA initialized... =========================')
 
     def estimate(self):
-        # Initial error
-        # initial_result = self.model.simulate(com_points=self.com_points)
-        # self.res = initial_result
-        # initial_error = calc_err(initial_result, self.ideal,
-        #                          ftype=self.ftype)['tot']
-        # self.best_err = initial_error
-
-        # def objective(x):  # TODO: it must be pickable for multiprocessing
-        #     """Returns model error"""
-        #     # Updated parameters are stored in x. Need to update the model.
-        #     self.logger.debug('objective(x={})'.format(x))
-
-        #     parameters = pd.DataFrame(index=[0])
-        #     try:
-        #         for v, ep in zip(x, self.est):
-        #             parameters[ep.name] = MODESTGA.rescale(v, ep.lo, ep.hi)
-        #     except TypeError as e:
-        #         print(x)
-        #         raise e
-        #     self.model.set_param(parameters)
-        #     result = self.model.simulate(com_points=MODESTGA.COM_POINTS)
-        #     err = calc_err(result, self.ideal, ftype=self.ftype)['tot']
-        #     # Update best error and result
-        #     if err < self.best_err:
-        #         self.best_err = err
-        #         self.res = result
-
-        #     return err
-
         # Objective function
         self.logger.debug('Instantiating ObjectiveFun')
         objective_fun = ObjectiveFun(
