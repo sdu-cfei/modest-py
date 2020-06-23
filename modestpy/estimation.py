@@ -198,10 +198,10 @@ class Estimation(object):
             self._update_opts(self.SCIPY_OPTS, scipy_opts, 'SCIPY')
 
         # MODESTGA options
-        workers = os.cpu_count() - 1
         self.MODESTGA_OPTS = {
+            'workers': 3,              # CPU cores to use
             'generations': 50,         # Max. number of generations
-            'pop_size': 50 * workers,  # Population size
+            'pop_size': 50,            # Population size
             'mut_rate': 0.01,          # Mutation rate
             'trm_size': 20,            # Tournament size
             'tol': 1e-3,               # Solution tolerance

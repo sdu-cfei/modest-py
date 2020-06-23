@@ -139,7 +139,7 @@ class MODESTGA(object):
     def __init__(self, fmu_path, inp, known, est, ideal,
                  options={}, fmi_opts=None, ftype='RMSE',
                  generations=None, pop_size=None, mut_rate=None,
-                 trm_size=None, tol=None, inertia=None):
+                 trm_size=None, tol=None, inertia=None, workers=None):
         """
         :param fmu_path: string, absolute path to the FMU
         :param inp: DataFrame, columns with input timeseries, index in seconds
@@ -148,7 +148,7 @@ class MODESTGA(object):
                     (guess value, lo limit, hi limit), guess can be None
         :param ideal: DataFrame, ideal solution to be compared with model
                       outputs (variable names must match)
-        :param options: dict, additional options passed to the solver
+        :param options: dict, additional options passed to the solver (not used here)
         :param fmi_opts: dict, Additional FMI options to be passed to
                          the simulator (consult FMI specification)
         :param ftype: str, cost function type. Currently 'NRMSE' (advised
@@ -168,10 +168,10 @@ class MODESTGA(object):
         self.com_points = len(self.ideal) - 1  # CVODE solver complains without "-1"
 
         # Default solver options
-        self.workers = os.cpu_count() - 1
+        self.workers = 3                # CPU cores to use
         self.options = {
-            'generations': 50,        # Max. number of generations
-            'pop_size': 50 * self.workers,  # Population size
+            'generations': 50,          # Max. number of generations
+            'pop_size': 50,             # Population size
             'mut_rate': 0.01,           # Mutation rate
             'trm_size': 20,             # Tournament size
             'tol': 1e-3,                # Solution tolerance
@@ -180,6 +180,8 @@ class MODESTGA(object):
         }
 
         # User options
+        if workers is not None:
+            self.workers = workers
         if generations is not None:
             self.options['generations'] = generations
         if pop_size is not None:
@@ -288,14 +290,13 @@ class MODESTGA(object):
         self.logger.debug(f'bounds = {b}')
 
         out = minimize(
-            # objective,          # TODO: Works with workers=1, but not pickable for multiprocessing
-            objective_fun,    # TODO: Pickable, but still doesn't work
+            objective_fun,
             bounds=b,
             x0=x0,
             args=(),
-            callback=MODESTGA._callback,  # TODO: it must be pickable
+            callback=MODESTGA._callback,
             options=self.options,
-            workers=self.workers)   # TODO: parallelize (workers > 1)
+            workers=self.workers)
 
         self.logger.debug(f'out = {out}')
         outx = [MODESTGA.rescale(x, ep.lo, ep.hi) for x, ep in
