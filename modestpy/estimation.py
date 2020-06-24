@@ -45,7 +45,7 @@ class Estimation(object):
 
     def __init__(self, workdir, fmu_path, inp, known, est, ideal,
                  lp_n=None, lp_len=None, lp_frame=None, vp=None,
-                 ic_param=None, methods=('GA', 'PS'), ga_opts={}, ps_opts={},
+                 ic_param=None, methods=('MODESTGA', 'PS'), ga_opts={}, ps_opts={},
                  scipy_opts={}, modestga_opts={}, fmi_opts={}, ftype='RMSE', seed=None,
                  default_log=True, logfile='modestpy.log'):
         """
@@ -56,11 +56,11 @@ class Estimation(object):
         (it happens quite often...). TODO: Check index name assertion.
 
         Currently available estimation methods:
-            - GA    - genetic algorithm
-            - PS    - pattern search (Hooke-Jeeves)
-            - SCIPY - interface to algorithms available through
-                      scipy.optimize.minimize()
-            - MODESTGA - parallel genetic algorithm
+            - MODESTGA  - parallel genetic algorithm (default GA in modestpy)
+            - GA        - single-process genetic algorithm (legacy implementation)
+            - PS        - pattern search (Hooke-Jeeves)
+            - SCIPY     - interface to algorithms available through
+                          scipy.optimize.minimize()
 
         Parameters:
         -----------
@@ -216,10 +216,11 @@ class Estimation(object):
 
         # Method dictionary
         self.method_dict = {
+            'MODESTGA': (MODESTGA, self.MODESTGA_OPTS),
             'GA': (GA, self.GA_OPTS),
             'PS': (PS, self.PS_OPTS),
-            'SCIPY': (SCIPY, self.SCIPY_OPTS),
-            'MODESTGA': (MODESTGA, self.MODESTGA_OPTS)
+            'SCIPY': (SCIPY, self.SCIPY_OPTS)
+
         }  # Key -> method name, value -> (method class, method options)
 
         # List of learning periods (tuples with start, stop)

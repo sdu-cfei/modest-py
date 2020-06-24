@@ -68,7 +68,7 @@ class ObjectiveFun:
         self.logger.debug(f"x = {x}")
         if self.model is None:
             self.model = self._get_model_instance(
-                self.fmu_path, self.inp, self.known, self.est, 
+                self.fmu_path, self.inp, self.known, self.est,
                 self.output_names, self.fmi_opts
             )
             logging.debug(f"Model instance returned: {self.model}")
@@ -118,7 +118,40 @@ class ObjectiveFun:
 
 class MODESTGA(object):
     """
-    Using GA with interface similar to `scipy.optimize.minimize()`.
+    Parallel Genetic Algorithm based on modestga
+    (https://github.com/krzysztofarendt/modestga).
+
+    Main features of modestga:
+    - parallel,
+    - adaptive mutation,
+    - suitable for large-scale non-convex problems,
+    - pure Python, so easy to adapt to own needs.
+
+    The number of CPU cores to use can be controlled
+    with the argument `workers` (default: 2). If run with `workers`=1,
+    the algorithm works in a single process mode and is similar to the legacy
+    GA implementation in modestpy.
+
+    If `workers` > 1, the number of processes is equal to `workers`+1.
+    In this parallel mode, the population is divided into `workers` subpopulations,
+    each of which evolves within a single process, while the main process
+    is responsible for gene exchange between subpopulations at the end
+    of each generation.
+
+    Since the population is divided into smaller subpopulations, the user
+    should remember to adjust the tournament size to not set it larger
+    than the subpopulation size.
+
+    The full list of options which can be used to control the optimization
+    process is as follows:
+    - `workers`     - number of CPUs (default 2),
+    - `generations` - number of GA iterations (default 50),
+    - `pop_size`    - population size (default 50), is divided into `workers` subpopulations,
+    - `mut_rate`    - mutation rate (default 0.01),
+    - `trm_size`    - tournament size (default 20), should be lower than the subpopulation size,
+    - `tol`         - solution absolute tolerance (default 1e-3),
+    - `inertia`     - maximum number of non-improving generations (default 100),
+    - `xover_ratio` - crossover ratio (default 0.5).
     """
     # Default number of communication points, should be adjusted
     # to the number of samples
@@ -152,7 +185,7 @@ class MODESTGA(object):
         :param fmi_opts: dict, Additional FMI options to be passed to
                          the simulator (consult FMI specification)
         :param ftype: str, cost function type. Currently 'NRMSE' (advised
-                      for multi-objective estimation) or 'RMSE'. 
+                      for multi-objective estimation) or 'RMSE'.
         """
         self.logger = logging.getLogger(type(self).__name__)
 
@@ -168,7 +201,7 @@ class MODESTGA(object):
         self.com_points = len(self.ideal) - 1  # CVODE solver complains without "-1"
 
         # Default solver options
-        self.workers = 3                # CPU cores to use
+        self.workers = 2                # CPU cores to use
         self.options = {
             'generations': 50,          # Max. number of generations
             'pop_size': 50,             # Population size

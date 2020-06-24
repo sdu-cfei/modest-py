@@ -13,6 +13,7 @@ setup(
     packages=[
         'modestpy',
         'modestpy.estim',
+        'modestpy.estim.ga_parallel',
         'modestpy.estim.ga',
         'modestpy.estim.ps',
         'modestpy.estim.scipy',
