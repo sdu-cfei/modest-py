@@ -6,6 +6,7 @@
 **/workdir/**
 build/
 .vscode/
+*.swp
 
 # Setuptools distribution folder.
 dist/
