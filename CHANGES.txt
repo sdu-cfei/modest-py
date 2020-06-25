@@ -1,36 +1,40 @@
-Changes in v. 0.0.9:
+Changes in v.0.1
+====================
+- parallel genetic algorithm added (based on modestga)
+
+Changes in v.0.0.9:
 ====================
 - it is possible now to estimate just 1 parameter (fixed bug in plot_pop_evo())
 
-Changes in v. 0.0.8:
+Changes in v.0.0.8:
 ====================
 - Version used in the ModestPy paper
 - Added interface to SciPy algorithms
 
-Changes in v. 0.0.7:
+Changes in v.0.0.7:
 ====================
 - added SQP method
 - modified interface of the Estimation class to facilitate multi-algorithm pipelines
 
-Changes in v. 0.0.6:
+Changes in v.0.0.6:
 ====================
 - LHS initialization of GA
 - random seed
 - many small bug fixes
 
-Changes in v. 0.0.5:
+Changes in v.0.0.5:
 ====================
 - Decreased tolerance of CVode solver in PyFMI
 
-Changes in v. 0.0.4:
+Changes in v.0.0.4:
 ====================
 - New pattern search plot (parameter evolution) added to Estimation.py
 - GA/PS default parameters tuned
 
-Changes in v. 0.0.3:
+Changes in v.0.0.3:
 ====================
 - Tolerance criteria for GA and PS exposed in the Estimation API.
 
-Changes in v. 0.0.2:
+Changes in v.0.0.2:
 ====================
 - Estimation class imported directly in __init__.py to allow imports like "from modestpy import Estimation".
