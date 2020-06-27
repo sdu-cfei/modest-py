@@ -60,23 +60,34 @@ if __name__ == "__main__":
 
     # MODEL IDENTIFICATION ==========================================
     # Comparing parallel GA against GA using different population sizes
-    for method in ['MODESTGA', 'GA']:
-        for pop in [40, 60, 80]:
-            case_workdir = os.path.join(workdir, f"{method}-{pop}")
-            if not os.path.exists(case_workdir):
-                os.mkdir(case_workdir)
+    case_workdir = os.path.join(workdir, "modestga")
+    if not os.path.exists(case_workdir):
+        os.mkdir(case_workdir)
 
-            session = Estimation(case_workdir, fmu_path, inp, known, est, ideal,
-                                lp_n=1, lp_len=50000, lp_frame=(0, 50000),
-                                vp=(0, 50000), ic_param={'Tstart': 'T'},
-                                methods=((method,)),
-                                ga_opts={
-                                    'maxiter': 20, 'pop_size': pop,
-                                    'trm_size': 7, 'tol': 1e-3, 'lhs': True},
-                                modestga_opts={
-                                    'generations': 20, 'pop_size': pop, 'trm_size': 7,
-                                    'tol': 1e-3, 'workers': 2},
-                                ftype='RMSE',
-                                default_log=True, logfile='simple.log')
-            estimates = session.estimate()
-            err, res = session.validate()
+    session = Estimation(
+        case_workdir,
+        fmu_path,
+        inp,
+        known,
+        est,
+        ideal,
+        lp_n=1,
+        lp_len=50000,
+        lp_frame=(0, 50000),
+        vp=(0, 50000),
+        ic_param={'Tstart': 'T'},
+        methods=('MODESTGA',),
+        modestga_opts={
+            'generations': 20,   # Max. number of generations
+            'pop_size': 60,      # Population size
+            'trm_size': 7,       # Tournament size
+            'tol': 1e-3,         # Absolute tolerance
+            'workers': 3         # Number of CPUs to use
+        },
+        ftype='RMSE',
+        default_log=True,
+        logfile='simple.log'
+    )
+    estimates = session.estimate()
+    err, res = session.validate()
+
