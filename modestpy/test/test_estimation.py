@@ -64,11 +64,12 @@ class TestEstimation(unittest.TestCase):
         shutil.rmtree(self.tmpdir)
 
     def test_estimation_basic(self):
-        ga_opts = {'maxiter': 3}
+        """Will use default methods ('MODESTGA', 'PS')"""
+        modestga_opts = {'generations': 3}
         ps_opts = {'maxiter': 3}
         session = Estimation(self.tmpdir, self.fmu_path, self.inp,
                              self.known, self.est, self.ideal,
-                             ga_opts=ga_opts, ps_opts=ps_opts)
+                             modestga_opts=modestga_opts, ps_opts=ps_opts)
         estimates = session.estimate()
         err, res = session.validate()
 
@@ -194,6 +195,7 @@ class TestEstimation(unittest.TestCase):
         ps_opts = {'maxiter': 10, 'rel_step': 0.1, 'tol': 0.001, 'try_lim': 10}
         session = Estimation(self.tmpdir, self.fmu_path, self.inp,
                              self.known, self.est, self.ideal,
+                             methods=('GA', 'PS'),
                              ga_opts=ga_opts, ps_opts=ps_opts)
         ga_return = session.GA_OPTS
         ps_return = session.PS_OPTS

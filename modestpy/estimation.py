@@ -201,9 +201,9 @@ class Estimation(object):
         self.MODESTGA_OPTS = {
             'workers': 3,              # CPU cores to use
             'generations': 50,         # Max. number of generations
-            'pop_size': 50,            # Population size
+            'pop_size': 30,            # Population size
             'mut_rate': 0.01,          # Mutation rate
-            'trm_size': 20,            # Tournament size
+            'trm_size': 3,             # Tournament size
             'tol': 1e-3,               # Solution tolerance
             'inertia': 100,            # Max. number of non-improving generations
             'ftype': ftype,

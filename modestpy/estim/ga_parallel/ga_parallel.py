@@ -201,12 +201,12 @@ class MODESTGA(object):
         self.com_points = len(self.ideal) - 1  # CVODE solver complains without "-1"
 
         # Default solver options
-        self.workers = 2                # CPU cores to use
+        self.workers = 3                # CPU cores to use
         self.options = {
             'generations': 50,          # Max. number of generations
-            'pop_size': 50,             # Population size
+            'pop_size': 30,             # Population size
             'mut_rate': 0.01,           # Mutation rate
-            'trm_size': 20,             # Tournament size
+            'trm_size': 3,             # Tournament size
             'tol': 1e-3,                # Solution tolerance
             'inertia': 100,             # Max. number of non-improving generations
             'xover_ratio': 0.5          # Crossover ratio
