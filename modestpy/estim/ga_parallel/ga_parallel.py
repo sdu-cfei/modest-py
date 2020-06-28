@@ -186,6 +186,13 @@ class MODESTGA(object):
                          the simulator (consult FMI specification)
         :param ftype: str, cost function type. Currently 'NRMSE' (advised
                       for multi-objective estimation) or 'RMSE'.
+        :param generations: int, max. number of generations
+        :param pop_size: int, population size
+        :param mut_rate: float, mutation rate
+        :param trm_size: int, tournament size
+        :param tol: float, absolute solution tolerance
+        :param inertia: int, maximum number of non-improving generations
+        :param workers: int, number of CPUs to use
         """
         self.logger = logging.getLogger(type(self).__name__)
 
@@ -206,7 +213,7 @@ class MODESTGA(object):
             'generations': 50,          # Max. number of generations
             'pop_size': 30,             # Population size
             'mut_rate': 0.01,           # Mutation rate
-            'trm_size': 3,             # Tournament size
+            'trm_size': 3,              # Tournament size
             'tol': 1e-3,                # Solution tolerance
             'inertia': 100,             # Max. number of non-improving generations
             'xover_ratio': 0.5          # Crossover ratio
@@ -227,6 +234,29 @@ class MODESTGA(object):
             self.options['tol'] = tol
         if inertia is not None:
             self.options['inertia'] = inertia
+
+        # Adjust trm_size if population size is too small
+        if self.options['trm_size'] >= (self.options['pop_size'] // (self.workers * 2)):
+            new_trm_size = self.options['pop_size'] // (self.workers * 4)
+            self.logger.warning(
+                'Tournament size has to be lower than pop_size // (workers * 2). '
+                f'Re-adjusting to trm_size = {new_trm_size}'
+            )
+            self.options['trm_size'] = new_trm_size
+
+        # Warn the user about a possible mistake in the chosen options
+        if self.options['trm_size'] <= 1:
+            self.logger.warning(
+                'Tournament size equals 1. The possible reasons are:\n'
+                '   - too small population size leading to readjusted tournament size\n'
+                '   - too many workers (population is divided among workers)\n'
+                '   - you chose tournament size equal to 1 by mistake\n'
+                'The optimization will proceed, but the performance '
+                'might be suboptimal...'
+            )
+
+        self.logger.debug(f'MODESTGA options: {self.options}')
+        self.logger.debug(f'MODESTGA workers = {self.workers}')
 
         # Known parameters to DataFrame
         known_df = pd.DataFrame()
@@ -250,8 +280,6 @@ class MODESTGA(object):
 
         # Model
         output_names = [var for var in ideal]
-        # self.model = MODESTGA._get_model_instance(fmu_path, inp, known_df, est,
-        #                                           output_names, fmi_opts)
 
         # Outputs
         self.summary = pd.DataFrame()

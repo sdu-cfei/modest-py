@@ -65,11 +65,30 @@ class TestEstimation(unittest.TestCase):
 
     def test_estimation_basic(self):
         """Will use default methods ('MODESTGA', 'PS')"""
-        modestga_opts = {'generations': 3}
-        ps_opts = {'maxiter': 3}
+        modestga_opts = {'generations': 2, 'workers': 1, 'pop_size': 6, 'trm_size': 3}
+        ps_opts = {'maxiter': 2}
         session = Estimation(self.tmpdir, self.fmu_path, self.inp,
                              self.known, self.est, self.ideal,
-                             modestga_opts=modestga_opts, ps_opts=ps_opts)
+                             modestga_opts=modestga_opts, ps_opts=ps_opts,
+                             default_log=False)
+        estimates = session.estimate()
+        err, res = session.validate()
+
+        self.assertIsNotNone(estimates)
+        self.assertGreater(len(estimates), 0)
+        self.assertIsNotNone(err)
+        self.assertIsNotNone(res)
+        self.assertGreater(len(res.index), 1)
+        self.assertGreater(len(res.columns), 0)
+
+    def test_estimation_basic_parallel(self):
+        """Will use default methods ('MODESTGA', 'PS')"""
+        modestga_opts = {'generations': 2, 'workers': 2, 'pop_size': 16, 'trm_size': 3}
+        ps_opts = {'maxiter': 2}
+        session = Estimation(self.tmpdir, self.fmu_path, self.inp,
+                             self.known, self.est, self.ideal,
+                             modestga_opts=modestga_opts, ps_opts=ps_opts,
+                             default_log=False)
         estimates = session.estimate()
         err, res = session.validate()
 
@@ -89,7 +108,8 @@ class TestEstimation(unittest.TestCase):
                              vp=(20000, 40000), ic_param={'Tstart': 'T'},
                              methods=('GA', 'PS'),
                              ga_opts=ga_opts, ps_opts=ps_opts,
-                             seed=1, ftype='NRMSE')
+                             seed=1, ftype='NRMSE',
+                             default_log=False)
 
         estimates = session.estimate()
         err, res = session.validate()  # Standard validation period
@@ -121,7 +141,8 @@ class TestEstimation(unittest.TestCase):
                              vp=(20000, 40000), ic_param={'Tstart': 'T'},
                              methods=('GA', 'PS'),
                              ga_opts=ga_opts, ps_opts=ps_opts,
-                             seed=1, ftype='RMSE')
+                             seed=1, ftype='RMSE',
+                             default_log=False)
 
         estimates = session.estimate()
         err, res = session.validate()
@@ -143,7 +164,8 @@ class TestEstimation(unittest.TestCase):
                              vp=(20000, 40000), ic_param={'Tstart': 'T'},
                              methods=('GA', ),
                              ga_opts=ga_opts, ps_opts=ps_opts,
-                             seed=1, ftype='RMSE')
+                             seed=1, ftype='RMSE',
+                             default_log=False)
         session.estimate()
 
     def test_seed(self):
@@ -156,7 +178,8 @@ class TestEstimation(unittest.TestCase):
                               vp=(20000, 40000), ic_param={'Tstart': 'T'},
                               methods=('GA', ),
                               ga_opts=ga_opts, ps_opts=ps_opts,
-                              seed=1, ftype='RMSE')
+                              seed=1, ftype='RMSE',
+                              default_log=False)
         estimates1 = session1.estimate()
         # Run 2
         session2 = Estimation(self.tmpdir, self.fmu_path, self.inp,
@@ -165,7 +188,8 @@ class TestEstimation(unittest.TestCase):
                               vp=(20000, 40000), ic_param={'Tstart': 'T'},
                               methods=('GA', ),
                               ga_opts=ga_opts, ps_opts=ps_opts,
-                              seed=1, ftype='RMSE')
+                              seed=1, ftype='RMSE',
+                              default_log=False)
         estimates2 = session2.estimate()
         # Check if estimates are the same
         same = True
@@ -186,7 +210,7 @@ class TestEstimation(unittest.TestCase):
                              vp=(20000, 40000), ic_param={'Tstart': 'T'},
                              methods=('PS', ),
                              ga_opts=ga_opts, ps_opts=ps_opts, seed=1,
-                             ftype='RMSE')
+                             ftype='RMSE', default_log=False)
         session.estimate()
 
     def test_opts(self):
@@ -196,7 +220,8 @@ class TestEstimation(unittest.TestCase):
         session = Estimation(self.tmpdir, self.fmu_path, self.inp,
                              self.known, self.est, self.ideal,
                              methods=('GA', 'PS'),
-                             ga_opts=ga_opts, ps_opts=ps_opts)
+                             ga_opts=ga_opts, ps_opts=ps_opts,
+                             default_log=False)
         ga_return = session.GA_OPTS
         ps_return = session.PS_OPTS
         self.assertDictContainsSubset(ga_opts, ga_return)
@@ -206,6 +231,7 @@ class TestEstimation(unittest.TestCase):
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(TestEstimation('test_estimation_basic'))
+    suite.addTest(TestEstimation('test_estimation_basic_parallel'))
     suite.addTest(TestEstimation('test_estimation_all_args'))
     suite.addTest(TestEstimation('test_estimation_rmse'))
     suite.addTest(TestEstimation('test_ga_only'))

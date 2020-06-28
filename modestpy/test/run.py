@@ -17,6 +17,7 @@ from modestpy.test import test_ps
 from modestpy.test import test_scipy
 from modestpy.test import test_estimation
 from modestpy.test import test_utilities
+from modestpy.loginit import config_logger
 
 
 def all_suites():
@@ -40,4 +41,5 @@ def tests():
 
 
 if __name__ == '__main__':
+    config_logger(filename='unit_tests.log', level='DEBUG')
     tests()

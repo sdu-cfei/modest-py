@@ -21,6 +21,7 @@ import pandas as pd
 import numpy as np
 from modestpy.estim.ga.ga import GA
 from modestpy.utilities.sysarch import get_sys_arch
+from modestpy.loginit import config_logger
 
 
 class TestGA(unittest.TestCase):
@@ -154,4 +155,5 @@ def suite():
 
 
 if __name__ == '__main__':
+    config_logger(filename='unit_tests.log', level='DEBUG')
     unittest.main()

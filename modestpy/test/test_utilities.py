@@ -15,6 +15,7 @@ import unittest
 import tempfile
 import os
 from modestpy.utilities.delete_logs import delete_logs
+from modestpy.loginit import config_logger
 
 
 class TestUtilities(unittest.TestCase):
@@ -47,4 +48,5 @@ def suite():
 
 
 if __name__ == "__main__":
+    config_logger(filename='unit_tests.log', level='DEBUG')
     unittest.main()

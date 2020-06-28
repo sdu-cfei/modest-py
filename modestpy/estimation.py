@@ -115,7 +115,7 @@ class Estimation(object):
         """
         # Default logging configuration?
         if default_log:
-            config_logger(filename=logfile, level='DEBUG')
+            config_logger(filename=logfile, level='WARNING')
 
         self.logger = logging.getLogger(type(self).__name__)
 

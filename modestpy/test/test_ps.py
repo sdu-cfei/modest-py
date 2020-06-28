@@ -19,6 +19,7 @@ import os
 import pandas as pd
 from modestpy.estim.ps.ps import PS
 from modestpy.utilities.sysarch import get_sys_arch
+from modestpy.loginit import config_logger
 
 
 class TestPS(unittest.TestCase):
@@ -104,4 +105,5 @@ def suite():
 
 
 if __name__ == '__main__':
+    config_logger(filename='unit_tests.log', level='DEBUG')
     unittest.main()
