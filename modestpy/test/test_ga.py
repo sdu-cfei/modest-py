@@ -150,7 +150,6 @@ def suite():
     suite = unittest.TestSuite()
     suite.addTest(TestGA('test_ga'))
     suite.addTest(TestGA('test_init_pop'))
-
     return suite
 
 

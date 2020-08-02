@@ -208,7 +208,7 @@ class MODESTGA(object):
         self.com_points = len(self.ideal) - 1  # CVODE solver complains without "-1"
 
         # Default solver options
-        self.workers = 3                # CPU cores to use
+        self.workers = os.cpu_count()   # CPU cores to use
         self.options = {
             'generations': 50,          # Max. number of generations
             'pop_size': 30,             # Population size
@@ -238,11 +238,16 @@ class MODESTGA(object):
         # Adjust trm_size if population size is too small
         if self.options['trm_size'] >= (self.options['pop_size'] // (self.workers * 2)):
             new_trm_size = self.options['pop_size'] // (self.workers * 4)
+            new_pop_size = self.options['pop_size']
+            if new_trm_size < 2:
+                new_trm_size = 2
+                new_pop_size = new_trm_size * self.workers * 4
             self.logger.warning(
                 'Tournament size has to be lower than pop_size // (workers * 2). '
-                f'Re-adjusting to trm_size = {new_trm_size}'
+                f'Re-adjusting to trm_size = {new_trm_size}, pop_size = {new_pop_size}'
             )
             self.options['trm_size'] = new_trm_size
+            self.options['pop_size'] = new_pop_size
 
         # Warn the user about a possible mistake in the chosen options
         if self.options['trm_size'] <= 1:
