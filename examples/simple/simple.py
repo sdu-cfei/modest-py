@@ -16,6 +16,7 @@ import os
 import pandas as pd
 from modestpy import Estimation
 from modestpy.utilities.sysarch import get_sys_arch
+from modestpy.loginit import config_logger
 
 
 if __name__ == "__main__":
@@ -23,6 +24,7 @@ if __name__ == "__main__":
     This file is supposed to be run from the root directory.
     Otherwise the paths have to be corrected.
     """
+    config_logger(filename='simple.log', level='DEBUG')
 
     # DATA PREPARATION ==============================================
     # Resources

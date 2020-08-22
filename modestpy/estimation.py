@@ -19,7 +19,6 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker
 import pandas as pd
 import numpy as np
-from pyfmi.fmi import FMUException
 from modestpy.estim.ga.ga import GA
 from modestpy.estim.ps.ps import PS
 from modestpy.estim.scipy.scipy import SCIPY
@@ -439,12 +438,12 @@ class Estimation(object):
         com_points = len(ideal_slice) - 1
         try:
             result = model.simulate(com_points=com_points)
-        except FMUException as e:
+        except Exception as e:
             msg = 'Problem found inside FMU. Did you set all parameters? ' + \
                   'Log:\n'
             msg += str(model.model.model.print_log())
             self.logger.error(msg)
-            raise FMUException(e)
+            raise e
 
         err = modestpy.estim.error.calc_err(result, ideal_slice)
 
