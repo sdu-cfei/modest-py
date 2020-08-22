@@ -22,6 +22,7 @@ setup(
         'modestpy.test'],
     include_package_data=True,
     install_requires=[
+        'fmpy[complete]',
         'scipy',
         'pandas',
         'matplotlib',
