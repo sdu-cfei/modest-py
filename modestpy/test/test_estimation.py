@@ -132,8 +132,8 @@ class TestEstimation(unittest.TestCase):
         self.assertLess(err['tot'], 1.7)  # NRMSE
 
     def test_estimation_rmse(self):
-        ga_opts = {'maxiter': 3, 'pop_size': 8, 'trm_size': 3}
-        ps_opts = {'maxiter': 3}
+        ga_opts = {'maxiter': 16, 'pop_size': 32, 'trm_size': 8}
+        ps_opts = {'maxiter': 16}
 
         session = Estimation(self.tmpdir, self.fmu_path, self.inp,
                              self.known, self.est, self.ideal,

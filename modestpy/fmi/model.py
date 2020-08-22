@@ -6,9 +6,7 @@ This code is licensed under BSD 2-clause license.L
 See LICENSE file in the project root for license terms.
 """
 import logging
-import json
-from fmpy import simulate_fmu, dump, read_model_description, instantiate_fmu, extract
-from fmpy.util import read_csv, write_csv
+from fmpy import simulate_fmu, read_model_description, instantiate_fmu, extract
 import numpy as np
 import pandas as pd
 
@@ -49,14 +47,11 @@ class Model(object):
         self.start = None
         self.end = None
         self.timeline = None
-        self.opts = opts
+        self.opts = opts  # TODO: Not used at the moment
 
         self.input_arr = None
         self.output_names = list()
-        self.parameter_names = list()
-
         self.parameters = dict()
-        self.init_cond = dict()
 
     def inputs_from_csv(self, csv, sep=',', exclude=list()):
         """Reads inputs from a CSV file.
@@ -107,10 +102,12 @@ class Model(object):
                 self.output_names.append(name)
 
     def parameters_from_csv(self, csv, sep=','):
+        """Read parameters from a CSV file."""
         df = pd.read_csv(csv, sep=sep)
         self.parameters_from_df(df)
 
     def parameters_from_df(self, df):
+        """Get parameters from a DataFrame."""
         self.logger.debug(f'parameters_from_df = {df}')
         if df is not None:
             df = df.copy()
@@ -125,8 +122,6 @@ class Model(object):
                                standard value is used (500)
         :param bool reset: if True, the model will be resetted after
                            simulation (use False with E+ FMU)
-        :param dict opts: Additional FMI options to be passed to the simulator
-                          (consult FMI specification)
         :return: Dataframe with results
         """
         # Calculate output internal (in seconds)
@@ -176,7 +171,7 @@ class Model(object):
             try:
                 self.model.reset()
             except Exception as e:
-                self.logger.warning(e.message)
+                self.logger.warning(str(e))
                 self.logger.warning(
                     "If you try to simulate an EnergyPlus FMU, "
                     "use reset=False"
