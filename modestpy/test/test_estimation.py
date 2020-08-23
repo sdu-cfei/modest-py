@@ -127,8 +127,6 @@ class TestEstimation(unittest.TestCase):
         self.assertGreater(len(res2.columns), 0)
         self.assertEqual(session.lp[0][0], 0)
         self.assertEqual(session.lp[0][1], 3600)
-        # Enabling next line triggers the Matplotlib error (issue #20)
-        # raw_input('Continue...')
         self.assertLess(err['tot'], 1.7)  # NRMSE
 
     def test_estimation_rmse(self):
