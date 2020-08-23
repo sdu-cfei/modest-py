@@ -67,8 +67,8 @@ class SCIPY(object):
         self.solver = solver
 
         # Default solver options
-        self.options = {'disp': True, 'iprint': 2, 'maxiter': 500,
-                        'full_output': True}
+        self.options = {'disp': True, 'iprint': 2, 'maxiter': 500}
+
         if len(options) > 0:
             for key in options:
                 self.options[key] = options[key]
