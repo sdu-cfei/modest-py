@@ -23,11 +23,13 @@ Installation with pip (recommended)
 It is now possible install ModestPy with a single command:
 
 ::
+
     pip install modestpy
 
 Alternatively:
 
 ::
+
     pip install https://github.com/sdu-cfei/modest-py/archive/master.zip
 
 Installation with conda
@@ -36,6 +38,7 @@ Installation with conda
 Conda is installation is less frequently tested, but should work:
 
 ::
+
    conda config --add channels conda-forge
    conda install modestpy
 
@@ -52,6 +55,7 @@ The unit tests will work only if you installed modestpy with conda or cloned the
 or
 
 ::
+
     cd <project_directory>
     python ./bin/test.py
 
