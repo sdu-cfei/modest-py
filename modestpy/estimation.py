@@ -23,7 +23,7 @@ from modestpy.estim.ga.ga import GA
 from modestpy.estim.ps.ps import PS
 from modestpy.estim.scipy.scipy import SCIPY
 from modestpy.estim.ga_parallel.ga_parallel import MODESTGA
-from modestpy.estim.model import Model
+from modestpy.fmi.model import Model
 import modestpy.estim.error
 from modestpy.estim.plots import plot_comparison
 import modestpy.utilities.figures as figures
@@ -435,9 +435,8 @@ class Estimation(object):
         model.set_outputs(list(self.ideal.columns))
 
         # Simulate and get error
-        com_points = len(ideal_slice) - 1
         try:
-            result = model.simulate(com_points=com_points)
+            result = model.simulate()
         except Exception as e:
             msg = 'Problem found inside FMU. Did you set all parameters? ' + \
                   'Log:\n'

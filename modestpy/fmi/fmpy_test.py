@@ -1,16 +1,25 @@
-"""Exemplary use of FMPy. This script can be deleted when everything starts working."""
+"""Example of FMPy-based simulation."""
 import json
 from fmpy import simulate_fmu, dump, read_model_description, instantiate_fmu, extract
 from fmpy.util import read_csv, write_csv
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
 def df_to_struct_arr(df):
-    """Converts a DataFrame to a structured array."""
+    """Converts a DataFrame to structured array."""
     struct_arr = np.rec.fromrecords(df, names=df.columns.tolist())
 
     return struct_arr
+
+
+def struct_arr_to_df(arr):
+    """Converts a structured array to DataFrame."""
+    df = pd.DataFrame(arr).set_index('time')
+
+    return df
+
 
 # Paths
 fmu_path = "examples/simple/resources/Simple2R1C_ic_linux64.fmu"
@@ -37,23 +46,32 @@ with open(known_path, 'r') as f:
 # Declare output names
 #output = []
 
-# Simulate using the existing FMU instance
-# (for faster looping)
-for i in range(3):
-    # Reset the FMU instance instead of creating a new one
-    fmu.reset()
+# Start and stop time
+breakpoint()
+start_time = inp_df['time'].iloc[0]
+stop_time = inp_df['time'].iloc[-1]
+output_interval = inp_df['time'].iloc[1] - inp_df['time'].iloc[0]
 
-    # Simulate
-    result = simulate_fmu(
-        filename=fmu_path,
-        start_values=start_values,
-        input=inp_struct,
-        output=None,
-        output_interval=None,
-        fmu_instance=fmu
-    )
+# Reset the FMU instance instead of creating a new one
+fmu.reset()
+
+# Simulate
+result = simulate_fmu(
+    filename=fmu_path,
+    start_values=start_values,
+    start_time=start_time,
+    stop_time=stop_time,
+    input=inp_struct,
+    output=None,
+    output_interval=output_interval,
+    fmu_instance=fmu
+)
 
 # Free the FMU instance and free the shared library
 fmu.freeInstance()
 
+# Result to DataFrame
+result = struct_arr_to_df(result)
 print(result)
+plt.plot(result)
+plt.show()

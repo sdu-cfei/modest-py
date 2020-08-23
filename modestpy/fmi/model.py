@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
+"""FMI wrapper for the model.
+
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
 This code is licensed under BSD 2-clause license.L
@@ -13,6 +14,8 @@ import pandas as pd
 
 def df_to_struct_arr(df):
     """Converts a DataFrame to structured array."""
+    # time index must be reset to pass it to the struct_arr
+    df = df.reset_index()
     struct_arr = np.rec.fromrecords(df, names=df.columns.tolist())
 
     return struct_arr
@@ -67,6 +70,9 @@ class Model(object):
         df = df.set_index('time')
         self.inputs_from_df(df, exclude)
 
+    def set_input(self, df, exclude=list()):
+        return self.inputs_from_df(df, exclude)
+
     def inputs_from_df(self, df, exclude=list()):
         """Reads inputs from dataframe.
 
@@ -91,6 +97,9 @@ class Model(object):
         self.end = self.timeline[-1]
         self.input_arr = df_to_struct_arr(df)
 
+    def set_outputs(self, outputs):
+        self.specify_outputs(outputs)
+
     def specify_outputs(self, outputs):
         """Specifies names of output variables.
 
@@ -106,6 +115,9 @@ class Model(object):
         df = pd.read_csv(csv, sep=sep)
         self.parameters_from_df(df)
 
+    def set_param(self, df):
+        self.parameters_from_df(df)
+
     def parameters_from_df(self, df):
         """Get parameters from a DataFrame."""
         self.logger.debug(f'parameters_from_df = {df}')
@@ -115,31 +127,30 @@ class Model(object):
                 self.parameters[col] = df[col]
         self.logger.debug(f'Updated parameters: {self.parameters}')
 
-    def simulate(self, com_points=None, reset=True):
+    def simulate(self, reset=True):
         """Performs a simulation.
 
-        :param int com_points: number of communication points, if None,
-                               standard value is used (500)
         :param bool reset: if True, the model will be resetted after
                            simulation (use False with E+ FMU)
         :return: Dataframe with results
         """
-        # Calculate output internal (in seconds)
-        if com_points is None:
-            self.logger.warning('Warning! Default number '
-                                'of communication points assumed (500)')
-            com_points = 500
-        output_interval = float(self.end - self.start) / com_points
+        # Calculate output interval (in seconds)
+        assert self.input_arr is not None, "No inputs assigned"
+        output_interval = self.input_arr[1][0] - self.input_arr[0][0]
 
         # Initial condition
         start_values = dict()
         input_names = self.input_arr.dtype.names
         for name in input_names:
-            start_values[name] = self.input_arr[name][0]
+            if name != 'time':
+                start_values[name] = self.input_arr[name][0]
+
+        assert 'time' in input_names, "time must be the first input"
 
         # Set parameters
         for name, value in self.parameters.items():
-            start_values[name] = value
+            if name != 'time':
+                start_values[name] = value
 
         # Inputs
         assert self.input_arr is not None, "Inputs not assigned!"
@@ -155,6 +166,8 @@ class Model(object):
         result = simulate_fmu(
             self.unzipdir,
             start_values=start_values,
+            start_time=self.start,
+            stop_time=self.end,
             input=self.input_arr,
             output=self.output_names,
             output_interval=output_interval,
@@ -178,7 +191,3 @@ class Model(object):
                 )
         # Return
         return res_df
-
-    def free(self):
-        # TODO: Not sure if it's needed
-        self.model.freeInstance()

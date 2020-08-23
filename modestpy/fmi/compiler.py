@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
+"""DEPRECATED.
 
-"""
+WARNING, THIS FILE RELIES ON PYMODELICA WHICH WILL NOT BE
+INCLUDED IN THE DEPENDENCIES IN THE NEXT RELEASE.
+
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
 This code is licensed under BSD 2-clause license.

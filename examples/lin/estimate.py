@@ -61,7 +61,7 @@ if __name__ == "__main__":
     model.inputs_from_df(inp)
     model.parameters_from_df(par)
     model.specify_outputs(['y'])
-    ideal = model.simulate(com_points=inp.index.size - 1)
+    ideal = model.simulate()
     # ideal.to_csv(os.path.join('examples', 'lin', 'resources', 'ideal.csv'))
 
     # Estimation ==============================================

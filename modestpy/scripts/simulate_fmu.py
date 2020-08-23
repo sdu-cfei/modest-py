@@ -36,7 +36,7 @@ if __name__ == "__main__":
     model.inputs_from_csv('./tests/resources/simple2R1C/inputs.csv')
     model.parameters_from_csv('./tests/resources/simple2R1C/parameters.csv')
     model.specify_outputs(['T'])
-    res = model.simulate(len(inp.index) - 1)
+    res = model.simulate()
 
     res.to_csv('./tests/resources/simple2R1C/result.csv')
 

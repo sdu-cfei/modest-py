@@ -13,7 +13,7 @@ from __future__ import print_function
 
 import logging
 from modestpy.estim.ga.individual import Individual
-from modestpy.estim.model import Model
+from modestpy.fmi.model import Model
 import pandas as pd
 import copy
 

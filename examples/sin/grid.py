@@ -60,7 +60,7 @@ if __name__ == "__main__":
     model.inputs_from_df(inp)
     model.parameters_from_df(par)
     model.specify_outputs(['y'])
-    ideal = model.simulate(com_points=inp.index.size - 1)
+    ideal = model.simulate()
     # ideal.to_csv(os.path.join('examples', 'sin', 'resources', 'ideal.csv'))
 
     # Grid search ==============================================
@@ -90,7 +90,7 @@ if __name__ == "__main__":
             par['b'] = bi
 
             model.parameters_from_df(par)
-            yi = model.simulate(com_points=inp.index.size - 1)
+            yi = model.simulate()
             yi['ideal'] = ideal['y']
             rmse.loc[ai, bi] = ((yi['ideal'] - yi['y']) ** 2).mean()
 

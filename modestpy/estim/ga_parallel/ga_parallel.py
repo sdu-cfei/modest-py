@@ -29,7 +29,7 @@ import modestpy.utilities.figures as figures
 
 class ObjectiveFun:
     def __init__(self, fmu_path, inp, known, est, ideal,
-                 fmi_opts=None, ftype='RMSE', com_points=500):
+                 fmi_opts=None, ftype='RMSE'):
         self.logger = logging.getLogger(type(self).__name__)
         self.model = None
         self.fmu_path = fmu_path
@@ -49,7 +49,6 @@ class ObjectiveFun:
         self.output_names = [var for var in ideal]
         self.fmi_opts = fmi_opts
         self.ftype = ftype
-        self.com_points = com_points
         self.best_err = 1e7
         self.res = pd.DataFrame()
 
@@ -86,7 +85,7 @@ class ObjectiveFun:
         self.logger.debug(f"parameters: {parameters}")
         self.logger.debug(f"model: {self.model}")
         self.logger.debug("Calling simulation...")
-        result = self.model.simulate(com_points=self.com_points)
+        result = self.model.simulate()
         self.logger.debug(f"result: {result}")
         err = calc_err(result, self.ideal, ftype=self.ftype)['tot']
         # Update best error and result
@@ -111,7 +110,7 @@ class ObjectiveFun:
         model.specify_outputs(output_names)
         self.logger.debug(f"Model instance initialized: {model}")
         self.logger.debug(f"Model instance initialized: {model.model}")
-        res = model.simulate(500)
+        res = model.simulate()
         self.logger.debug(f"test result: {res}")
         return model
 
@@ -205,7 +204,6 @@ class MODESTGA(object):
         self.ideal = ideal
         self.fmi_opts = fmi_opts
         self.ftype = ftype
-        self.com_points = len(self.ideal) - 1  # CVODE solver complains without "-1"
 
         # Default solver options
         self.workers = os.cpu_count()   # CPU cores to use
@@ -306,7 +304,7 @@ class MODESTGA(object):
         self.logger.debug('Instantiating ObjectiveFun')
         objective_fun = ObjectiveFun(
             self.fmu_path, self.inp, self.known, self.est, self.ideal,
-            self.fmi_opts, self.ftype, self.com_points
+            self.fmi_opts, self.ftype
         )
         self.logger.debug(f'ObjectiveFun: {objective_fun}')
 
@@ -460,13 +458,3 @@ class MODESTGA(object):
 
         # Append
         MODESTGA.TMP_SUMMARY = MODESTGA.TMP_SUMMARY.append(row, ignore_index=True)
-
-    @staticmethod
-    def _get_model_instance(fmu_path, inputs, known_pars, est, output_names,
-                            fmi_opts=None):
-        model = Model(fmu_path, fmi_opts)
-        model.set_input(inputs)
-        model.set_param(known_pars)
-        model.set_param(estpars_2_df(est))
-        model.set_outputs(output_names)
-        return model

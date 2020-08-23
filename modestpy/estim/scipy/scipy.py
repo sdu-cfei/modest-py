@@ -17,7 +17,7 @@ import pandas as pd
 import numpy as np
 from random import random
 from scipy.optimize import minimize
-from modestpy.estim.model import Model
+from modestpy.fmi.model import Model
 from modestpy.estim.estpar import EstPar
 from modestpy.estim.estpar import estpars_2_df
 from modestpy.estim.error import calc_err
@@ -29,10 +29,6 @@ class SCIPY(object):
     """
     Interface to `scipy.optimize.minimize()`.
     """
-    # Default number of communication points, should be adjusted
-    # to the number of samples
-    COM_POINTS = 500
-
     # Summary placeholder
     TMP_SUMMARY = pd.DataFrame()
 
@@ -60,7 +56,7 @@ class SCIPY(object):
         :param fmi_opts: dict, Additional FMI options to be passed to
                          the simulator (consult FMI specification)
         :param ftype: str, cost function type. Currently 'NRMSE' (advised
-                      for multi-objective estimation) or 'RMSE'. 
+                      for multi-objective estimation) or 'RMSE'.
         """
         self.logger = logging.getLogger(type(self).__name__)
 
@@ -133,7 +129,7 @@ class SCIPY(object):
     def estimate(self):
 
         # Initial error
-        initial_result = self.model.simulate(com_points=SCIPY.COM_POINTS)
+        initial_result = self.model.simulate()
         self.res = initial_result
         initial_error = calc_err(initial_result, self.ideal,
                                  ftype=self.ftype)['tot']
@@ -152,7 +148,7 @@ class SCIPY(object):
                 print(x)
                 raise e
             self.model.set_param(parameters)
-            result = self.model.simulate(com_points=SCIPY.COM_POINTS)
+            result = self.model.simulate()
             err = calc_err(result, self.ideal, ftype=self.ftype)['tot']
             # Update best error and result
             if err < self.best_err:

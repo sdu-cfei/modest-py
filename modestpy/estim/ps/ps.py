@@ -12,7 +12,7 @@ from __future__ import division
 from __future__ import print_function
 
 import logging
-from modestpy.estim.model import Model
+from modestpy.fmi.model import Model
 from modestpy.estim.estpar import estpars_2_df
 from modestpy.estim.estpar import EstPar
 from modestpy.estim.error import calc_err
@@ -36,10 +36,6 @@ class PS(object):
     METHOD = '_method_'
     ITER = '_iter_'
     ERR = '_error_'
-
-    # Default number of communication points, should be adjusted
-    # to the number of samples
-    COM_POINTS = 500
 
     # Maximum allowed relative step
     STEP_CEILING = 1.00
@@ -211,7 +207,7 @@ class PS(object):
         best_estimates = copy.deepcopy(initial_estimates)
         current_estimates = copy.deepcopy(initial_estimates)
 
-        initial_result = self.model.simulate(com_points=PS.COM_POINTS)
+        initial_result = self.model.simulate()
         self.res = initial_result
         initial_error = calc_err(initial_result,
                                  self.ideal,
@@ -244,7 +240,7 @@ class PS(object):
 
                     # Simulate and calculate error
                     self.model.set_param(estpars_2_df([new_par]))
-                    result = self.model.simulate(com_points=PS.COM_POINTS)
+                    result = self.model.simulate()
                     err = calc_err(result, self.ideal, ftype=self.ftype)['tot']
 
                     # Save point if solution improved
