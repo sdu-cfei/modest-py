@@ -1,16 +1,10 @@
 # -*- coding: utf-8 -*-
-
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import time
 import os
 import pandas as pd
@@ -77,7 +71,7 @@ if __name__ == "__main__":
 
     # Session
     session = Estimation(workdir, fmu_path, inp, known, est, ideal,
-                         methods=('GA', 'PS'),
+                         methods=('GA_LEGACY', 'PS'),
                          ga_opts={'maxiter': 20, 'tol': 1e-6, 'lhs': False,
                                   'pop_size': 8, 'trm_size': 3},
                          ps_opts={'maxiter': 500, 'tol': 1e-8},

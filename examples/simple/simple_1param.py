@@ -66,7 +66,7 @@ if __name__ == "__main__":
     session = Estimation(workdir, fmu_path, inp, known, est, ideal,
                          lp_n=2, lp_len=50000, lp_frame=(0, 50000),
                          vp=(0, 50000), ic_param={'Tstart': 'T'},
-                         methods=('GA', 'PS'),
+                         methods=('GA_LEGACY', 'PS'),
                          ga_opts={'maxiter': 5, 'tol': 0.001, 'lhs': True},
                          ps_opts={'maxiter': 500, 'tol': 1e-6},
                          scipy_opts={},

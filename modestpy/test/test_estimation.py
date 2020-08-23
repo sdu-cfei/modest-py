@@ -1,16 +1,10 @@
 # -*- coding: utf-8 -*-
-
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import unittest
 import tempfile
 import shutil
@@ -106,7 +100,7 @@ class TestEstimation(unittest.TestCase):
                              self.known, self.est, self.ideal,
                              lp_n=2, lp_len=3600, lp_frame=(0, 3600),
                              vp=(20000, 40000), ic_param={'Tstart': 'T'},
-                             methods=('GA', 'PS'),
+                             methods=('GA_LEGACY', 'PS'),
                              ga_opts=ga_opts, ps_opts=ps_opts,
                              seed=1, ftype='NRMSE',
                              default_log=False)
@@ -137,7 +131,7 @@ class TestEstimation(unittest.TestCase):
                              self.known, self.est, self.ideal,
                              lp_n=1, lp_len=3600, lp_frame=(0, 3600),
                              vp=(20000, 40000), ic_param={'Tstart': 'T'},
-                             methods=('GA', 'PS'),
+                             methods=('GA_LEGACY', 'PS'),
                              ga_opts=ga_opts, ps_opts=ps_opts,
                              seed=1, ftype='RMSE',
                              default_log=False)
@@ -160,7 +154,7 @@ class TestEstimation(unittest.TestCase):
                              self.known, self.est, self.ideal,
                              lp_n=1, lp_len=3600, lp_frame=(0, 3600),
                              vp=(20000, 40000), ic_param={'Tstart': 'T'},
-                             methods=('GA', ),
+                             methods=('GA_LEGACY', ),
                              ga_opts=ga_opts, ps_opts=ps_opts,
                              seed=1, ftype='RMSE',
                              default_log=False)
@@ -174,7 +168,7 @@ class TestEstimation(unittest.TestCase):
                               self.known, self.est, self.ideal,
                               lp_n=1, lp_len=3600, lp_frame=(0, 3600),
                               vp=(20000, 40000), ic_param={'Tstart': 'T'},
-                              methods=('GA', ),
+                              methods=('GA_LEGACY', ),
                               ga_opts=ga_opts, ps_opts=ps_opts,
                               seed=1, ftype='RMSE',
                               default_log=False)
@@ -184,7 +178,7 @@ class TestEstimation(unittest.TestCase):
                               self.known, self.est, self.ideal,
                               lp_n=1, lp_len=3600, lp_frame=(0, 3600),
                               vp=(20000, 40000), ic_param={'Tstart': 'T'},
-                              methods=('GA', ),
+                              methods=('GA_LEGACY', ),
                               ga_opts=ga_opts, ps_opts=ps_opts,
                               seed=1, ftype='RMSE',
                               default_log=False)
@@ -217,7 +211,7 @@ class TestEstimation(unittest.TestCase):
         ps_opts = {'maxiter': 10, 'rel_step': 0.1, 'tol': 0.001, 'try_lim': 10}
         session = Estimation(self.tmpdir, self.fmu_path, self.inp,
                              self.known, self.est, self.ideal,
-                             methods=('GA', 'PS'),
+                             methods=('GA_LEGACY', 'PS'),
                              ga_opts=ga_opts, ps_opts=ps_opts,
                              default_log=False)
         ga_return = session.GA_OPTS

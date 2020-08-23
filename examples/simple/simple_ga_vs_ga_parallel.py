@@ -6,11 +6,6 @@ All rights reserved.
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import logging
 import json
 import os
@@ -60,7 +55,7 @@ if __name__ == "__main__":
 
     # MODEL IDENTIFICATION ==========================================
     # Comparing parallel GA against GA using different population sizes
-    for method in ['MODESTGA', 'GA']:
+    for method in ['MODESTGA', 'GA_LEGACY']:
         for pop in [40, 60, 80]:
             case_workdir = os.path.join(workdir, f"{method}-{pop}")
             if not os.path.exists(case_workdir):

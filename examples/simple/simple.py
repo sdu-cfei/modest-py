@@ -1,16 +1,10 @@
 # -*- coding: utf-8 -*-
-
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import json
 import os
 import pandas as pd
@@ -62,7 +56,7 @@ if __name__ == "__main__":
     session = Estimation(workdir, fmu_path, inp, known, est, ideal,
                          lp_n=2, lp_len=50000, lp_frame=(0, 50000),
                          vp=(0, 50000), ic_param={'Tstart': 'T'},
-                         methods=('GA', 'PS'),
+                         methods=('GA_LEGACY', 'PS'),
                          ga_opts={'maxiter': 5, 'tol': 0.001, 'lhs': True},
                          ps_opts={'maxiter': 500, 'tol': 1e-6},
                          scipy_opts={},

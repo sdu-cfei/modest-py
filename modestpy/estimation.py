@@ -49,7 +49,7 @@ class Estimation(object):
 
         Currently available estimation methods:
             - MODESTGA  - parallel genetic algorithm (default GA in modestpy)
-            - GA        - single-process genetic algorithm (legacy implementation)
+            - GA_LEGACY - single-process genetic algorithm (legacy implementation)
             - PS        - pattern search (Hooke-Jeeves)
             - SCIPY     - interface to algorithms available through
                           scipy.optimize.minimize()
@@ -159,7 +159,7 @@ class Estimation(object):
         # Default
         self.GA_OPTS['trm_size'] = max(self.GA_OPTS['pop_size']//6, 2)
         # User options
-        self.GA_OPTS = self._update_opts(self.GA_OPTS, ga_opts, 'GA')
+        self.GA_OPTS = self._update_opts(self.GA_OPTS, ga_opts, 'GA_LEGACY')
 
         # PS options
         self.PS_OPTS = {
@@ -209,7 +209,7 @@ class Estimation(object):
         # Method dictionary
         self.method_dict = {
             'MODESTGA': (MODESTGA, self.MODESTGA_OPTS),
-            'GA': (GA, self.GA_OPTS),
+            'GA_LEGACY': (GA, self.GA_OPTS),
             'PS': (PS, self.PS_OPTS),
             'SCIPY': (SCIPY, self.SCIPY_OPTS)
 
@@ -260,7 +260,7 @@ class Estimation(object):
 
         # (1) Initialize local variables
         # Tuple with method names
-        # e.g. ('GA', 'PS'), ('GA', 'SCIPY') or ('GA', )
+        # e.g. ('MODESTGA', 'PS'), ('MODESTGA', 'SCIPY') or ('MODESTGA', )
         methods = self.methods
 
         # List of plots to be saved
@@ -476,7 +476,7 @@ class Estimation(object):
 
         :param dict opts: Options to be updated
         :param dict new_opts: New options (can contain a subset of opts keys)
-        :param str method: Method name, 'GA', 'PS' etc. (used only for logging)
+        :param str method: Method name, 'MODESTGA', 'PS' etc. (used only for logging)
         :return: Updated dict
         """
         if len(new_opts) > 0:

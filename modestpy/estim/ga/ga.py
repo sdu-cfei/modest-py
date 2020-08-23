@@ -1,16 +1,10 @@
 # -*- coding: utf-8 -*-
-
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import logging
 import os
 import random
@@ -25,7 +19,8 @@ from modestpy.estim.ga.population import Population
 
 
 class GA(object):
-    """
+    """DEPRECATED. Use MODESTGA instead.
+
     Genetic algorithm for FMU parameter estimation.
     This is the main class of the package, containing the high-level
     algorithm and some result plotting methods.
@@ -90,6 +85,11 @@ class GA(object):
                          Lating Hypercube Sampling.
         """
         self.logger = logging.getLogger(type(self).__name__)
+
+        deprecated_msg = 'This GA implementation is deprecated. Use MODESTGA instead.'
+        print(deprecated_msg)
+        self.logger.warning('This GA implementation is deprecated. Use MODESTGA instead.')
+
         self.logger.info('GA constructor invoked')
 
         assert inp.index.equals(ideal.index), \
