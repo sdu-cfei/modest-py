@@ -1,6 +1,7 @@
 Changes in v.0.1
 ====================
 - parallel genetic algorithm added (based on modestga)
+- FMPy instead of pyFMI
 
 Changes in v.0.0.9:
 ====================
