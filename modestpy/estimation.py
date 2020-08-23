@@ -1,16 +1,10 @@
 # -*- coding: utf-8 -*-
-
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
-
-from __future__ import absolute_import  # TODO: Drop Python 2 support
-from __future__ import division         # TODO: Drop Python 2 support
-from __future__ import print_function   # TODO: Drop Python 2 support
-
 import logging
 import random
 import copy
@@ -34,7 +28,6 @@ class Estimation(object):
     """
     Public API of ``modestpy``.
     """
-
     # Number of attempts to find nonzero learning data set
     NONZERO_ATTEMPTS = 20
 
@@ -130,7 +123,7 @@ class Estimation(object):
 
         # Random seed
         if seed is not None:
-            self.logger.info('Setting random seed: {}'.format(seed))
+            self.logger.info(f'Setting random seed: {seed}')
             random.seed(seed)
             np.random.seed(seed)  # Important for other libraries, like pyDOE
 

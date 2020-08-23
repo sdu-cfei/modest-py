@@ -124,14 +124,14 @@ class MODESTGA(object):
     - parallel,
     - adaptive mutation,
     - suitable for large-scale non-convex problems,
-    - pure Python, so easy to adapt to own needs.
+    - pure Python, so easy to adjust to your own needs.
 
     The number of CPU cores to use can be controlled
-    with the argument `workers` (default: 2). If run with `workers`=1,
+    with the argument `workers` (default: all CPUs). If run with `workers=1`,
     the algorithm works in a single process mode and is similar to the legacy
     GA implementation in modestpy.
 
-    If `workers` > 1, the number of processes is equal to `workers`+1.
+    If `workers > 1`, the number of processes is equal to `workers + 1`.
     In this parallel mode, the population is divided into `workers` subpopulations,
     each of which evolves within a single process, while the main process
     is responsible for gene exchange between subpopulations at the end
@@ -143,7 +143,7 @@ class MODESTGA(object):
 
     The full list of options which can be used to control the optimization
     process is as follows:
-    - `workers`     - number of CPUs (default 2),
+    - `workers`     - number of CPUs (default all CPUs),
     - `generations` - number of GA iterations (default 50),
     - `pop_size`    - population size (default 50), is divided into `workers` subpopulations,
     - `mut_rate`    - mutation rate (default 0.01),
@@ -152,10 +152,6 @@ class MODESTGA(object):
     - `inertia`     - maximum number of non-improving generations (default 100),
     - `xover_ratio` - crossover ratio (default 0.5).
     """
-    # Default number of communication points, should be adjusted
-    # to the number of samples
-    COM_POINTS = 500
-
     # Summary placeholder
     TMP_SUMMARY = pd.DataFrame()
 
