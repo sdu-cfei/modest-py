@@ -38,7 +38,7 @@ class Estimation(object):
     def __init__(self, workdir, fmu_path, inp, known, est, ideal,
                  lp_n=None, lp_len=None, lp_frame=None, vp=None,
                  ic_param=None, methods=('MODESTGA', 'PS'), ga_opts={}, ps_opts={},
-                 scipy_opts={}, modestga_opts={}, fmi_opts={}, ftype='RMSE', seed=None,
+                 scipy_opts={}, modestga_opts={}, ftype='RMSE', seed=None,
                  default_log=True, logfile='modestpy.log'):
         """
         Index in DataFrames ``inp`` and ``ideal`` must be named 'time'
@@ -89,9 +89,6 @@ class Estimation(object):
             Pattern search options
         scipy_opts: dict
             SciPy solver options
-        fmi_opts: dict
-            Additional options to be passed to the FMI model
-            (e.g. solver tolerance)
         ftype: string
             Cost function type. Currently 'NRMSE' (advised for multi-objective
             estimation) or 'RMSE'.
@@ -152,8 +149,7 @@ class Estimation(object):
             'uniformity':   0.5,
             'look_back':    50,
             'lhs':          False,
-            'ftype':        ftype,
-            'fmi_opts':     fmi_opts
+            'ftype':        ftype
         }  # Default
 
         # Default
@@ -167,8 +163,7 @@ class Estimation(object):
             'rel_step': 0.02,
             'tol':      1e-11,
             'try_lim':  1000,
-            'ftype':    ftype,
-            'fmi_opts': fmi_opts
+            'ftype':    ftype
         }  # Default
 
         # User options
@@ -181,8 +176,7 @@ class Estimation(object):
                         'iprint': 2,
                         'maxiter': 150,
                         'full_output': True},
-            'ftype': ftype,
-            'fmi_opts': fmi_opts
+            'ftype': ftype
         }  # Default
 
         # User options
@@ -198,8 +192,7 @@ class Estimation(object):
             'trm_size': 3,             # Tournament size
             'tol': 1e-3,               # Solution tolerance
             'inertia': 100,            # Max. number of non-improving generations
-            'ftype': ftype,
-            'fmi_opts': fmi_opts
+            'ftype': ftype
         }  # Default
 
         # User options

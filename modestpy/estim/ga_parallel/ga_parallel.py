@@ -22,8 +22,7 @@ import modestpy.utilities.figures as figures
 
 
 class ObjectiveFun:
-    def __init__(self, fmu_path, inp, known, est, ideal,
-                 fmi_opts=None, ftype='RMSE'):
+    def __init__(self, fmu_path, inp, known, est, ideal, ftype='RMSE'):
         self.logger = logging.getLogger(type(self).__name__)
         self.model = None
         self.fmu_path = fmu_path
@@ -41,7 +40,6 @@ class ObjectiveFun:
         self.est = est
         self.ideal = ideal
         self.output_names = [var for var in ideal]
-        self.fmi_opts = fmi_opts
         self.ftype = ftype
         self.best_err = 1e7
         self.res = pd.DataFrame()
@@ -61,8 +59,7 @@ class ObjectiveFun:
         self.logger.debug(f"x = {x}")
         if self.model is None:
             self.model = self._get_model_instance(
-                self.fmu_path, self.inp, self.known, self.est,
-                self.output_names, self.fmi_opts
+                self.fmu_path, self.inp, self.known, self.est, self.output_names
             )
             logging.debug(f"Model instance returned: {self.model}")
 
@@ -89,15 +86,14 @@ class ObjectiveFun:
 
         return err
 
-    def _get_model_instance(self, fmu_path, inputs, known_pars, est,
-                            output_names, fmi_opts=None):
+    def _get_model_instance(self, fmu_path, inputs, known_pars, est, output_names):
         self.logger.debug("Getting model instance...")
         self.logger.debug(f"inputs = {inputs}")
         self.logger.debug(f"known_pars = {known_pars}")
         self.logger.debug(f"est = {est}")
         self.logger.debug(f"estpars_2_df(est) = {estpars_2_df(est)}")
         self.logger.debug(f"output_names = {output_names}")
-        model = Model(fmu_path, fmi_opts)
+        model = Model(fmu_path)
         model.inputs_from_df(inputs)
         model.parameters_from_df(known_pars)
         model.parameters_from_df(estpars_2_df(est))
@@ -159,7 +155,7 @@ class MODESTGA(object):
     ERR = '_error_'
 
     def __init__(self, fmu_path, inp, known, est, ideal,
-                 options={}, fmi_opts=None, ftype='RMSE',
+                 options={}, ftype='RMSE',
                  generations=None, pop_size=None, mut_rate=None,
                  trm_size=None, tol=None, inertia=None, workers=None):
         """
@@ -171,8 +167,6 @@ class MODESTGA(object):
         :param ideal: DataFrame, ideal solution to be compared with model
                       outputs (variable names must match)
         :param options: dict, additional options passed to the solver (not used here)
-        :param fmi_opts: dict, Additional FMI options to be passed to
-                         the simulator (consult FMI specification)
         :param ftype: str, cost function type. Currently 'NRMSE' (advised
                       for multi-objective estimation) or 'RMSE'.
         :param generations: int, max. number of generations
@@ -192,7 +186,6 @@ class MODESTGA(object):
         self.inp = inp
         self.known = known
         self.ideal = ideal
-        self.fmi_opts = fmi_opts
         self.ftype = ftype
 
         # Default solver options
@@ -293,8 +286,7 @@ class MODESTGA(object):
         # Objective function
         self.logger.debug('Instantiating ObjectiveFun')
         objective_fun = ObjectiveFun(
-            self.fmu_path, self.inp, self.known, self.est, self.ideal,
-            self.fmi_opts, self.ftype
+            self.fmu_path, self.inp, self.known, self.est, self.ideal, self.ftype
         )
         self.logger.debug(f'ObjectiveFun: {objective_fun}')
 

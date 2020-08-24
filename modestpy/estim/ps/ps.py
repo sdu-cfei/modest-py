@@ -41,8 +41,7 @@ class PS(object):
     STEP_DEC = 1.5
 
     def __init__(self, fmu_path, inp, known, est, ideal, rel_step=0.01,
-                 tol=0.0001, try_lim=30, maxiter=300,
-                 fmi_opts=None, ftype='RMSE'):
+                 tol=0.0001, try_lim=30, maxiter=300, ftype='RMSE'):
         """
         :param fmu_path: string, absolute path to the FMU
         :param inp: DataFrame, columns with input timeseries, index in seconds
@@ -56,7 +55,6 @@ class PS(object):
                     becomes smaller than tol algorithm stops
         :param try_lim: integer, maximum number of tries to decrease rel_step
         :param maxiter: integer, maximum number of iterations
-        :param dict fmi_opts: Additional FMI options
         :param string ftype: Cost function type. Currently 'NRMSE' or 'RMSE'
         """
         self.logger = logging.getLogger(type(self).__name__)
@@ -102,7 +100,7 @@ class PS(object):
         # Model
         output_names = [var for var in ideal]
         self.model = PS._get_model_instance(fmu_path, inp, known_df,
-                                            est, output_names, fmi_opts)
+                                            est, output_names)
 
         # Initial value for relative parameter step (0-1)
         self.rel_step = rel_step
@@ -356,9 +354,8 @@ class PS(object):
         return EstPar(estpar.name, estpar.lo, estpar.hi, new_value)
 
     @staticmethod
-    def _get_model_instance(fmu_path, inputs, known_pars, est,
-                            output_names, fmi_opts=None):
-        model = Model(fmu_path, fmi_opts)
+    def _get_model_instance(fmu_path, inputs, known_pars, est, output_names):
+        model = Model(fmu_path)
         model.set_input(inputs)
         model.set_param(known_pars)
         model.set_param(estpars_2_df(est))
