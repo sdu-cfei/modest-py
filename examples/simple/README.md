@@ -18,10 +18,3 @@ source and on Windows 64bit with Python 32bit and JModelica 2.0 installed
 from a binary. If you cannot find an FMU for you platform, please compile
 the Modelica model by yourself (from .mo file).
 
----
-**Note 2**
-
-Example ``simple_old_API.py`` shows how to use ``LearnMan`` class.
-This class is however deprecated and will be removed in the future.
-
----
