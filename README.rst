@@ -14,7 +14,7 @@ Features:
 
 - combination of global and local search methods (genetic algorithm, pattern search, truncated Newton method, L-BFGS-B, sequential least squares),
 - suitable also for non-continuous and non-differentiable models,
-- can run on multiple cores (GA based on `modestga <https://github.com/krzysztofarendt/modestga>__`),
+- scalable to multiple cores (genetic algorithm from `modestga <https://github.com/krzysztofarendt/modestga>`_),
 - Python 3.
 
 Installation with pip (recommended)
