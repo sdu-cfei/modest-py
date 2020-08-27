@@ -25,8 +25,68 @@ from modestpy.loginit import config_logger
 
 
 class Estimation(object):
-    """
-    Public API of ``modestpy``.
+    """Public interface of `modestpy`.
+
+    Index in DataFrames `inp` and `ideal` must be named 'time'
+    and given in seconds. The index name assertion check is
+    implemented to avoid situations in which a user reads DataFrame
+    from a csv and forgets to use `DataFrame.set_index(column_name)`
+    (it happens quite often...).
+
+    Currently available estimation methods:
+        - MODESTGA  - parallel genetic algorithm (default GA in modestpy)
+        - GA_LEGACY - single-process genetic algorithm (legacy implementation, discouraged)
+        - PS        - pattern search (Hooke-Jeeves)
+        - SCIPY     - interface to algorithms available through
+                      scipy.optimize.minimize()
+
+    Parameters:
+    -----------
+    workdir: str
+        Output directory, must exist
+    fmu_path: str
+        Absolute path to the FMU
+    inp: pandas.DataFrame
+        Input data, index given in seconds and named 'time'
+    known: dict(str: float)
+        Dictionary with known parameters (`parameter_name: value`)
+    est: dict(str: tuple(float, float, float))
+        Dictionary defining estimated parameters,
+        (`par_name: (guess value, lo limit, hi limit)`)
+    ideal: pandas.DataFrame
+        Ideal solution (usually measurements),
+        index in seconds and named `time`
+    lp_n: int or None
+        Number of learning periods, one if `None`
+    lp_len: float or None
+        Length of a single learning period, entire `lp_frame` if `None`
+    lp_frame: tuple of floats or None
+        Learning period time frame, entire data set if `None`
+    vp: tuple(float, float) or None
+        Validation period, entire data set if `None`
+    ic_param: dict(str, str) or None
+        Mapping between model parameters used for IC and variables from
+        `ideal`
+    methods: tuple(str, str)
+        List of methods to be used in the pipeline
+    ga_opts: dict
+        Genetic algorithm options
+    ps_opts: dict
+        Pattern search options
+    scipy_opts: dict
+        SciPy solver options
+    ftype: string
+        Cost function type. Currently 'NRMSE' (advised for multi-objective
+        estimation) or 'RMSE'.
+    seed: None or int
+        Random number seed. If None, current time or OS specific
+        randomness is used.
+    default_log: bool
+        If true, use default logging settings. Use false if you want to
+        use own logging.
+    logfile: str
+        If default_log=True, this argument can be used to specify the log
+        file name
     """
     # Number of attempts to find nonzero learning data set
     NONZERO_ATTEMPTS = 20
@@ -40,68 +100,7 @@ class Estimation(object):
                  ic_param=None, methods=('MODESTGA', 'PS'), ga_opts={}, ps_opts={},
                  scipy_opts={}, modestga_opts={}, ftype='RMSE', seed=None,
                  default_log=True, logfile='modestpy.log'):
-        """
-        Index in DataFrames ``inp`` and ``ideal`` must be named 'time'
-        and given in seconds. The index name assertion check is
-        implemented to avoid situations in which a user reads DataFrame
-        from a csv and forgets to use ``DataFrame.set_index(column_name)``
-        (it happens quite often...). TODO: Check index name assertion.
 
-        Currently available estimation methods:
-            - MODESTGA  - parallel genetic algorithm (default GA in modestpy)
-            - GA_LEGACY - single-process genetic algorithm (legacy implementation)
-            - PS        - pattern search (Hooke-Jeeves)
-            - SCIPY     - interface to algorithms available through
-                          scipy.optimize.minimize()
-
-        Parameters:
-        -----------
-        workdir: str
-            Output directory, must exist
-        fmu_path: str
-            Absolute path to the FMU
-        inp: pandas.DataFrame
-            Input data, index given in seconds and named ``time``
-        known: dict(str: float)
-            Dictionary with known parameters (``parameter_name: value``)
-        est: dict(str: tuple(float, float, float))
-            Dictionary defining estimated parameters,
-            (``par_name: (guess value, lo limit, hi limit)``)
-        ideal: pandas.DataFrame
-            Ideal solution (usually measurements),
-            index in seconds and named ``time``
-        lp_n: int or None
-            Number of learning periods, one if ``None``
-        lp_len: float or None
-            Length of a single learning period, entire ``lp_frame`` if ``None``
-        lp_frame: tuple of floats or None
-            Learning period time frame, entire data set if ``None``
-        vp: tuple(float, float) or None
-            Validation period, entire data set if ``None``
-        ic_param: dict(str, str) or None
-            Mapping between model parameters used for IC and variables from
-            ``ideal``
-        methods: tuple(str, str)
-            List of methods to be used in the pipeline
-        ga_opts: dict
-            Genetic algorithm options
-        ps_opts: dict
-            Pattern search options
-        scipy_opts: dict
-            SciPy solver options
-        ftype: string
-            Cost function type. Currently 'NRMSE' (advised for multi-objective
-            estimation) or 'RMSE'.
-        seed: None or int
-            Random number seed. If None, current time or OS specific
-            randomness is used.
-        default_log: bool
-            If true, use default logging settings. Use false if you want to
-            use own logging.
-        logfile: str
-            If default_log=True, this argument can be used to specify the log
-            file name
-        """
         # Default logging configuration?
         if default_log:
             config_logger(filename=logfile, level='WARNING')
@@ -227,16 +226,16 @@ class Estimation(object):
         """
         Estimates parameters.
 
-        Returns average or best estimates depending on ``get``.
+        Returns average or best estimates depending on `get`.
         Average parameters are calculated as arithmetic average
         from all learning periods. Best parameters are those which
         resulted in the lowest error during respective learning period.
         It is advised to use 'best' parameters.
 
         The chosen estimates ('avg' or 'best') are saved
-        in a csv file ``final.csv`` in the working directory.
+        in a csv file `final.csv` in the working directory.
         In addition estimates and errors from all learning periods
-        are saved in ``best_per_run.csv``.
+        are saved in `best_per_run.csv`.
 
         Parameters
         ----------
@@ -424,9 +423,8 @@ class Estimation(object):
         try:
             result = model.simulate()
         except Exception as e:
-            msg = 'Problem found inside FMU. Did you set all parameters? ' + \
-                  'Log:\n'
-            msg += str(model.model.model.print_log())
+            msg = 'Problem found inside FMU. Did you set all parameters?'
+            self.logger.error(str(e))
             self.logger.error(msg)
             raise e
 
@@ -578,10 +576,10 @@ class Estimation(object):
 
     def _select_lp(self, lp_n=None, lp_len=None, lp_frame=None):
         """
-        Selects random learning periods within ``lp_frame``.
+        Selects random learning periods within `lp_frame`.
 
-        Each learning period has the length of ``lp_len``. Periods may overlap.
-        Ensures that a period with null data for any ``ideal`` variable is not
+        Each learning period has the length of `lp_len`. Periods may overlap.
+        Ensures that a period with null data for any `ideal` variable is not
         selected.
 
         Parameters
@@ -663,5 +661,4 @@ class Estimation(object):
         all_zero = (df == 0).all().all()
         if all_zero:
             return False
-        else:
-            return True
+        return True

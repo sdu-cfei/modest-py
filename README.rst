@@ -64,10 +64,9 @@ Usage
 -----
 
 Users are supposed to call only the high level API included in
-``modestpy.Estimation``. The API is fully discussed in `this
-wiki <https://github.com/sdu-cfei/modest-py/wiki/modestpy-API>`__. You
-can also check out this `simple example </examples/simple>`__. The basic
-usage is as follows:
+``modestpy.Estimation``. The API is fully discussed in the `docs <docs/documentation.md>`__.
+You can also check out this `simple example </examples/simple>`__.
+The basic usage is as follows:
 
 .. code:: python
 
@@ -77,7 +76,7 @@ usage is as follows:
     >>> err, res = session.validate()
 
 More control is possible via optional arguments, as discussed in the `documentation
-<https://github.com/sdu-cfei/modest-py/wiki/modestpy-API>`__.
+<docs/documentation.md>`__.
 
 ``modestpy`` automatically saves results in the working
 directory including csv files with estimates and some useful plots,
