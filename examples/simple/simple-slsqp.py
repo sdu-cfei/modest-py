@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
     # estimates = session.estimate()
     # err, res = session.validate()
-    scipy = SCIPY(fmu_path, inp, known, est, ideal, ftype='RMSE')
+    scipy = SCIPY(fmu_path, inp, known, est, ideal, ftype='RMSE', solver='SLSQP')
 
     par = scipy.estimate()
     print(par)
