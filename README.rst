@@ -70,13 +70,19 @@ The basic usage is as follows:
 
 .. code:: python
 
-    >>> from modestpy import Estimation
-    >>> session = Estimation(workdir, fmu_path, inp, known, est, ideal)
-    >>> estimates = session.estimate()
-    >>> err, res = session.validate()
+    from modestpy import Estimation
+
+    if __name__ == "__main__":
+        session = Estimation(workdir, fmu_path, inp, known, est, ideal)
+        estimates = session.estimate()
+        err, res = session.validate()
 
 More control is possible via optional arguments, as discussed in the `documentation
 <docs/documentation.md>`__.
+
+The ``if __name__ == "__main__":`` wrapper is needed on Windows, because ``modestpy``
+relies on ``multiprocessing``. You can find more explanation on why this is needed
+`here <https://docs.python.org/3/library/multiprocessing.html#multiprocessing-programming>`__.
 
 ``modestpy`` automatically saves results in the working
 directory including csv files with estimates and some useful plots,
