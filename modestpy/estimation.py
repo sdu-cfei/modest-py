@@ -78,9 +78,6 @@ class Estimation(object):
     ftype: string
         Cost function type. Currently 'NRMSE' (advised for multi-objective
         estimation) or 'RMSE'.
-    seed: None or int
-        Random number seed. If None, current time or OS specific
-        randomness is used.
     default_log: bool
         If true, use default logging settings. Use false if you want to
         use own logging.
@@ -98,7 +95,7 @@ class Estimation(object):
     def __init__(self, workdir, fmu_path, inp, known, est, ideal,
                  lp_n=None, lp_len=None, lp_frame=None, vp=None,
                  ic_param=None, methods=('MODESTGA', 'PS'), ga_opts={}, ps_opts={},
-                 scipy_opts={}, modestga_opts={}, ftype='RMSE', seed=None,
+                 scipy_opts={}, modestga_opts={}, ftype='RMSE',
                  default_log=True, logfile='modestpy.log'):
 
         # Default logging configuration?
@@ -116,12 +113,6 @@ class Estimation(object):
             assert (est[v][init] >= est[v][lo])  \
                 and (est[v][init] <= est[v][hi]), \
                 'Initial value out of limits ({})'.format(v)
-
-        # Random seed
-        if seed is not None:
-            self.logger.info(f'Setting random seed: {seed}')
-            random.seed(seed)
-            np.random.seed(seed)  # Important for other libraries, like pyDOE
 
         # Input data
         self.workdir = workdir

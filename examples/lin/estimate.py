@@ -79,7 +79,7 @@ if __name__ == "__main__":
                          ps_opts={'maxiter': 1000, 'tol': 1e-12},
                          scipy_opts={'solver': 'L-BFGS-B',
                                      'options': {'eps': 1e-12}},
-                         ftype='RMSE', seed=1)
+                         ftype='RMSE')
 
     t0 = time.time()
     estimates = session.estimate()

@@ -58,7 +58,7 @@ if __name__ == "__main__":
                          vp=(150000, 215940), ic_param={'Tstart': 'T'},
                          methods=('PS', ),
                          ps_opts={'maxiter': 300, 'tol': 1e-6},
-                         ftype='RMSE', seed=1)
+                         ftype='RMSE')
 
     estimates = session.estimate()
     err, res = session.validate()

@@ -76,7 +76,7 @@ if __name__ == "__main__":
                                   'pop_size': 8, 'trm_size': 3},
                          ps_opts={'maxiter': 500, 'tol': 1e-8},
                          scipy_opts={'scipy_opts': {'tol': 1e-6}},
-                         ftype='RMSE', seed=1)
+                         ftype='RMSE')
 
     t0 = time.time()
     estimates = session.estimate()
