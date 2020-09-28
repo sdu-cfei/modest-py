@@ -19,7 +19,7 @@ def all_suites():
 
     suites = [
         test_fmpy.suite(),
-        test_ga.suite(),
+        # test_ga.suite(),
         test_ps.suite(),
         test_scipy.suite(),
         test_estimation.suite(),
