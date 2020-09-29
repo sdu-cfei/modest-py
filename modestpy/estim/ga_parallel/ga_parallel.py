@@ -425,8 +425,6 @@ class MODESTGA(object):
         """
         return self.summary[MODESTGA.ERR].tolist()
 
-    # PRIVATE METHODS
-
     @staticmethod
     def _callback(xk, fx, ng, *args):  # TODO: it must be pickable for multiprocessing
         # New row
