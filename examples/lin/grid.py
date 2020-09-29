@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.

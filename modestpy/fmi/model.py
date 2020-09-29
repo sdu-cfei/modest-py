@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """FMI wrapper for the model.
 
 Copyright (c) 2017, University of Southern Denmark

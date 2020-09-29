@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """DEPRECATED. PyFMI-based model. Superseded by FMPy-based class.
 
 Copyright (c) 2017, University of Southern Denmark
