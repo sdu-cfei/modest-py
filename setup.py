@@ -6,8 +6,8 @@ setup(
     description='FMI-compliant model identification package',
     url='https://github.com/sdu-cfei/modest-py',
     keywords='fmi fmu optimization model identification estimation',
-    author='Center for Energy Informatics SDU',
-    author_email='veje@mmmi.sdu.dk',
+    author='Krzysztof Arendt, Center for Energy Informatics SDU',
+    author_email='krzysztof.arendt@gmail.com, veje@mmmi.sdu.dk',
     license='BSD',
     platforms=['Windows', 'Linux'],
     packages=[
