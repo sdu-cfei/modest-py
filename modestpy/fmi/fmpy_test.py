@@ -47,7 +47,6 @@ with open(known_path, 'r') as f:
 #output = []
 
 # Start and stop time
-breakpoint()
 start_time = inp_df['time'].iloc[0]
 stop_time = inp_df['time'].iloc[-1]
 output_interval = inp_df['time'].iloc[1] - inp_df['time'].iloc[0]
