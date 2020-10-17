@@ -50,7 +50,7 @@ with open(known_path, 'r') as f:
 #output = []
 
 # Start and stop time
-start_time = 3600  # THIS TRIGGERS THE WARNINGS
+start_time = 360  # THIS TRIGGERS THE WARNINGS
 stop_time = inp_df['time'].iloc[-1]
 output_interval = inp_df['time'].iloc[1] - inp_df['time'].iloc[0]
 
