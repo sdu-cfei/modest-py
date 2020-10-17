@@ -5,6 +5,7 @@ from fmpy.util import read_csv, write_csv
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from modestpy.utilities.sysarch import get_sys_arch
 
 
 def df_to_struct_arr(df):
@@ -22,7 +23,7 @@ def struct_arr_to_df(arr):
 
 
 # Paths
-fmu_path = "examples/simple/resources/Simple2R1C_ic_linux64.fmu"
+fmu_path = f"examples/simple/resources/Simple2R1C_ic_{get_sys_arch()}.fmu"
 input_path = "examples/simple/resources/inputs.csv"
 known_path = "examples/simple/resources/known.json"
 est_path = "examples/simple/resources/est.json"
