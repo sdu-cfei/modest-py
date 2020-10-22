@@ -1,16 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import unittest
 import shutil
 import tempfile
@@ -19,6 +12,7 @@ import os
 import pandas as pd
 from modestpy.estim.scipy.scipy import SCIPY
 from modestpy.utilities.sysarch import get_sys_arch
+from modestpy.loginit import config_logger
 
 
 class TestSCIPY(unittest.TestCase):
@@ -101,4 +95,5 @@ def suite():
 
 
 if __name__ == '__main__':
+    config_logger(filename='unit_tests.log', level='DEBUG')
     unittest.main()

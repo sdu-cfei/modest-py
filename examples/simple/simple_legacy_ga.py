@@ -9,6 +9,7 @@ import os
 import pandas as pd
 from modestpy import Estimation
 from modestpy.utilities.sysarch import get_sys_arch
+from modestpy.loginit import config_logger
 
 
 if __name__ == "__main__":
@@ -16,6 +17,7 @@ if __name__ == "__main__":
     This file is supposed to be run from the root directory.
     Otherwise the paths have to be corrected.
     """
+    config_logger(filename='simple.log', level='DEBUG')
 
     # DATA PREPARATION ==============================================
     # Resources
@@ -45,21 +47,16 @@ if __name__ == "__main__":
     with open(est_path) as f:
         est = json.load(f)
 
-    del est['R1']  # We want to estimate only C
-    del est['R2']  # We want to estimate only C
-
     # Load definition of known parameters (name, value)
     with open(known_path) as f:
         known = json.load(f)
-
-    known['R1'] = 0.1
-    known['R2'] = 0.25
 
     # MODEL IDENTIFICATION ==========================================
     session = Estimation(workdir, fmu_path, inp, known, est, ideal,
                          lp_n=2, lp_len=50000, lp_frame=(0, 50000),
                          vp=(0, 50000), ic_param={'Tstart': 'T'},
-                         methods=('MODESTGA', 'PS'),
+                         methods=('GA_LEGACY', 'PS'),
+                         ga_opts={'maxiter': 5, 'tol': 0.001, 'lhs': True},
                          ps_opts={'maxiter': 500, 'tol': 1e-6},
                          scipy_opts={},
                          ftype='RMSE',

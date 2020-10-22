@@ -1,18 +1,11 @@
-# -*- coding: utf-8 -*-
-
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import logging
-from modestpy.estim.model import Model
+from modestpy.fmi.model import Model
 from modestpy.estim.estpar import estpars_2_df
 from modestpy.estim.estpar import EstPar
 from modestpy.estim.error import calc_err
@@ -37,10 +30,6 @@ class PS(object):
     ITER = '_iter_'
     ERR = '_error_'
 
-    # Default number of communication points, should be adjusted
-    # to the number of samples
-    COM_POINTS = 500
-
     # Maximum allowed relative step
     STEP_CEILING = 1.00
 
@@ -51,8 +40,7 @@ class PS(object):
     STEP_DEC = 1.5
 
     def __init__(self, fmu_path, inp, known, est, ideal, rel_step=0.01,
-                 tol=0.0001, try_lim=30, maxiter=300,
-                 fmi_opts=None, ftype='RMSE'):
+                 tol=0.0001, try_lim=30, maxiter=300, ftype='RMSE'):
         """
         :param fmu_path: string, absolute path to the FMU
         :param inp: DataFrame, columns with input timeseries, index in seconds
@@ -66,7 +54,6 @@ class PS(object):
                     becomes smaller than tol algorithm stops
         :param try_lim: integer, maximum number of tries to decrease rel_step
         :param maxiter: integer, maximum number of iterations
-        :param dict fmi_opts: Additional FMI options
         :param string ftype: Cost function type. Currently 'NRMSE' or 'RMSE'
         """
         self.logger = logging.getLogger(type(self).__name__)
@@ -112,7 +99,7 @@ class PS(object):
         # Model
         output_names = [var for var in ideal]
         self.model = PS._get_model_instance(fmu_path, inp, known_df,
-                                            est, output_names, fmi_opts)
+                                            est, output_names)
 
         # Initial value for relative parameter step (0-1)
         self.rel_step = rel_step
@@ -211,7 +198,7 @@ class PS(object):
         best_estimates = copy.deepcopy(initial_estimates)
         current_estimates = copy.deepcopy(initial_estimates)
 
-        initial_result = self.model.simulate(com_points=PS.COM_POINTS)
+        initial_result = self.model.simulate()
         self.res = initial_result
         initial_error = calc_err(initial_result,
                                  self.ideal,
@@ -244,7 +231,7 @@ class PS(object):
 
                     # Simulate and calculate error
                     self.model.set_param(estpars_2_df([new_par]))
-                    result = self.model.simulate(com_points=PS.COM_POINTS)
+                    result = self.model.simulate()
                     err = calc_err(result, self.ideal, ftype=self.ftype)['tot']
 
                     # Save point if solution improved
@@ -366,9 +353,8 @@ class PS(object):
         return EstPar(estpar.name, estpar.lo, estpar.hi, new_value)
 
     @staticmethod
-    def _get_model_instance(fmu_path, inputs, known_pars, est,
-                            output_names, fmi_opts=None):
-        model = Model(fmu_path, fmi_opts)
+    def _get_model_instance(fmu_path, inputs, known_pars, est, output_names):
+        model = Model(fmu_path)
         model.set_input(inputs)
         model.set_param(known_pars)
         model.set_param(estpars_2_df(est))

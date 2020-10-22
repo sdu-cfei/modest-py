@@ -14,67 +14,33 @@ Features:
 
 - combination of global and local search methods (genetic algorithm, pattern search, truncated Newton method, L-BFGS-B, sequential least squares),
 - suitable also for non-continuous and non-differentiable models,
-- compatible with both Python 2.7 and 3 (tested up to 3.5).
+- scalable to multiple cores (genetic algorithm from `modestga <https://github.com/krzysztofarendt/modestga>`_),
+- Python 3.
 
-Installation with conda (recommended)
--------------------------------------
+Installation with pip (recommended)
+-----------------------------------
 
-It is now possible to install ModestPy through ``conda``:
+It is now possible install ModestPy with a single command:
+
+::
+
+    pip install modestpy
+
+Alternatively:
+
+::
+
+    pip install https://github.com/sdu-cfei/modest-py/archive/master.zip
+
+Installation with conda
+-----------------------
+
+Conda is installation is less frequently tested, but should work:
 
 ::
 
    conda config --add channels conda-forge
    conda install modestpy
-
-Installation with conda and pip
--------------------------------
-
-This procedure has been tested on Debian 9 and Ubuntu 16.04 with Python 3.
-
-It is advised to use ``conda`` to install the required dependencies.
-``modestpy`` itself can be installed using ``pip`` inside the ``conda`` environment.
-
-Create separate environment (optional):
-
-::
-
-    conda create --name modestpy
-    conda activate modestpy
-
-Install dependencies:
-
-::
-
-    conda install scipy pandas numpy matplotlib
-    conda install -c chria pyfmi
-    conda install -c conda-forge pydoe
-
-Install ``modestpy``:
-
-::
-
-    python -m pip install modestpy
-
-Installation with pip
----------------------
-
-This procedure has been tested on Windows 7 with Python 2.
-
-Install ``pyfmi`` as part of `JModelica <http://www.jmodelica.org/>`__.
-
-To install ``modestpy`` use ``pip`` (other dependencies will be installed automatically):
-
-::
-
-    python -m pip install modestpy
-
-To get the latest development version download directly from GitHub repository:
-
-::
-
-    python -m pip install https://github.com/sdu-cfei/modest-py/archive/master.zip
-
-Note, that JModelica installs Python and libraries in a separate directory than the standard Python distribution. Therefore either the path to those libraries needs to be added to PYTHONPATH or ModestPy needs to be installed inside the JModelica distribution.
 
 Test your installation
 ----------------------
@@ -98,20 +64,25 @@ Usage
 -----
 
 Users are supposed to call only the high level API included in
-``modestpy.Estimation``. The API is fully discussed in `this
-wiki <https://github.com/sdu-cfei/modest-py/wiki/modestpy-API>`__. You
-can also check out this `simple example </examples/simple>`__. The basic
-usage is as follows:
+``modestpy.Estimation``. The API is fully discussed in the `docs <docs/documentation.md>`__.
+You can also check out this `simple example </examples/simple>`__.
+The basic usage is as follows:
 
 .. code:: python
 
-    >>> from modestpy import Estimation
-    >>> session = Estimation(workdir, fmu_path, inp, known, est, ideal)
-    >>> estimates = session.estimate()
-    >>> err, res = session.validate()
+    from modestpy import Estimation
 
-More control is possible via optional arguments, as discussed in the `documentation 
-<https://github.com/sdu-cfei/modest-py/wiki/modestpy-API>`__.
+    if __name__ == "__main__":
+        session = Estimation(workdir, fmu_path, inp, known, est, ideal)
+        estimates = session.estimate()
+        err, res = session.validate()
+
+More control is possible via optional arguments, as discussed in the `documentation
+<docs/documentation.md>`__.
+
+The ``if __name__ == "__main__":`` wrapper is needed on Windows, because ``modestpy``
+relies on ``multiprocessing``. You can find more explanation on why this is needed
+`here <https://docs.python.org/3/library/multiprocessing.html#multiprocessing-programming>`__.
 
 ``modestpy`` automatically saves results in the working
 directory including csv files with estimates and some useful plots,

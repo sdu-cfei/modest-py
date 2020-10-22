@@ -1,16 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import json
 import os
 import pandas as pd
@@ -64,11 +57,11 @@ if __name__ == "__main__":
     #                      lp_n=3, lp_len=25000, lp_frame=(0, 25000),
     #                      vp = (150000, 215940), ic_param={'Tstart': 'T'},
     #                      ga_pop=20, ga_iter=20, ps_iter=30, ga_tol=0.001,
-    #                      ps_tol=0.0001, seed=1, ftype='RMSE', lhs=True)
+    #                      ps_tol=0.0001, ftype='RMSE', lhs=True)
 
     # estimates = session.estimate()
     # err, res = session.validate()
-    scipy = SCIPY(fmu_path, inp, known, est, ideal, ftype='RMSE')
+    scipy = SCIPY(fmu_path, inp, known, est, ideal, ftype='RMSE', solver='SLSQP')
 
     par = scipy.estimate()
     print(par)

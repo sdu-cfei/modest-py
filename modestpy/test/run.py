@@ -1,28 +1,24 @@
-# -*- coding: utf-8 -*-
-
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import unittest
+from modestpy.test import test_fmpy
 from modestpy.test import test_ga
 from modestpy.test import test_ps
 from modestpy.test import test_scipy
 from modestpy.test import test_estimation
 from modestpy.test import test_utilities
+from modestpy.loginit import config_logger
 
 
 def all_suites():
 
     suites = [
-        test_ga.suite(),
+        test_fmpy.suite(),
+        # test_ga.suite(),
         test_ps.suite(),
         test_scipy.suite(),
         test_estimation.suite(),
@@ -40,4 +36,5 @@ def tests():
 
 
 if __name__ == '__main__':
+    config_logger(filename='unit_tests.log', level='DEBUG')
     tests()

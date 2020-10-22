@@ -1,16 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import logging
 import random
 import pandas as pd
@@ -20,8 +13,6 @@ from modestpy.estim.error import calc_err
 
 
 class Individual(object):
-
-    COM_POINTS = 500
 
     def __init__(self, est_objects, population, genes=None,
                  use_init_guess=False, ftype='NRMSE'):
@@ -51,10 +42,6 @@ class Individual(object):
 
         # Cost function type
         self.ftype = ftype
-
-        # Adjust COM_POINTS
-        # CVODE solver complains without "-1"
-        Individual.COM_POINTS = len(self.ideal) - 1
 
         # Deep copy EstPar instances to avoid sharing between individuals
         self.est_par_objects = copy.deepcopy(est_objects)
@@ -95,7 +82,7 @@ class Individual(object):
         # because all individuals share the same model instance
         self.model.set_param(self.est_par_df)
         # Simulation
-        self.result = self.model.simulate(Individual.COM_POINTS)
+        self.result = self.model.simulate()
         # Make sure the returned result is not empty
         assert self.result.empty is False, \
             'Empty result returned from simulation... (?)'

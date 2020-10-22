@@ -1,23 +1,16 @@
-# -*- coding: utf-8 -*-
-
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import logging
 import os
 import pandas as pd
 import numpy as np
 from random import random
 from scipy.optimize import minimize
-from modestpy.estim.model import Model
+from modestpy.fmi.model import Model
 from modestpy.estim.estpar import EstPar
 from modestpy.estim.estpar import estpars_2_df
 from modestpy.estim.error import calc_err
@@ -29,10 +22,6 @@ class SCIPY(object):
     """
     Interface to `scipy.optimize.minimize()`.
     """
-    # Default number of communication points, should be adjusted
-    # to the number of samples
-    COM_POINTS = 500
-
     # Summary placeholder
     TMP_SUMMARY = pd.DataFrame()
 
@@ -46,7 +35,7 @@ class SCIPY(object):
     ERR = '_error_'
 
     def __init__(self, fmu_path, inp, known, est, ideal,
-                 solver, options={}, fmi_opts=None, ftype='RMSE'):
+                 solver, options={}, ftype='RMSE'):
         """
         :param fmu_path: string, absolute path to the FMU
         :param inp: DataFrame, columns with input timeseries, index in seconds
@@ -57,10 +46,8 @@ class SCIPY(object):
                       outputs (variable names must match)
         :param solver: str, solver type (e.g. 'TNC', 'L-BFGS-B', 'SLSQP')
         :param options: dict, additional options passed to the SciPy's solver
-        :param fmi_opts: dict, Additional FMI options to be passed to
-                         the simulator (consult FMI specification)
         :param ftype: str, cost function type. Currently 'NRMSE' (advised
-                      for multi-objective estimation) or 'RMSE'. 
+                      for multi-objective estimation) or 'RMSE'.
         """
         self.logger = logging.getLogger(type(self).__name__)
 
@@ -71,8 +58,8 @@ class SCIPY(object):
         self.solver = solver
 
         # Default solver options
-        self.options = {'disp': True, 'iprint': 2, 'maxiter': 500,
-                        'full_output': True}
+        self.options = {'disp': True, 'iprint': 2, 'maxiter': 500}
+
         if len(options) > 0:
             for key in options:
                 self.options[key] = options[key]
@@ -112,8 +99,7 @@ class SCIPY(object):
 
         # Model
         output_names = [var for var in ideal]
-        self.model = SCIPY._get_model_instance(fmu_path, inp, known_df, est,
-                                               output_names, fmi_opts)
+        self.model = SCIPY._get_model_instance(fmu_path, inp, known_df, est, output_names)
 
         # Outputs
         self.summary = pd.DataFrame()
@@ -133,7 +119,7 @@ class SCIPY(object):
     def estimate(self):
 
         # Initial error
-        initial_result = self.model.simulate(com_points=SCIPY.COM_POINTS)
+        initial_result = self.model.simulate()
         self.res = initial_result
         initial_error = calc_err(initial_result, self.ideal,
                                  ftype=self.ftype)['tot']
@@ -152,7 +138,7 @@ class SCIPY(object):
                 print(x)
                 raise e
             self.model.set_param(parameters)
-            result = self.model.simulate(com_points=SCIPY.COM_POINTS)
+            result = self.model.simulate()
             err = calc_err(result, self.ideal, ftype=self.ftype)['tot']
             # Update best error and result
             if err < self.best_err:
@@ -309,9 +295,8 @@ class SCIPY(object):
         SCIPY.TMP_SUMMARY = SCIPY.TMP_SUMMARY.append(row, ignore_index=True)
 
     @staticmethod
-    def _get_model_instance(fmu_path, inputs, known_pars, est, output_names,
-                            fmi_opts=None):
-        model = Model(fmu_path, fmi_opts)
+    def _get_model_instance(fmu_path, inputs, known_pars, est, output_names):
+        model = Model(fmu_path)
         model.set_input(inputs)
         model.set_param(known_pars)
         model.set_param(estpars_2_df(est))

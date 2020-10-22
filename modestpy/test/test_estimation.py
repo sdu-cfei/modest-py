@@ -1,16 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 Copyright (c) 2017, University of Southern Denmark
 All rights reserved.
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import unittest
 import tempfile
 import shutil
@@ -64,11 +57,31 @@ class TestEstimation(unittest.TestCase):
         shutil.rmtree(self.tmpdir)
 
     def test_estimation_basic(self):
-        ga_opts = {'maxiter': 3}
-        ps_opts = {'maxiter': 3}
+        """Will use default methods ('MODESTGA', 'PS')"""
+        modestga_opts = {'generations': 2, 'workers': 1, 'pop_size': 8, 'trm_size': 3}
+        ps_opts = {'maxiter': 2}
         session = Estimation(self.tmpdir, self.fmu_path, self.inp,
                              self.known, self.est, self.ideal,
-                             ga_opts=ga_opts, ps_opts=ps_opts)
+                             modestga_opts=modestga_opts, ps_opts=ps_opts,
+                             default_log=False)
+        estimates = session.estimate()
+        err, res = session.validate()
+
+        self.assertIsNotNone(estimates)
+        self.assertGreater(len(estimates), 0)
+        self.assertIsNotNone(err)
+        self.assertIsNotNone(res)
+        self.assertGreater(len(res.index), 1)
+        self.assertGreater(len(res.columns), 0)
+
+    def test_estimation_basic_parallel(self):
+        """Will use default methods ('MODESTGA', 'PS')"""
+        modestga_opts = {'generations': 2, 'workers': 2, 'pop_size': 16, 'trm_size': 3}
+        ps_opts = {'maxiter': 2}
+        session = Estimation(self.tmpdir, self.fmu_path, self.inp,
+                             self.known, self.est, self.ideal,
+                             modestga_opts=modestga_opts, ps_opts=ps_opts,
+                             default_log=False)
         estimates = session.estimate()
         err, res = session.validate()
 
@@ -80,15 +93,16 @@ class TestEstimation(unittest.TestCase):
         self.assertGreater(len(res.columns), 0)
 
     def test_estimation_all_args(self):
-        ga_opts = {'maxiter': 3, 'pop_size': 10, 'trm_size': 5, 'lhs': True}
+        modestga_opts = {'generations': 2, 'workers': 2, 'pop_size': 16, 'trm_size': 3}
         ps_opts = {'maxiter': 3}
         session = Estimation(self.tmpdir, self.fmu_path, self.inp,
                              self.known, self.est, self.ideal,
                              lp_n=2, lp_len=3600, lp_frame=(0, 3600),
                              vp=(20000, 40000), ic_param={'Tstart': 'T'},
-                             methods=('GA', 'PS'),
-                             ga_opts=ga_opts, ps_opts=ps_opts,
-                             seed=1, ftype='NRMSE')
+                             methods=('MODESTGA', 'PS'),
+                             modestga_opts=modestga_opts, ps_opts=ps_opts,
+                             ftype='NRMSE',
+                             default_log=False)
 
         estimates = session.estimate()
         err, res = session.validate()  # Standard validation period
@@ -106,21 +120,21 @@ class TestEstimation(unittest.TestCase):
         self.assertGreater(len(res2.columns), 0)
         self.assertEqual(session.lp[0][0], 0)
         self.assertEqual(session.lp[0][1], 3600)
-        # Enabling next line triggers the Matplotlib error (issue #20)
-        # raw_input('Continue...')
         self.assertLess(err['tot'], 1.7)  # NRMSE
 
     def test_estimation_rmse(self):
-        ga_opts = {'maxiter': 3, 'pop_size': 8, 'trm_size': 3}
-        ps_opts = {'maxiter': 3}
+        modestga_opts = {'generations': 8}
+        ps_opts = {'maxiter': 16}
 
         session = Estimation(self.tmpdir, self.fmu_path, self.inp,
                              self.known, self.est, self.ideal,
                              lp_n=1, lp_len=3600, lp_frame=(0, 3600),
                              vp=(20000, 40000), ic_param={'Tstart': 'T'},
-                             methods=('GA', 'PS'),
-                             ga_opts=ga_opts, ps_opts=ps_opts,
-                             seed=1, ftype='RMSE')
+                             methods=('MODESTGA', 'PS'),
+                             modestga_opts=modestga_opts,
+                             ps_opts=ps_opts,
+                             ftype='RMSE',
+                             default_log=False)
 
         estimates = session.estimate()
         err, res = session.validate()
@@ -134,82 +148,65 @@ class TestEstimation(unittest.TestCase):
         self.assertLess(err['tot'], 1.48)
 
     def test_ga_only(self):
-        ga_opts = {'maxiter': 1}
+        modestga_opts = {'generations': 1}
         ps_opts = {'maxiter': 0}
         session = Estimation(self.tmpdir, self.fmu_path, self.inp,
                              self.known, self.est, self.ideal,
                              lp_n=1, lp_len=3600, lp_frame=(0, 3600),
                              vp=(20000, 40000), ic_param={'Tstart': 'T'},
-                             methods=('GA', ),
-                             ga_opts=ga_opts, ps_opts=ps_opts,
-                             seed=1, ftype='RMSE')
+                             methods=('MODESTGA', ),
+                             modestga_opts=modestga_opts, ps_opts=ps_opts,
+                             ftype='RMSE',
+                             default_log=False)
         session.estimate()
 
-    def test_seed(self):
-        ga_opts = {'maxiter': 10}
-        ps_opts = {'maxiter': 5}
-        # Run 1
-        session1 = Estimation(self.tmpdir, self.fmu_path, self.inp,
-                              self.known, self.est, self.ideal,
-                              lp_n=1, lp_len=3600, lp_frame=(0, 3600),
-                              vp=(20000, 40000), ic_param={'Tstart': 'T'},
-                              methods=('GA', ),
-                              ga_opts=ga_opts, ps_opts=ps_opts,
-                              seed=1, ftype='RMSE')
-        estimates1 = session1.estimate()
-        # Run 2
-        session2 = Estimation(self.tmpdir, self.fmu_path, self.inp,
-                              self.known, self.est, self.ideal,
-                              lp_n=1, lp_len=3600, lp_frame=(0, 3600),
-                              vp=(20000, 40000), ic_param={'Tstart': 'T'},
-                              methods=('GA', ),
-                              ga_opts=ga_opts, ps_opts=ps_opts,
-                              seed=1, ftype='RMSE')
-        estimates2 = session2.estimate()
-        # Check if estimates are the same
-        same = True
-        for key in estimates1:
-            if estimates1[key] != estimates2[key]:
-                same = False
-        self.assertTrue(
-            same,
-            "Different estimates obtained despite the same seed"
-            )
-
     def test_ps_only(self):
-        ga_opts = {'maxiter': 0}
+        modestga_opts = {'generations': 0}
         ps_opts = {'maxiter': 1}
         session = Estimation(self.tmpdir, self.fmu_path, self.inp,
                              self.known, self.est, self.ideal,
                              lp_n=1, lp_len=3600, lp_frame=(0, 3600),
                              vp=(20000, 40000), ic_param={'Tstart': 'T'},
                              methods=('PS', ),
-                             ga_opts=ga_opts, ps_opts=ps_opts, seed=1,
-                             ftype='RMSE')
+                             modestga_opts=modestga_opts, ps_opts=ps_opts,
+                             ftype='RMSE', default_log=False)
         session.estimate()
 
     def test_opts(self):
-        ga_opts = {'maxiter': 10, 'pop_size': 10, 'look_back': 10,
-                   'tol': 0.001, 'mut': 0.02, 'mut_inc': 0.3, 'trm_size': 3}
+        modestga_opts = {
+            'workers': 2,              # CPU cores to use
+            'generations': 10,         # Max. number of generations
+            'pop_size': 40,            # Population size
+            'mut_rate': 0.05,          # Mutation rate
+            'trm_size': 10,            # Tournament size
+            'tol': 1e-4,               # Solution tolerance
+            'inertia': 20              # Max. number of non-improving generations
+        }
         ps_opts = {'maxiter': 10, 'rel_step': 0.1, 'tol': 0.001, 'try_lim': 10}
         session = Estimation(self.tmpdir, self.fmu_path, self.inp,
                              self.known, self.est, self.ideal,
-                             ga_opts=ga_opts, ps_opts=ps_opts)
-        ga_return = session.GA_OPTS
+                             methods=('MODESTGA', 'PS'),
+                             modestga_opts=modestga_opts, ps_opts=ps_opts,
+                             default_log=False)
+        modestga_return = session.MODESTGA_OPTS
         ps_return = session.PS_OPTS
-        self.assertDictContainsSubset(ga_opts, ga_return)
-        self.assertDictContainsSubset(ps_opts, ps_return)
+
+        def extractDictAFromB(A, B):
+            return dict([(k, B[k]) for k in A.keys() if k in B.keys()])
+
+        self.assertEqual(modestga_opts, extractDictAFromB(modestga_opts, modestga_return))
+        self.assertEqual(ps_opts, extractDictAFromB(ps_opts, ps_return))
 
 
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(TestEstimation('test_estimation_basic'))
+    suite.addTest(TestEstimation('test_estimation_basic_parallel'))
     suite.addTest(TestEstimation('test_estimation_all_args'))
     suite.addTest(TestEstimation('test_estimation_rmse'))
     suite.addTest(TestEstimation('test_ga_only'))
     suite.addTest(TestEstimation('test_ps_only'))
     suite.addTest(TestEstimation('test_opts'))
-    suite.addTest(TestEstimation('test_seed'))
 
     return suite
 

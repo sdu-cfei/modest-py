@@ -10,12 +10,12 @@ import tempfile
 import json
 import os
 import pandas as pd
-from modestpy.estim.ps.ps import PS
+from modestpy.fmi.model import Model
 from modestpy.utilities.sysarch import get_sys_arch
 from modestpy.loginit import config_logger
 
 
-class TestPS(unittest.TestCase):
+class TestFMPy(unittest.TestCase):
 
     def setUp(self):
 
@@ -51,48 +51,35 @@ class TestPS(unittest.TestCase):
         with open(est_path) as f:
             self.est = json.load(f)
         with open(known_path) as f:
-            self.known = json.load(f)
-
-        # PS settings
-        self.max_iter = 3
-        self.try_lim = 2
+            known_dict = json.load(f)
+            known_records = dict()
+            for k, v in known_dict.items():
+                known_records[k] = [v]
+            self.known_df = pd.DataFrame.from_dict(known_records)
 
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
 
-    def test_ps(self):
-        self.ps = PS(self.fmu_path, self.inp, self.known,
-                     self.est, self.ideal, maxiter=self.max_iter,
-                     try_lim=self.try_lim)
-        self.estimates = self.ps.estimate()
+    def test_simulation(self):
+        output_names = self.ideal.columns.tolist()
+        model = Model(self.fmu_path)
+        model.inputs_from_df(self.inp)
+        model.specify_outputs(output_names)
+        model.parameters_from_df(self.known_df)
 
-        # Generate plots
-        self.ps.plot_comparison(os.path.join(self.tmpdir,
-                                             'ps_comparison.png'))
-        self.ps.plot_error_evo(os.path.join(self.tmpdir,
-                                            'ps_error_evo.png'))
-        self.ps.plot_parameter_evo(os.path.join(self.tmpdir,
-                                                'ps_param_evo.png'))
+        res1 = model.simulate(reset=True)
+        res2 = model.simulate(reset=False)
 
-        # Make sure plots are created
-        self.assertTrue(os.path.exists(os.path.join(self.tmpdir,
-                                                    'ps_comparison.png')))
-        self.assertTrue(os.path.exists(os.path.join(self.tmpdir,
-                                                    'ps_error_evo.png')))
-        self.assertTrue(os.path.exists(os.path.join(self.tmpdir,
-                                                    'ps_param_evo.png')))
+        self.assertTrue(res1.equals(res2), 'Dataframes not equal')
 
-        # Make sure errors do not increase
-        errors = self.ps.get_errors()
-        for i in range(1, len(errors)):
-            prev_err = errors[i-1]
-            next_err = errors[i]
-            self.assertGreaterEqual(prev_err, next_err)
+        input_size = self.inp.index.size
+        result_size = res1.index.size
+        self.assertTrue(input_size == result_size, 'Result size different than input')
 
 
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(TestPS('test_ps'))
+    suite.addTest(TestFMPy('test_simulation'))
 
     return suite
 
@@ -100,3 +87,4 @@ def suite():
 if __name__ == '__main__':
     config_logger(filename='unit_tests.log', level='DEBUG')
     unittest.main()
+
