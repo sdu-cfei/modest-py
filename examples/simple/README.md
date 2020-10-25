@@ -9,12 +9,3 @@ achieved with different sets of estimates (e.g. compare estimates vs. error on
 `scatter.png`). Hence, it is likely that you get different parameters, than
 the ones used to produce the measured data (``ideal``). Compare your result
 with ``resources/true_parameters.csv`` and look at the validation results. 
-
----
-**Note 1**
-
-This example was tested on Linux 64bit with JModelica 2.0 compiled from
-source and on Windows 64bit with Python 32bit and JModelica 2.0 installed
-from a binary. If you cannot find an FMU for you platform, please compile
-the Modelica model by yourself (from .mo file).
-
