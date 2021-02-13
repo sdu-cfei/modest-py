@@ -70,6 +70,18 @@ class TestMODESTGA(unittest.TestCase):
         par_df = ga.estimate()
         assert type(par_df) is pd.DataFrame
 
+    def test_modestga_simulation_fail(self):
+        est_fail = {
+            "R1": (-99, -100., 0.),
+            "R2": (-1e6, -1e7, -1e5),
+            "C": (0., -1e-10, 1e-10)
+        }
+        gen = 3
+        ga = MODESTGA(self.fmu_path, self.inp, self.known, est_fail, self.ideal,
+                      generations=gen)
+        par_df = ga.estimate()
+        assert type(par_df) is pd.DataFrame
+
     def test_modestga_1_worker(self):
         ga = MODESTGA(self.fmu_path, self.inp, self.known, self.est, self.ideal,
                       generations=self.gen,
@@ -107,6 +119,7 @@ class TestMODESTGA(unittest.TestCase):
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(TestMODESTGA('test_modestga_default'))
+    suite.addTest(TestMODESTGA('test_modestga_simulation_fail'))
     suite.addTest(TestMODESTGA('test_modestga_1_worker'))
     suite.addTest(TestMODESTGA('test_modestga_2_workers_small_pop'))
     suite.addTest(TestMODESTGA('test_modestga_2_workers_large_pop'))
@@ -116,4 +129,3 @@ def suite():
 if __name__ == '__main__':
     config_logger(filename='unit_tests.log', level='DEBUG')
     unittest.main()
-
