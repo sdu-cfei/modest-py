@@ -6,11 +6,11 @@ See LICENSE file in the project root for license terms.
 """
 import logging
 import os
-import pandas as pd
-import numpy as np
 from random import random
-from multiprocessing import Manager
-from multiprocessing.managers import BaseManager
+
+import numpy as np
+import pandas as pd
+
 from modestga import minimize
 from modestpy.fmi.model import Model
 from modestpy.estim.estpar import EstPar
@@ -21,9 +21,20 @@ import modestpy.utilities.figures as figures
 
 
 class ObjectiveFun:
+    """Objective function for paralell GA.
+
+    This class is callable and it is a wrapper
+    containing FMU initialization and simulation.
+
+    Note:
+        If FMU simulation fails, the returned error is 1e8
+        (attribute `err_sim_failed`) and the FMU is
+        reinitialized before next simulation.
+    """
     def __init__(self, fmu_path, inp, known, est, ideal, ftype='RMSE'):
         self.logger = logging.getLogger(type(self).__name__)
         self.model = None
+        self.sim_failed = False
         self.fmu_path = fmu_path
         self.inp = inp
 
@@ -41,6 +52,7 @@ class ObjectiveFun:
         self.output_names = [var for var in ideal]
         self.ftype = ftype
         self.best_err = 1e7
+        self.err_sim_failed = 1e8
         self.res = pd.DataFrame()
 
         self.logger.debug(f"fmu_path = {fmu_path}")
@@ -54,12 +66,17 @@ class ObjectiveFun:
         return lo + v * (hi - lo)
 
     def __call__(self, x, *args):
-        # Instantiate the model
+
         self.logger.debug(f"x = {x}")
-        if self.model is None:
+
+        # Instantiate the model if
+        # - there's no model yet
+        # - previous simulation failed
+        if (self.model is None) or (self.sim_failed is True):
             self.model = self._get_model_instance(
                 self.fmu_path, self.inp, self.known, self.est, self.output_names
             )
+            self.sim_failed = False
             logging.debug(f"Model instance returned: {self.model}")
 
         # Updated parameters are stored in x. Need to update the model.
@@ -69,15 +86,25 @@ class ObjectiveFun:
                 parameters[ep.name] = self.rescale(v, ep.lo, ep.hi)
         except TypeError as e:
             raise e
+
         self.logger.debug(f"parameters = {parameters}")
+
         self.model.parameters_from_df(parameters)
+
         self.logger.debug(f"est: {self.est}")
         self.logger.debug(f"parameters: {parameters}")
         self.logger.debug(f"model: {self.model}")
         self.logger.debug("Calling simulation...")
-        result = self.model.simulate()
-        self.logger.debug(f"result: {result}")
-        err = calc_err(result, self.ideal, ftype=self.ftype)['tot']
+
+        try:
+            result = self.model.simulate()
+            self.logger.debug(f"result: {result}")
+            err = calc_err(result, self.ideal, ftype=self.ftype)['tot']
+        except Exception as e:
+            self.model_failed = True
+            err = self.err_sim_failed
+            self.logger.error(str(e))
+
         # Update best error and result
         if err < self.best_err:
             self.best_err = err
@@ -92,19 +119,31 @@ class ObjectiveFun:
         self.logger.debug(f"est = {est}")
         self.logger.debug(f"estpars_2_df(est) = {estpars_2_df(est)}")
         self.logger.debug(f"output_names = {output_names}")
-        model = Model(fmu_path)
-        model.inputs_from_df(inputs)
-        model.parameters_from_df(known_pars)
-        model.parameters_from_df(estpars_2_df(est))
-        model.specify_outputs(output_names)
+
+        try:
+            model = Model(fmu_path)
+            model.inputs_from_df(inputs)
+            model.parameters_from_df(known_pars)
+            model.parameters_from_df(estpars_2_df(est))
+            model.specify_outputs(output_names)
+            res = model.simulate()
+        except Exception as e:
+            self.logger.error(str(e))
+            msg = "Can't initialize FMU with given parameters. Will try with defaults."
+            self.logger.error(msg)
+            model = Model(fmu_path)
+            model.inputs_from_df(inputs)
+            model.specify_outputs(output_names)
+            res = model.simulate()
+
         self.logger.debug(f"Model instance initialized: {model}")
         self.logger.debug(f"Model instance initialized: {model.model}")
-        res = model.simulate()
         self.logger.debug(f"test result: {res}")
+
         return model
 
 
-class MODESTGA(object):
+class MODESTGA:
     """
     Parallel Genetic Algorithm based on modestga
     (https://github.com/krzysztofarendt/modestga).

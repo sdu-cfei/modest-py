@@ -7,6 +7,7 @@ See LICENSE file in the project root for license terms.
 import unittest
 from modestpy.test import test_fmpy
 from modestpy.test import test_ga
+from modestpy.test import test_ga_parallel
 from modestpy.test import test_ps
 from modestpy.test import test_scipy
 from modestpy.test import test_estimation
