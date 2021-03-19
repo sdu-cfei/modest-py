@@ -19,7 +19,7 @@ modestga==0.5.3
 numpy==1.19.1
 pandas==1.1.1
 partd==1.1.0
-Pillow==7.2.0
+Pillow==8.1.1
 pkg-resources==0.0.0
 pudb==2019.2
 pyDOE==0.3.8
