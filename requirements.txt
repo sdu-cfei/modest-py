@@ -23,7 +23,7 @@ Pillow==7.2.0
 pkg-resources==0.0.0
 pudb==2019.2
 pyDOE==0.3.8
-Pygments==2.6.1
+Pygments==2.7.4
 pylint==2.6.0
 pyparsing==2.4.7
 PyQt5==5.15.0
