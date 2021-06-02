@@ -38,6 +38,6 @@ six==1.15.0
 toml==0.10.1
 toolz==0.10.0
 typed-ast==1.4.1
-urllib3==1.25.10
+urllib3==1.26.5
 urwid==2.1.1
 wrapt==1.12.1
