@@ -9,14 +9,6 @@ RUN apt-get update
 RUN apt-get install -y libgfortran3 gcc g++
 RUN apt-get install -y python3 python3-pip
 RUN apt-get install -y libjpeg8-dev zlib1g-dev
-RUN apt-get install -y git
-
-# Vim + cool vimrc ;)
-WORKDIR /vimrc
-RUN apt-get install -y vim
-RUN git clone https://github.com/krzysztofarendt/vimrc /vimrc
-RUN ./install_wsl.sh
-ENV TERM=xterm-256color
 
 # Modestpy
 WORKDIR /modestpy
