@@ -21,10 +21,10 @@ def delete_logs(directory=os.getcwd()):
     """
     content = os.listdir(directory)
     for el in content:
-        if el.split('.')[-1] == 'log':
+        if el.split(".")[-1] == "log":
             # This is a log file
             fpath = os.path.join(directory, el)
-            print('Removing {}'.format(fpath))
+            print("Removing {}".format(fpath))
             try:
                 os.remove(fpath)
             except WindowsError as e:

@@ -7,9 +7,13 @@ See LICENSE file in the project root for license terms.
 """
 import logging
 from pathlib import Path
-from fmpy import simulate_fmu, read_model_description, instantiate_fmu, extract
+
 import numpy as np
 import pandas as pd
+from fmpy import extract
+from fmpy import instantiate_fmu
+from fmpy import read_model_description
+from fmpy import simulate_fmu
 
 
 def df_to_struct_arr(df):
@@ -23,7 +27,7 @@ def df_to_struct_arr(df):
 
 def struct_arr_to_df(arr):
     """Converts a structured array to DataFrame."""
-    df = pd.DataFrame(arr).set_index('time')
+    df = pd.DataFrame(arr).set_index("time")
 
     return df
 
@@ -32,6 +36,7 @@ class Model(object):
     """FMU model to be simulated with inputs and parameters provided from
     files or dataframes.
     """
+
     tmpdir_file = "tmp_dirs.txt"
 
     def __init__(self, fmu_path, opts=None):
@@ -66,7 +71,7 @@ class Model(object):
         with open(Model.tmpdir_file, "a") as f:
             f.write(str(d) + "\n")
 
-    def inputs_from_csv(self, csv, sep=',', exclude=list()):
+    def inputs_from_csv(self, csv, sep=",", exclude=list()):
         """Reads inputs from a CSV file.
 
         Time (column `time`) should be given in seconds.
@@ -76,8 +81,8 @@ class Model(object):
         :return: None
         """
         df = pd.read_csv(csv, sep=sep)
-        assert 'time' in df.columns, "'time' not present in csv..."
-        df = df.set_index('time')
+        assert "time" in df.columns, "'time' not present in csv..."
+        df = df.set_index("time")
         self.inputs_from_df(df, exclude)
 
     def set_input(self, df, exclude=list()):
@@ -96,12 +101,14 @@ class Model(object):
         :param exclude: list of strings, names of columns to be omitted
         :return:
         """
-        assert df.index.name == 'time', "Index name ('{}') different " \
-                                        "than 'time'! " \
-                                        "Are you sure you assigned index " \
-                                        "correctly?".format(df.index.name)
+        assert df.index.name == "time", (
+            "Index name ('{}') different "
+            "than 'time'! "
+            "Are you sure you assigned index "
+            "correctly?".format(df.index.name)
+        )
         if len(exclude) > 0:
-            df = df.drop(exclude, axis='columns')
+            df = df.drop(exclude, axis="columns")
         self.timeline = df.index.values
         self.start = self.timeline[0]
         self.end = self.timeline[-1]
@@ -120,7 +127,7 @@ class Model(object):
             if name not in self.output_names:
                 self.output_names.append(name)
 
-    def parameters_from_csv(self, csv, sep=','):
+    def parameters_from_csv(self, csv, sep=","):
         """Read parameters from a CSV file."""
         df = pd.read_csv(csv, sep=sep)
         self.parameters_from_df(df)
@@ -130,12 +137,12 @@ class Model(object):
 
     def parameters_from_df(self, df):
         """Get parameters from a DataFrame."""
-        self.logger.debug(f'parameters_from_df = {df}')
+        self.logger.debug(f"parameters_from_df = {df}")
         if df is not None:
             df = df.copy()
             for col in df:
                 self.parameters[col] = df[col]
-        self.logger.debug(f'Updated parameters: {self.parameters}')
+        self.logger.debug(f"Updated parameters: {self.parameters}")
 
     def simulate(self, reset=True):
         """Performs a simulation.
@@ -152,14 +159,14 @@ class Model(object):
         start_values = dict()
         input_names = self.input_arr.dtype.names
         for name in input_names:
-            if name != 'time':
+            if name != "time":
                 start_values[name] = self.input_arr[name][0]
 
-        assert 'time' in input_names, "time must be the first input"
+        assert "time" in input_names, "time must be the first input"
 
         # Set parameters
         for name, value in self.parameters.items():
-            if name != 'time':
+            if name != "time":
                 start_values[name] = value
 
         # Inputs
@@ -182,8 +189,8 @@ class Model(object):
             output=self.output_names,
             output_interval=output_interval,
             fmu_instance=self.model
-            #solver='Euler',  # TODO: It might be useful to add solver/step to options
-            #step_size=0.005
+            # solver='Euler',  # TODO: It might be useful to add solver/step to options
+            # step_size=0.005
         )
 
         # Convert result to DataFrame
@@ -196,8 +203,7 @@ class Model(object):
             except Exception as e:
                 self.logger.warning(str(e))
                 self.logger.warning(
-                    "If you try to simulate an EnergyPlus FMU, "
-                    "use reset=False"
+                    "If you try to simulate an EnergyPlus FMU, " "use reset=False"
                 )
         # Return
         return res_df

@@ -4,9 +4,10 @@ All rights reserved.
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
-from modestpy.estim.ga.population import Population
-import random
 import logging
+import random
+
+from modestpy.estim.ga.population import Population
 
 # Constants controlling the evolution
 UNIFORM_RATE = 0.5  # affects crossover
@@ -31,13 +32,15 @@ def evolve(pop):
     """
     logger = logging.getLogger("ga.algorithm.evolve")
 
-    new_pop = Population(fmu_path=pop.fmu_path,
-                         pop_size=pop.size(),
-                         inp=pop.inputs,
-                         known=pop.known_pars,
-                         est=pop.get_estpars(),
-                         ideal=pop.ideal,
-                         init=False)
+    new_pop = Population(
+        fmu_path=pop.fmu_path,
+        pop_size=pop.size(),
+        inp=pop.inputs,
+        known=pop.known_pars,
+        est=pop.get_estpars(),
+        ideal=pop.ideal,
+        init=False,
+    )
 
     elite_offset = 0
     if ELITISM:
@@ -50,8 +53,7 @@ def evolve(pop):
         ind2 = tournament_selection(pop, TOURNAMENT_SIZE)
         child = crossover(ind1, ind2, UNIFORM_RATE)
         new_pop.add_individual(child)
-        logger.debug('Crossover: ({}) x ({}) -> ({})'
-                     .format(ind1, ind2, child))
+        logger.debug("Crossover: ({}) x ({}) -> ({})".format(ind1, ind2, child))
 
     # Mutation
     # Check population diversity
@@ -66,9 +68,7 @@ def evolve(pop):
         for i in range(elite_offset, new_pop.size()):
             if random.random() < INC_MUT_PROP:
                 # Increased mutation rate, slightly changed values
-                slight_mutation(new_pop.individuals[i],
-                                MUT_RATE_INC,
-                                MAX_CHANGE)
+                slight_mutation(new_pop.individuals[i], MUT_RATE_INC, MAX_CHANGE)
             else:
                 # Increased mutation rate, completely random new values
                 mutation(new_pop.individuals[i], MUT_RATE_INC)
@@ -131,8 +131,8 @@ def crossover(ind1, ind2, uniformity):
     i1_clone = ind1.get_clone()
     i2_clone = ind2.get_clone()
 
-    logger.debug('Ind1: {}'.format(i1_clone))
-    logger.debug('Ind2: {}'.format(i2_clone))
+    logger.debug("Ind1: {}".format(i1_clone))
+    logger.debug("Ind2: {}".format(i2_clone))
 
     for name in child.get_sorted_gene_names():
         randnum = random.random()
@@ -158,7 +158,7 @@ def mutation(ind, mut_rate):
 
     for g_name in ind.get_sorted_gene_names():
         if random.random() < mut_rate:
-            logger.debug('Mutate gene for parameter {}'.format(g_name))
+            logger.debug("Mutate gene for parameter {}".format(g_name))
             ind.set_gene(g_name, random.random())
 
 
@@ -176,24 +176,30 @@ def slight_mutation(ind, mut_rate, max_change):
 
     for g_name in ind.get_sorted_gene_names():
         if random.random() < mut_rate:
-            logger.debug('Mutate gene for parameter {}'.format(g_name))
+            logger.debug("Mutate gene for parameter {}".format(g_name))
             value = ind.genes[g_name]
-            new_value = value + random.uniform(-1., 1.) * max_change / 100.
-            if new_value > 1.:
-                new_value = 1.
-            if new_value < 0.:
-                new_value = 0.
+            new_value = value + random.uniform(-1.0, 1.0) * max_change / 100.0
+            if new_value > 1.0:
+                new_value = 1.0
+            if new_value < 0.0:
+                new_value = 0.0
             ind.set_gene(g_name, new_value)
 
 
 def tournament_selection(pop, tournament_size):
     # Create tournament population
-    t_pop = Population(pop.fmu_path, tournament_size, pop.inputs,
-                       pop.known_pars, pop.get_estpars(), pop.ideal,
-                       init=False)
+    t_pop = Population(
+        pop.fmu_path,
+        tournament_size,
+        pop.inputs,
+        pop.known_pars,
+        pop.get_estpars(),
+        pop.ideal,
+        init=False,
+    )
     # For each place in the tournament get a random individual
     for i in range(tournament_size):
-        rand_index = random.randint(0, pop.size()-1)
+        rand_index = random.randint(0, pop.size() - 1)
         t_pop.individuals.append(pop.individuals[rand_index])
 
     return t_pop.get_fittest()
@@ -202,6 +208,6 @@ def tournament_selection(pop, tournament_size):
 def info(txt):
     if VERBOSE:
         if isinstance(txt, str):
-            print('[ALGORITHM]', txt)
+            print("[ALGORITHM]", txt)
         else:
-            print('[ALGORITHM]', repr(txt))
+            print("[ALGORITHM]", repr(txt))

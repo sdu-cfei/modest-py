@@ -4,18 +4,20 @@ All rights reserved.
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
+import copy
 import logging
 import random
-import pandas as pd
+
 import numpy as np
-import copy
+import pandas as pd
+
 from modestpy.estim.error import calc_err
 
 
 class Individual(object):
-
-    def __init__(self, est_objects, population, genes=None,
-                 use_init_guess=False, ftype='NRMSE'):
+    def __init__(
+        self, est_objects, population, genes=None, use_init_guess=False, ftype="NRMSE"
+    ):
         """
         Individual can be initialized using `genes` OR initial guess
         in `est_objects` (genes are inferred from parameters and vice versa).
@@ -59,10 +61,11 @@ class Individual(object):
             self.genes = dict()
             for p in self.est_par_objects:
                 self.genes[p.name] = (p.value - p.lo) / (p.hi - p.lo)
-                assert self.genes[p.name] >= 0. and self.genes[p.name] <= 1., \
-                    'Initial guess outside the bounds'
+                assert (
+                    self.genes[p.name] >= 0.0 and self.genes[p.name] <= 1.0
+                ), "Initial guess outside the bounds"
         else:
-            msg = 'Either genes or parameters have to be None'
+            msg = "Either genes or parameters have to be None"
             self.logger.error(msg)
             raise ValueError(msg)
 
@@ -84,11 +87,13 @@ class Individual(object):
         # Simulation
         self.result = self.model.simulate()
         # Make sure the returned result is not empty
-        assert self.result.empty is False, \
-            'Empty result returned from simulation... (?)'
+        assert (
+            self.result.empty is False
+        ), "Empty result returned from simulation... (?)"
         # Calculate error
-        self.logger.debug("Calculating error ({}) in individual {}"
-                          .format(self.ftype, self.genes))
+        self.logger.debug(
+            "Calculating error ({}) in individual {}".format(self.ftype, self.genes)
+        )
         self.error = calc_err(self.result, self.ideal, ftype=self.ftype)
 
     def reset(self):
@@ -121,12 +126,13 @@ class Individual(object):
 
     def get_estimates_and_error(self):
         estimates = self.get_estimates()
-        estimates['_error_'] = self.error['tot']
+        estimates["_error_"] = self.error["tot"]
         return estimates
 
     def get_clone(self):
-        clone = Individual(self.est_par_objects, self.population,
-                           self.genes, ftype=self.ftype)
+        clone = Individual(
+            self.est_par_objects, self.population, self.genes, ftype=self.ftype
+        )
         return clone
 
     # Private methods ---------------------------
@@ -176,15 +182,15 @@ class Individual(object):
 
     # Overriden methods --------------------------
     def __str__(self):
-        s = 'Individual ('
+        s = "Individual ("
         for par in self.est_par_objects:
-            s += par.name + '={0:.3f}'.format(par.value)
-            s += ', '
+            s += par.name + "={0:.3f}".format(par.value)
+            s += ", "
         # Delete trailing comma
         s = s[:-2]
-        s += '), err='
+        s += "), err="
         if self.error:
-            s += '{:.4f} '.format(self.error['tot'])
+            s += "{:.4f} ".format(self.error["tot"])
         else:
-            s += 'None'
+            s += "None"
         return s

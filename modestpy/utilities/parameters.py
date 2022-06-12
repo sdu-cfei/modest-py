@@ -21,6 +21,7 @@ class Parameters:
     * save csv with updated parameters
 
     """
+
     def __init__(self, f=None):
         self.pars = pd.DataFrame()
         self.f = None

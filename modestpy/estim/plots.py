@@ -9,7 +9,7 @@ import numpy as np
 
 
 def plot_comparison(sim_res, ideal_res, f=None):
-    """ Plots comparison: simulation vs. ideal results.
+    """Plots comparison: simulation vs. ideal results.
 
     :param sim_res: DataFrame
     :param ideal_res: DataFrame
@@ -18,10 +18,10 @@ def plot_comparison(sim_res, ideal_res, f=None):
     """
     simulated = sim_res.copy()
     measured = ideal_res.copy()
-    measured.columns = [x + '_meas' for x in measured.columns]
+    measured.columns = [x + "_meas" for x in measured.columns]
 
     variables = list(simulated.columns)
-    assert len(variables) > 0, 'No output variables to be compared'
+    assert len(variables) > 0, "No output variables to be compared"
 
     fig, axes = plt.subplots(nrows=len(variables), ncols=1)
     i = 0
@@ -30,10 +30,11 @@ def plot_comparison(sim_res, ideal_res, f=None):
             ax = axes[i]
         else:
             ax = axes
-        var_meas = var + '_meas'
-        ax.plot(measured.index / 3600., measured[var_meas],
-                label='$' + var + '_{meas}$')
-        ax.plot(simulated.index / 3600., simulated[var], label='$' + var + '$')
+        var_meas = var + "_meas"
+        ax.plot(
+            measured.index / 3600.0, measured[var_meas], label="$" + var + "_{meas}$"
+        )
+        ax.plot(simulated.index / 3600.0, simulated[var], label="$" + var + "$")
         ax.legend()
         ax.set_xlim(measured.index[0] / 3600)
         i += 1
@@ -41,7 +42,7 @@ def plot_comparison(sim_res, ideal_res, f=None):
         ax_last = axes[-1]
     else:
         ax_last = axes
-    ax_last.set_xlabel('time [h]')
+    ax_last.set_xlabel("time [h]")
 
     if f:
         fig.savefig(f)
@@ -50,7 +51,7 @@ def plot_comparison(sim_res, ideal_res, f=None):
 
 
 def plot_error_evo(errors, f=None):
-    """ Plots evolution of errors.
+    """Plots evolution of errors.
 
     :param errors: DataFrame
     :param f: string
@@ -58,8 +59,8 @@ def plot_error_evo(errors, f=None):
     """
     fig, ax = plt.subplots()
     ax.plot(errors)
-    ax.set_xlabel('Iteration')
-    ax.set_ylabel('Error (NRMSE)')
+    ax.set_xlabel("Iteration")
+    ax.set_ylabel("Error (NRMSE)")
     if f:
         fig = ax.get_figure()
         fig.savefig(f)
@@ -67,7 +68,7 @@ def plot_error_evo(errors, f=None):
 
 
 def plot_parameter_evo(parameters, file=None):
-    """ Plots parameter evolution.
+    """Plots parameter evolution.
 
     :param parameters: DataFrame
     :param file: string
@@ -80,7 +81,7 @@ def plot_parameter_evo(parameters, file=None):
     # Extend y lim
     axes = _extend_ylim(axes, par_evo)
     # x label
-    axes[-1].set_xlabel('Iteration')
+    axes[-1].set_xlabel("Iteration")
 
     if file:
         fig.savefig(file)
@@ -88,7 +89,7 @@ def plot_parameter_evo(parameters, file=None):
 
 
 def plot_inputs(inputs, file=None):
-    """ Plots inputs.
+    """Plots inputs.
 
     :param inputs: DataFrame
     :param file: string
@@ -97,7 +98,7 @@ def plot_inputs(inputs, file=None):
     axes = inputs.plot(subplots=True)
     fig = axes[0].get_figure()
     # x label
-    axes[-1].set_xlabel('Time [s]')
+    axes[-1].set_xlabel("Time [s]")
 
     if file:
         fig.savefig(file)
@@ -116,14 +117,15 @@ def _extend_ylim(axes, df):
             ext = y_range * 0.2
             y_ext_range = y_range + 2 * ext
             axes[i].set_ylim([minimum - ext, maximum + ext])
-            axes[i].set_yticks(np.arange(minimum - ext, maximum + ext * 1.1,
-                               y_ext_range / 2))
+            axes[i].set_yticks(
+                np.arange(minimum - ext, maximum + ext * 1.1, y_ext_range / 2)
+            )
         else:
             # Probably constant value
             # ...but just in case take the average
             avg = (maximum + minimum) / 2
             # set_ylim and set_yticks wouldn't work if average == 0
-            if avg != 0.:
+            if avg != 0.0:
                 ext = avg * 0.2
                 axes[i].set_ylim([minimum - ext, maximum + ext])
                 axes[i].set_yticks(np.arange(avg - ext, avg + ext * 1.1, ext))

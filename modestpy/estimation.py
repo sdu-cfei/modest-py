@@ -4,24 +4,26 @@ All rights reserved.
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
-import logging
-import random
 import copy
+import logging
 import os
-from pathlib import Path
+import random
 import shutil
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import matplotlib.ticker
-import pandas as pd
 import numpy as np
+import pandas as pd
+
+import modestpy.estim.error
+import modestpy.utilities.figures as figures
 from modestpy.estim.ga.ga import GA
+from modestpy.estim.ga_parallel.ga_parallel import MODESTGA
+from modestpy.estim.plots import plot_comparison
 from modestpy.estim.ps.ps import PS
 from modestpy.estim.scipy.scipy import SCIPY
-from modestpy.estim.ga_parallel.ga_parallel import MODESTGA
 from modestpy.fmi.model import Model
-import modestpy.estim.error
-from modestpy.estim.plots import plot_comparison
-import modestpy.utilities.figures as figures
 from modestpy.loginit import config_logger
 
 
@@ -86,6 +88,7 @@ class Estimation(object):
         If default_log=True, this argument can be used to specify the log
         file name
     """
+
     # Number of attempts to find nonzero learning data set
     NONZERO_ATTEMPTS = 20
 
@@ -93,27 +96,43 @@ class Estimation(object):
     FIG_DPI = 150
     FIG_SIZE = (10, 6)
 
-    def __init__(self, workdir, fmu_path, inp, known, est, ideal,
-                 lp_n=None, lp_len=None, lp_frame=None, vp=None,
-                 ic_param=None, methods=('MODESTGA', 'PS'), ga_opts={}, ps_opts={},
-                 scipy_opts={}, modestga_opts={}, ftype='RMSE',
-                 default_log=True, logfile='modestpy.log'):
+    def __init__(
+        self,
+        workdir,
+        fmu_path,
+        inp,
+        known,
+        est,
+        ideal,
+        lp_n=None,
+        lp_len=None,
+        lp_frame=None,
+        vp=None,
+        ic_param=None,
+        methods=("MODESTGA", "PS"),
+        ga_opts={},
+        ps_opts={},
+        scipy_opts={},
+        modestga_opts={},
+        ftype="RMSE",
+        default_log=True,
+        logfile="modestpy.log",
+    ):
 
         # Default logging configuration?
         if default_log:
-            config_logger(filename=logfile, level='WARNING')
+            config_logger(filename=logfile, level="WARNING")
 
         self.logger = logging.getLogger(type(self).__name__)
 
         # Sanity checks
-        assert inp.index.equals(ideal.index), \
-            'inp and ideal indexes are not matching'
+        assert inp.index.equals(ideal.index), "inp and ideal indexes are not matching"
 
         init, lo, hi = 0, 1, 2  # Init. value, lower bound, upper bound indices
         for v in est:
-            assert (est[v][init] >= est[v][lo])  \
-                and (est[v][init] <= est[v][hi]), \
-                'Initial value out of limits ({})'.format(v)
+            assert (est[v][init] >= est[v][lo]) and (
+                est[v][init] <= est[v][hi]
+            ), "Initial value out of limits ({})".format(v)
 
         # Input data
         self.workdir = workdir
@@ -132,71 +151,67 @@ class Estimation(object):
         # Estimation options
         # GA options
         self.GA_OPTS = {
-            'maxiter':      50,
-            'pop_size':     max((4 * len(est.keys()), 20)),
-            'tol':          1e-6,
-            'mut':          0.10,
-            'mut_inc':      0.33,
-            'uniformity':   0.5,
-            'look_back':    50,
-            'lhs':          False,
-            'ftype':        ftype
+            "maxiter": 50,
+            "pop_size": max((4 * len(est.keys()), 20)),
+            "tol": 1e-6,
+            "mut": 0.10,
+            "mut_inc": 0.33,
+            "uniformity": 0.5,
+            "look_back": 50,
+            "lhs": False,
+            "ftype": ftype,
         }  # Default
 
         # Default
-        self.GA_OPTS['trm_size'] = max(self.GA_OPTS['pop_size']//6, 2)
+        self.GA_OPTS["trm_size"] = max(self.GA_OPTS["pop_size"] // 6, 2)
         # User options
-        self.GA_OPTS = self._update_opts(self.GA_OPTS, ga_opts, 'GA_LEGACY')
+        self.GA_OPTS = self._update_opts(self.GA_OPTS, ga_opts, "GA_LEGACY")
 
         # PS options
         self.PS_OPTS = {
-            'maxiter':  500,
-            'rel_step': 0.02,
-            'tol':      1e-11,
-            'try_lim':  1000,
-            'ftype':    ftype
+            "maxiter": 500,
+            "rel_step": 0.02,
+            "tol": 1e-11,
+            "try_lim": 1000,
+            "ftype": ftype,
         }  # Default
 
         # User options
-        self.PS_OPTS = self._update_opts(self.PS_OPTS, ps_opts, 'PS')
+        self.PS_OPTS = self._update_opts(self.PS_OPTS, ps_opts, "PS")
 
         # SCIPY options
         self.SCIPY_OPTS = {
-            'solver': 'L-BFGS-B',
-            'options': {'disp': True,
-                        'iprint': 2,
-                        'maxiter': 150,
-                        'full_output': True},
-            'ftype': ftype
+            "solver": "L-BFGS-B",
+            "options": {"disp": True, "iprint": 2, "maxiter": 150, "full_output": True},
+            "ftype": ftype,
         }  # Default
 
         # User options
-        self.SCIPY_OPTS = \
-            self._update_opts(self.SCIPY_OPTS, scipy_opts, 'SCIPY')
+        self.SCIPY_OPTS = self._update_opts(self.SCIPY_OPTS, scipy_opts, "SCIPY")
 
         # MODESTGA options
         self.MODESTGA_OPTS = {
-            'workers': 3,              # CPU cores to use
-            'generations': 50,         # Max. number of generations
-            'pop_size': 30,            # Population size
-            'mut_rate': 0.01,          # Mutation rate
-            'trm_size': 3,             # Tournament size
-            'tol': 1e-3,               # Solution tolerance
-            'inertia': 100,            # Max. number of non-improving generations
-            'ftype': ftype
+            "workers": 3,  # CPU cores to use
+            "generations": 50,  # Max. number of generations
+            "pop_size": 30,  # Population size
+            "mut_rate": 0.01,  # Mutation rate
+            "trm_size": 3,  # Tournament size
+            "tol": 1e-3,  # Solution tolerance
+            "inertia": 100,  # Max. number of non-improving generations
+            "ftype": ftype,
         }  # Default
 
         # User options
-        self.MODESTGA_OPTS = \
-            self._update_opts(self.MODESTGA_OPTS, modestga_opts, 'MODESTGA')
+        self.MODESTGA_OPTS = self._update_opts(
+            self.MODESTGA_OPTS, modestga_opts, "MODESTGA"
+        )
 
         # Method dictionary
         self.method_dict = {
-            'MODESTGA': (MODESTGA, self.MODESTGA_OPTS),
-            'GA_LEGACY': (GA, self.GA_OPTS),
-            'PS': (PS, self.PS_OPTS),
-            'SCIPY': (SCIPY, self.SCIPY_OPTS)
-
+            "MODESTGA": (MODESTGA, self.MODESTGA_OPTS),
+            "GA_LEGACY": (GA, self.GA_OPTS),
+            "PS": (PS, self.PS_OPTS),
+            "SCIPY": (SCIPY, self.SCIPY_OPTS),
         }  # Key -> method name, value -> (method class, method options)
 
         # List of learning periods (tuples with start, stop)
@@ -214,7 +229,7 @@ class Estimation(object):
 
     # PUBLIC METHODS =====================================================
 
-    def estimate(self, get='best'):
+    def estimate(self, get="best"):
         """
         Estimates parameters.
 
@@ -239,8 +254,8 @@ class Estimation(object):
         dict(str: float)
         """
         # (0) Sanity checks
-        allowed_types = ['best', 'avg']
-        assert get in allowed_types, 'get={} is not allowed'.format(get)
+        allowed_types = ["best", "avg"]
+        assert get in allowed_types, "get={} is not allowed".format(get)
 
         # (1) Initialize local variables
         # Tuple with method names
@@ -250,11 +265,11 @@ class Estimation(object):
         # List of plots to be saved
         plots = list()
 
-        cols = ['_method_', '_error_'] + [par_name for par_name in self.est]
+        cols = ["_method_", "_error_"] + [par_name for par_name in self.est]
 
         # Estimates and errors from all iterations from all methods
         summary = pd.DataFrame(columns=cols)
-        summary.index.name = '_iter_'
+        summary.index.name = "_iter_"
 
         # List of DataFrames with summaries from all runs
         summary_list = list()
@@ -284,8 +299,9 @@ class Estimation(object):
                 m_class = self.method_dict[m_name][0]
                 m_opts = self.method_dict[m_name][1]
 
-                m_inst = m_class(self.fmu_path, inp_slice, self.known, est,
-                                 ideal_slice, **m_opts)
+                m_inst = m_class(
+                    self.fmu_path, inp_slice, self.known, est, ideal_slice, **m_opts
+                )
 
                 # (2.4.2) Estimate
                 m_estimates = m_inst.estimate()
@@ -302,17 +318,18 @@ class Estimation(object):
                     # Add iterations from previous methods
                     full_traj.index += summary.index[-1]
                 summary = summary.append(full_traj, verify_integrity=True)
-                summary.index.rename('_iter_', inplace=True)
+                summary.index.rename("_iter_", inplace=True)
 
                 # (2.4.5) Save method's plots
                 plots = m_inst.get_plots()
                 for p in plots:
-                    fig = figures.get_figure(p['axes'])
-                    fig_file = os.path.join(self.workdir, "{}_{}.png"
-                                            .format(p['name'], n))
+                    fig = figures.get_figure(p["axes"])
+                    fig_file = os.path.join(
+                        self.workdir, "{}_{}.png".format(p["name"], n)
+                    )
                     fig.set_size_inches(Estimation.FIG_SIZE)
                     fig.savefig(fig_file, dpi=Estimation.FIG_DPI)
-                plt.close('all')
+                plt.close("all")
 
                 # (2.4.6) Increase method counter
                 m += 1
@@ -326,38 +343,38 @@ class Estimation(object):
 
         # (3) Get and save best estimates per run and final estimates
         best_per_run = self._get_finals(summary_list)
-        best_per_run.to_csv(os.path.join(self.workdir, 'best_per_run.csv'))
+        best_per_run.to_csv(os.path.join(self.workdir, "best_per_run.csv"))
 
-        if get == 'best':
-            cond = best_per_run['_error_'] == best_per_run['_error_'].min()
+        if get == "best":
+            cond = best_per_run["_error_"] == best_per_run["_error_"].min()
             # Take only one if more than one present
             final = best_per_run.loc[cond].iloc[0:1]
-            final = final.drop('_error_', axis=1)
-        elif get == 'avg':
-            final = best_per_run.drop('_error_', axis=1).mean().to_frame().T
+            final = final.drop("_error_", axis=1)
+        elif get == "avg":
+            final = best_per_run.drop("_error_", axis=1).mean().to_frame().T
         else:
             # This shouldn't happen, because the type is checked at (0)
-            raise RuntimeError('Unknown type of estimates: {}'.format(get))
+            raise RuntimeError("Unknown type of estimates: {}".format(get))
 
-        final_file = os.path.join(self.workdir, 'final.csv')
+        final_file = os.path.join(self.workdir, "final.csv")
         final.to_csv(final_file, index=False)
 
         # (4) Save summaries from all learning periods
         for s, n in zip(summary_list, range(1, len(summary_list) + 1)):
-            sfile = os.path.join(self.workdir, 'summary_{}.csv'.format(n))
+            sfile = os.path.join(self.workdir, "summary_{}.csv".format(n))
             s.to_csv(sfile)
 
         # (5) Save error plot including all learning periods
         ax = self._plot_error_per_run(summary_list, err_type=self.ftype)
         fig = figures.get_figure(ax)
-        fig.savefig(os.path.join(self.workdir, 'errors.png'))
+        fig.savefig(os.path.join(self.workdir, "errors.png"))
 
         # (6) Assign results to instance attributes
         self.best_per_run = best_per_run
         self.final = final
 
         # (7) Estimates to dict
-        final = final.to_dict('records')[0]
+        final = final.to_dict("records")[0]
 
         # (8) Delete temp dirs
         self._clean()
@@ -390,8 +407,9 @@ class Estimation(object):
         est = self.final
         est.index = [0]  # Reset index (needed by model.set_param())
 
-        self.logger.info('Validation of parameters: {}'.format(
-            str(est.iloc[0].to_dict())))
+        self.logger.info(
+            "Validation of parameters: {}".format(str(est.iloc[0].to_dict()))
+        )
 
         # Slice data
         if vp is None:
@@ -418,7 +436,7 @@ class Estimation(object):
         try:
             result = model.simulate()
         except Exception as e:
-            msg = 'Problem found inside FMU. Did you set all parameters?'
+            msg = "Problem found inside FMU. Did you set all parameters?"
             self.logger.error(str(e))
             self.logger.error(msg)
             raise e
@@ -429,8 +447,9 @@ class Estimation(object):
         ax = plot_comparison(result, ideal_slice, f=None)
         fig = figures.get_figure(ax)
         fig.set_size_inches(Estimation.FIG_SIZE)
-        fig.savefig(os.path.join(self.workdir, 'validation.png'),
-                    dpi=Estimation.FIG_DPI)
+        fig.savefig(
+            os.path.join(self.workdir, "validation.png"), dpi=Estimation.FIG_DPI
+        )
 
         # Remove temp dirs
         self._clean()
@@ -452,10 +471,11 @@ class Estimation(object):
         """
         finals = pd.DataFrame()
         for s in summary_list:
-            finals = finals.append(s.drop('_method_', axis=1).iloc[-1:],
-                                   ignore_index=True)
+            finals = finals.append(
+                s.drop("_method_", axis=1).iloc[-1:], ignore_index=True
+            )
         finals.index += 1  # Start from 1
-        finals.index.name = '_run_'
+        finals.index.name = "_run_"
 
         return finals
 
@@ -471,11 +491,14 @@ class Estimation(object):
         if len(new_opts) > 0:
             for key in new_opts:
                 if key not in opts.keys():
-                    msg = 'Unknown key: {}'.format(key)
+                    msg = "Unknown key: {}".format(key)
                     self.logger.error(msg)
                     raise KeyError(msg)
-                self.logger.info('User defined option ({}): {} = {}'
-                                 .format(method, key, new_opts[key]))
+                self.logger.info(
+                    "User defined option ({}): {} = {}".format(
+                        method, key, new_opts[key]
+                    )
+                )
                 opts[key] = new_opts[key]
         return opts
 
@@ -488,12 +511,13 @@ class Estimation(object):
         # Error evolution per estimation run
         err = pd.DataFrame()
         for s, n in zip(summary_list, range(1, len(summary_list) + 1)):
-            next_err = pd.Series(data=s['_error_'], name='error #{}'.format(n))
+            next_err = pd.Series(data=s["_error_"], name="error #{}".format(n))
             err = pd.concat([err, next_err], axis=1)
 
         # Plot
-        fig, ax = plt.subplots(1, 1, figsize=Estimation.FIG_SIZE,
-                               dpi=Estimation.FIG_DPI)
+        fig, ax = plt.subplots(
+            1, 1, figsize=Estimation.FIG_SIZE, dpi=Estimation.FIG_DPI
+        )
         err.plot(ax=ax)
 
         # Get line colors
@@ -514,8 +538,7 @@ class Estimation(object):
                     colors.append(c)
 
         for x, y, c in zip(xloc, yloc, colors * mltp):
-            ax.scatter(x, y, marker='o', c='white', edgecolors=c, lw=1.5,
-                       zorder=10)
+            ax.scatter(x, y, marker="o", c="white", edgecolors=c, lw=1.5, zorder=10)
 
         # Formatting
         ax.set_xlabel("Iterations")
@@ -549,7 +572,7 @@ class Estimation(object):
         # where m1, m2, m3 are iteration numbers when method 1, 2, 3 started.
         switch_array = list()
         for s in summary_list:
-            methods = s['_method_'].values
+            methods = s["_method_"].values
             switch = list()
             last = None
             for n, i in zip(methods, range(len(methods))):
@@ -567,7 +590,7 @@ class Estimation(object):
         for run in switch_array:
             for index in run:
                 xloc.append(index)
-                yloc.append(summary_list[i]['_error_'].iloc[index-1])
+                yloc.append(summary_list[i]["_error_"].iloc[index - 1])
             i += 1
 
         return xloc, yloc
@@ -605,9 +628,9 @@ class Estimation(object):
         # Assign time frame
         t0 = lp_frame[0]
         tend = lp_frame[1]
-        assert lp_len <= tend - t0, \
-            'Learning period length cannot be ' \
-            'longer than data length!'
+        assert lp_len <= tend - t0, (
+            "Learning period length cannot be " "longer than data length!"
+        )
 
         # Return variable
         lp = []
@@ -622,22 +645,23 @@ class Estimation(object):
 
                 ideal_nonzero = self._all_columns_nonzero(
                     self.ideal.loc[new_t0:new_tend]
-                    )
+                )
 
                 if ideal_nonzero:
                     lp.append((new_t0, new_tend))
                     chosen_lp = True
                 else:
                     tries_left -= 1
-                    self.logger.warning('Zero ideal solution not allowed, '
-                                        'selecting another one...')
-                    self.logger.warning('Number of tries left: {}'
-                                        .format(tries_left))
+                    self.logger.warning(
+                        "Zero ideal solution not allowed, " "selecting another one..."
+                    )
+                    self.logger.warning("Number of tries left: {}".format(tries_left))
 
             if tries_left == 0:
-                self.logger.error('Nonzero ideal solution not found '
-                                  '({} attempts)'
-                                  .format(Estimation.NONZERO_ATTEMPTS))
+                self.logger.error(
+                    "Nonzero ideal solution not found "
+                    "({} attempts)".format(Estimation.NONZERO_ATTEMPTS)
+                )
                 raise Exception
 
         return lp
@@ -654,8 +678,9 @@ class Estimation(object):
         -------
         boolean
         """
-        assert df.empty is False, 'This DataFrame should not be empty. ' \
-                                  'Something went wrong.'
+        assert df.empty is False, (
+            "This DataFrame should not be empty. " "Something went wrong."
+        )
         all_zero = (df == 0).all().all()
         if all_zero:
             return False

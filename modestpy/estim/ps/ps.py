@@ -4,31 +4,34 @@ All rights reserved.
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
-import logging
-from modestpy.fmi.model import Model
-from modestpy.estim.estpar import estpars_2_df
-from modestpy.estim.estpar import EstPar
-from modestpy.estim.error import calc_err
-import modestpy.utilities.figures as figures
-import modestpy.estim.plots as plots
-import pandas as pd
 import copy
+import logging
 import os
 from random import random
+
+import pandas as pd
+
+import modestpy.estim.plots as plots
+import modestpy.utilities.figures as figures
+from modestpy.estim.error import calc_err
+from modestpy.estim.estpar import EstPar
+from modestpy.estim.estpar import estpars_2_df
+from modestpy.fmi.model import Model
 
 
 class PS(object):
     """
     Pattern search (Hooke-Jeeves) algorithm for FMU parameter estimation.
     """
+
     # Ploting settings
     FIG_DPI = 150
     FIG_SIZE = (10, 6)
 
-    NAME = 'PS'
-    METHOD = '_method_'
-    ITER = '_iter_'
-    ERR = '_error_'
+    NAME = "PS"
+    METHOD = "_method_"
+    ITER = "_iter_"
+    ERR = "_error_"
 
     # Maximum allowed relative step
     STEP_CEILING = 1.00
@@ -39,8 +42,19 @@ class PS(object):
     # Step is divided by this factor if solution does not improve
     STEP_DEC = 1.5
 
-    def __init__(self, fmu_path, inp, known, est, ideal, rel_step=0.01,
-                 tol=0.0001, try_lim=30, maxiter=300, ftype='RMSE'):
+    def __init__(
+        self,
+        fmu_path,
+        inp,
+        known,
+        est,
+        ideal,
+        rel_step=0.01,
+        tol=0.0001,
+        try_lim=30,
+        maxiter=300,
+        ftype="RMSE",
+    ):
         """
         :param fmu_path: string, absolute path to the FMU
         :param inp: DataFrame, columns with input timeseries, index in seconds
@@ -58,10 +72,10 @@ class PS(object):
         """
         self.logger = logging.getLogger(type(self).__name__)
 
-        assert inp.index.equals(ideal.index), \
-            'inp and ideal indexes are not matching'
-        assert rel_step > tol, \
-            'Relative step must not be smaller than the stop criterion'
+        assert inp.index.equals(ideal.index), "inp and ideal indexes are not matching"
+        assert (
+            rel_step > tol
+        ), "Relative step must not be smaller than the stop criterion"
 
         # Cost function type
         self.ftype = ftype
@@ -79,9 +93,9 @@ class PS(object):
         # Known parameters to DataFrame
         known_df = pd.DataFrame()
         for key in known:
-            assert known[key] is not None, \
-                'None is not allowed in known parameters ' \
-                '(parameter {})'.format(key)
+            assert (
+                known[key] is not None
+            ), "None is not allowed in known parameters " "(parameter {})".format(key)
             known_df[key] = [known[key]]
 
         # est: dictionary to a list with EstPar instances
@@ -98,8 +112,7 @@ class PS(object):
 
         # Model
         output_names = [var for var in ideal]
-        self.model = PS._get_model_instance(fmu_path, inp, known_df,
-                                            est, output_names)
+        self.model = PS._get_model_instance(fmu_path, inp, known_df, est, output_names)
 
         # Initial value for relative parameter step (0-1)
         self.rel_step = rel_step
@@ -118,9 +131,7 @@ class PS(object):
         self.summary = pd.DataFrame()
         self.res = pd.DataFrame()
 
-        self.logger.info(
-            'Pattern Search initialized... ========================='
-            )
+        self.logger.info("Pattern Search initialized... =========================")
 
     def estimate(self):
         """
@@ -155,9 +166,9 @@ class PS(object):
         return self.summary
 
     def save_plots(self, workdir):
-        self.plot_comparison(os.path.join(workdir, 'ps_comparison.png'))
-        self.plot_error_evo(os.path.join(workdir, 'ps_error_evo.png'))
-        self.plot_parameter_evo(os.path.join(workdir, 'ps_param_evo.png'))
+        self.plot_comparison(os.path.join(workdir, "ps_comparison.png"))
+        self.plot_error_evo(os.path.join(workdir, "ps_error_evo.png"))
+        self.plot_parameter_evo(os.path.join(workdir, "ps_param_evo.png"))
 
     def plot_comparison(self, file=None):
         return plots.plot_comparison(self.res, self.ideal, file)
@@ -168,15 +179,15 @@ class PS(object):
 
     def plot_parameter_evo(self, file=None):
         par_df = self.summary.drop([PS.METHOD], axis=1)
-        par_df = par_df.rename(columns={
-            x: 'error' if x == PS.ERR else x for x in par_df.columns
-            })
+        par_df = par_df.rename(
+            columns={x: "error" if x == PS.ERR else x for x in par_df.columns}
+        )
 
         # Get axes
         axes = par_df.plot(subplots=True)
         fig = figures.get_figure(axes)
         # x label
-        axes[-1].set_xlabel('Iteration')
+        axes[-1].set_xlabel("Iteration")
         # ylim for error
         axes[-1].set_ylim(0, None)
 
@@ -200,9 +211,7 @@ class PS(object):
 
         initial_result = self.model.simulate()
         self.res = initial_result
-        initial_error = calc_err(initial_result,
-                                 self.ideal,
-                                 ftype=self.ftype)['tot']
+        initial_error = calc_err(initial_result, self.ideal, ftype=self.ftype)["tot"]
         best_err = initial_error
 
         # First line of the summary
@@ -214,25 +223,27 @@ class PS(object):
         iteration = 0
 
         # Search loop
-        while ((n_try < self.try_lim)
-                and (iteration < self.max_iter)
-                and (self.rel_step > self.tol)):
+        while (
+            (n_try < self.try_lim)
+            and (iteration < self.max_iter)
+            and (self.rel_step > self.tol)
+        ):
             iteration += 1
-            self.logger.info('Iteration no. {} '
-                             '========================='
-                             .format(iteration))
+            self.logger.info(
+                "Iteration no. {} " "=========================".format(iteration)
+            )
             improved = False
 
             # Iterate over all parameters
             for par in current_estimates:
-                for sign in ['+', '-']:
+                for sign in ["+", "-"]:
                     # Calculate new parameter
                     new_par = self._get_new_estpar(par, self.rel_step, sign)
 
                     # Simulate and calculate error
                     self.model.set_param(estpars_2_df([new_par]))
                     result = self.model.simulate()
-                    err = calc_err(result, self.ideal, ftype=self.ftype)['tot']
+                    err = calc_err(result, self.ideal, ftype=self.ftype)["tot"]
 
                     # Save point if solution improved
                     if err < best_err:
@@ -244,8 +255,7 @@ class PS(object):
                         #                                  new_par)
 
                         # Orthogonal search
-                        best_estimates = PS._replace_par(current_estimates,
-                                                         new_par)
+                        best_estimates = PS._replace_par(current_estimates, new_par)
 
                         improved = True
 
@@ -264,21 +274,21 @@ class PS(object):
             if not improved:
                 n_try += 1
                 self.rel_step /= PS.STEP_DEC
-                self.logger.info('Solution did not improve...')
-                self.logger.debug('Step reduced to {}'.format(self.rel_step))
-                self.logger.debug('Tries left: {}'
-                                  .format(self.try_lim - n_try))
+                self.logger.info("Solution did not improve...")
+                self.logger.debug("Step reduced to {}".format(self.rel_step))
+                self.logger.debug("Tries left: {}".format(self.try_lim - n_try))
             else:
                 # Solution improved, reset n_try counter
                 n_try = 0
                 self.rel_step *= PS.STEP_INC
                 if self.rel_step > PS.STEP_CEILING:
                     self.rel_step = PS.STEP_CEILING
-                self.logger.info('Solution improved')
-                self.logger.debug('Current step is {}'.format(self.rel_step))
-                self.logger.info('New error: {}'.format(best_err))
-                self.logger.debug('New estimates:\n{}'
-                                  .format(estpars_2_df(current_estimates)))
+                self.logger.info("Solution improved")
+                self.logger.debug("Current step is {}".format(self.rel_step))
+                self.logger.info("New error: {}".format(best_err))
+                self.logger.debug(
+                    "New estimates:\n{}".format(estpars_2_df(current_estimates))
+                )
 
         # Reorder columns in summary
         s_cols = summary.columns.tolist()
@@ -296,16 +306,16 @@ class PS(object):
         summary[PS.METHOD] = PS.NAME
 
         # Print summary
-        reason = 'Unknown'
+        reason = "Unknown"
         if n_try >= self.try_lim:
-            reason = 'Maximum number of tries to decrease the step reached'
+            reason = "Maximum number of tries to decrease the step reached"
         elif iteration >= self.max_iter:
-            reason = 'Maximum number of iterations reached'
+            reason = "Maximum number of iterations reached"
         elif self.rel_step <= self.tol:
-            reason = 'Relative step smaller than the stoping criterion'
+            reason = "Relative step smaller than the stoping criterion"
 
-        self.logger.info('Pattern search finished. Reason: {}'.format(reason))
-        self.logger.info('Summary:\n{}'.format(summary))
+        self.logger.info("Pattern search finished. Reason: {}".format(reason))
+        self.logger.info("Summary:\n{}".format(summary))
 
         # Final assignments
         self.summary = summary
@@ -322,7 +332,7 @@ class PS(object):
         :return: list(dict)
         """
         plots = list()
-        plots.append({'name': 'PS', 'axes': self.plot_parameter_evo()})
+        plots.append({"name": "PS", "axes": self.plot_parameter_evo()})
         return plots
 
     def _get_new_estpar(self, estpar, rel_step, sign):
@@ -336,12 +346,12 @@ class PS(object):
         :return: EstPar
         """
         sign_mltp = None
-        if sign == '+':
-            sign_mltp = 1.
-        elif sign == '-':
-            sign_mltp = -1.
+        if sign == "+":
+            sign_mltp = 1.0
+        elif sign == "-":
+            sign_mltp = -1.0
         else:
-            print('Unrecognized sign ({})'.format(sign))
+            print("Unrecognized sign ({})".format(sign))
 
         new_value = estpar.value * (1 + rel_step * sign_mltp)
 

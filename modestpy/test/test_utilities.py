@@ -4,11 +4,12 @@ All rights reserved.
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
-import unittest
-import tempfile
 import os
-from modestpy.utilities.delete_logs import delete_logs
+import tempfile
+import unittest
+
 from modestpy.loginit import config_logger
+from modestpy.utilities.delete_logs import delete_logs
 
 
 class TestUtilities(unittest.TestCase):
@@ -16,8 +17,8 @@ class TestUtilities(unittest.TestCase):
         # Temp directory
         self.temp_dir = tempfile.mkdtemp()
         # Temp log file
-        self.log_path = os.path.join(self.temp_dir, 'test.log')
-        log_file = open(self.log_path, 'w')
+        self.log_path = os.path.join(self.temp_dir, "test.log")
+        log_file = open(self.log_path, "w")
         log_file.close()
 
     def tearDown(self):
@@ -35,11 +36,11 @@ class TestUtilities(unittest.TestCase):
 
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(TestUtilities('test_delete_logs'))
+    suite.addTest(TestUtilities("test_delete_logs"))
 
     return suite
 
 
 if __name__ == "__main__":
-    config_logger(filename='unit_tests.log', level='DEBUG')
+    config_logger(filename="unit_tests.log", level="DEBUG")
     unittest.main()

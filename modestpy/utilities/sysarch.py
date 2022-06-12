@@ -36,20 +36,18 @@ def get_sys_arch():
     sys = None
     bits = None
 
-    if ('win' in sys_type) or ('Win' in sys_type) or ('WIN' in sys_type):
-        sys = 'win'
-    elif (('linux' in sys_type)
-            or ('Linux' in sys_type)
-            or ('LINUX' in sys_type)):
+    if ("win" in sys_type) or ("Win" in sys_type) or ("WIN" in sys_type):
+        sys = "win"
+    elif ("linux" in sys_type) or ("Linux" in sys_type) or ("LINUX" in sys_type):
 
-        sys = 'linux'
+        sys = "linux"
 
-    if '32' in bit_arch:
-        bits = '32'
-    elif '64' in bit_arch:
-        bits = '64'
+    if "32" in bit_arch:
+        bits = "32"
+    elif "64" in bit_arch:
+        bits = "64"
 
-    if (sys and bits):
+    if sys and bits:
         sys_bits = sys + bits
     else:
         sys_bits = None
