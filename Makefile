@@ -1,4 +1,4 @@
-.PHONY: build stop rm run
+.PHONY: build stop rm run bash test
 
 build: stop rm
 	DOCKER_BUILDKIT=1 docker build -t modestpy .
@@ -18,3 +18,6 @@ run:
 
 bash:
 	docker exec -ti modestpy_container bash
+
+test:
+	docker exec -ti modestpy_container python3 modestpy/test/run.py
