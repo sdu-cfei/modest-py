@@ -28,7 +28,7 @@ setup(
         'matplotlib',
         'numpy',
         'pyDOE',
-        'modestga'
+        'modestga',
     ],
     classifiers=[
         'Programming Language :: Python :: 3'
