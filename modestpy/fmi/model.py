@@ -6,6 +6,7 @@ This code is licensed under BSD 2-clause license.L
 See LICENSE file in the project root for license terms.
 """
 import logging
+from pathlib import Path
 from fmpy import simulate_fmu, read_model_description, instantiate_fmu, extract
 import numpy as np
 import pandas as pd
@@ -31,6 +32,8 @@ class Model(object):
     """FMU model to be simulated with inputs and parameters provided from
     files or dataframes.
     """
+    tmpdir_file = "tmp_dirs.txt"
+
     def __init__(self, fmu_path, opts=None):
         self.logger = logging.getLogger(type(self).__name__)
 
@@ -39,6 +42,7 @@ class Model(object):
             # Load FMU
             model_desc = read_model_description(fmu_path)
             self.unzipdir = extract(fmu_path)
+            self._save_tmpdir(self.unzipdir)
             self.model = instantiate_fmu(self.unzipdir, model_desc)
 
         except Exception as e:
@@ -54,6 +58,13 @@ class Model(object):
         self.input_arr = None
         self.output_names = list()
         self.parameters = dict()
+
+    def _save_tmpdir(self, d):
+        if not Path(Model.tmpdir_file).exists():
+            open(str(Model.tmpdir_file), "w").close()
+
+        with open(Model.tmpdir_file, "a") as f:
+            f.write(str(d) + "\n")
 
     def inputs_from_csv(self, csv, sep=',', exclude=list()):
         """Reads inputs from a CSV file.

@@ -10,7 +10,7 @@ FMI-compliant Model Estimation in Python
 Description
 -----------
 
-**modestpy** facilitates parameter estimation in models compliant with
+**ModestPy** facilitates parameter estimation in models compliant with
 `Functional Mock-up Interface <https://fmi-standard.org/>`__.
 
 Features:
@@ -45,10 +45,26 @@ Conda is installation is less frequently tested, but should work:
    conda config --add channels conda-forge
    conda install modestpy
 
+Docker
+------------
+
+Due to time constraints, Modestpy is no longer actively developed.
+The last system known to work well was Ubuntu 18.04.
+If you encounter any issues with running ModestPy on your system (e.g. some libs missing), try using Docker.
+
+I prepared a ``Dockerfile`` and some initial ``make`` commands:
+
+- ``make build`` - build an image with ModestPy, based on Ubuntu 18.04 (tag = ``modestpy``)
+- ``make run`` - run the container (name = ``modestpy_container``)
+- ``make test`` - run unit tests in the running container and print output to terminal
+- ``make bash`` - run Bash in the running container
+
+Most likely you will like to modify ``Dockerfile`` and ``Makefile`` to your needs, e.g. by adding bind volumes with your FMUs.
+
 Test your installation
 ----------------------
 
-The unit tests will work only if you installed modestpy with conda or cloned the project from GitHub. To run tests:
+The unit tests will work only if you installed ModestPy with conda or cloned the project from GitHub. To run tests:
 
 .. code:: python
 

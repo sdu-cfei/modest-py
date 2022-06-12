@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='modestpy',
-    version='0.1',
+    version='0.1.1',
     description='FMI-compliant model identification package',
     url='https://github.com/sdu-cfei/modest-py',
     keywords='fmi fmu optimization model identification estimation',
@@ -22,13 +22,13 @@ setup(
         'modestpy.test'],
     include_package_data=True,
     install_requires=[
-        'fmpy[complete]',
+        'fmpy',
         'scipy',
         'pandas',
         'matplotlib',
         'numpy',
         'pyDOE',
-        'modestga'
+        'modestga',
     ],
     classifiers=[
         'Programming Language :: Python :: 3'
