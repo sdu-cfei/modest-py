@@ -1,3 +1,9 @@
+
+Changes in v.0.1.1
+====================
+- temporary directories are now automatically removed
+- added Dockerfile with exemplary setup working with ModestPy
+
 Changes in v.0.1
 ====================
 - parallel genetic algorithm added (based on modestga)
