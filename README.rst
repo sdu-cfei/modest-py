@@ -10,6 +10,7 @@ FMI-compliant Model Estimation in Python
 
 .. figure:: https://img.shields.io/pypi/dm/modestpy.svg
    :alt: downloads
+   :target: https://pypistats.org/packages/modestpy
 
 Description
 -----------
