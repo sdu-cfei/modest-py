@@ -8,6 +8,8 @@ import logging
 import random
 import copy
 import os
+from pathlib import Path
+import shutil
 import matplotlib.pyplot as plt
 import matplotlib.ticker
 import pandas as pd
@@ -357,7 +359,10 @@ class Estimation(object):
         # (7) Estimates to dict
         final = final.to_dict('records')[0]
 
-        # (8) Return final estimates
+        # (8) Delete temp dirs
+        self._clean()
+
+        # (9) Return final estimates
         return final
 
     def validate(self, vp=None):
@@ -426,6 +431,9 @@ class Estimation(object):
         fig.set_size_inches(Estimation.FIG_SIZE)
         fig.savefig(os.path.join(self.workdir, 'validation.png'),
                     dpi=Estimation.FIG_DPI)
+
+        # Remove temp dirs
+        self._clean()
 
         # Return
         return err, result
@@ -652,3 +660,14 @@ class Estimation(object):
         if all_zero:
             return False
         return True
+
+    def _clean(self):
+        """Clean temp dirs."""
+        if Path(Model.tmpdir_file).exists():
+            with open(Model.tmpdir_file, "r") as f:
+                dirs = f.read().splitlines()
+                self.logger.info(f"Temp dirs to remove: {dirs}")
+                for d in dirs:
+                    self.logger.info(f"-> removing temp dir: {d}")
+                    shutil.rmtree(d, ignore_errors=True)
+            os.remove(Model.tmpdir_file)
