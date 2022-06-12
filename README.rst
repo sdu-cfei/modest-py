@@ -8,6 +8,9 @@ FMI-compliant Model Estimation in Python
    :alt: unit_test_status
    :target: https://github.com/sdu-cfei/modest-py/actions/workflows/python-package.yml
 
+.. figure:: https://img.shields.io/pypi/dm/modestpy.svg
+   :alt: downloads
+
 Description
 -----------
 
