@@ -12,4 +12,5 @@ RUN apt-get install -y libjpeg8-dev zlib1g-dev
 COPY . .
 RUN python3 -m pip install -U pip
 RUN python3 -m pip install .
+RUN python3 -m pip install -r requirements.txt
 ENTRYPOINT ["/bin/bash"]
