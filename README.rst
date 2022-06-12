@@ -21,6 +21,11 @@ Features:
 - scalable to multiple cores (genetic algorithm from `modestga <https://github.com/krzysztofarendt/modestga>`_),
 - Python 3.
 
+**Due to time constraints, Modestpy is no longer actively developed. The last system known to work well was Ubuntu 18.04.** 
+Unit tests in GitHub Actions are run on Ubuntu 18.04 and Python 3.6/3.7.
+It does not mean it will not work on other systems, but it is not guaranteed.
+Use Docker (as described below) if you want to run ModestPy on a tested platform.
+
 Installation with pip (recommended)
 -----------------------------------
 
@@ -49,8 +54,8 @@ Conda is installation is less frequently tested, but should work:
 Docker
 ------------
 
-Due to time constraints, Modestpy is no longer actively developed.
-The last system known to work well was Ubuntu 18.04.
+**Due to time constraints, Modestpy is no longer actively developed.
+The last system known to work well was Ubuntu 18.04.**
 If you encounter any issues with running ModestPy on your system (e.g. some libs missing), try using Docker.
 
 I prepared a ``Dockerfile`` and some initial ``make`` commands:
