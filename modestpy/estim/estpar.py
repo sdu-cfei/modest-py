@@ -4,14 +4,15 @@ All rights reserved.
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 
 class EstPar:
     """
     Estimated parameter for PS.
     """
+
     def __init__(self, name, lo=None, hi=None, value=None):
         self.name = name
         self.value = value
@@ -19,8 +20,15 @@ class EstPar:
         self.hi = hi  # Upper limit
 
     def __str__(self):
-        s = self.name + '={:.4f}'.format(self.value) + \
-             ' (' + str(self.lo) + '-' + str(self.hi) + ')'
+        s = (
+            self.name
+            + "={:.4f}".format(self.value)
+            + " ("
+            + str(self.lo)
+            + "-"
+            + str(self.hi)
+            + ")"
+        )
         return s
 
 
@@ -45,7 +53,6 @@ def df_2_estpars(df):
     :return: list of EstPar instances"""
     estpars = []
     for p in df:
-        ep = EstPar(p, float('-inf'), float('+inf'), df[p][0])
+        ep = EstPar(p, float("-inf"), float("+inf"), df[p][0])
         estpars.append(ep)
     return estpars
-

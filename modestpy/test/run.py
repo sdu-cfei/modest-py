@@ -5,13 +5,14 @@ This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
 import unittest
+
+from modestpy.loginit import config_logger
+from modestpy.test import test_estimation
 from modestpy.test import test_fmpy
 from modestpy.test import test_ga
 from modestpy.test import test_ps
 from modestpy.test import test_scipy
-from modestpy.test import test_estimation
 from modestpy.test import test_utilities
-from modestpy.loginit import config_logger
 
 
 def all_suites():
@@ -22,7 +23,7 @@ def all_suites():
         test_ps.suite(),
         test_scipy.suite(),
         test_estimation.suite(),
-        test_utilities.suite()
+        test_utilities.suite(),
     ]
 
     all_suites = unittest.TestSuite(suites)
@@ -35,6 +36,6 @@ def tests():
     runner.run(test_suite)
 
 
-if __name__ == '__main__':
-    config_logger(filename='unit_tests.log', level='DEBUG')
+if __name__ == "__main__":
+    config_logger(filename="unit_tests.log", level="DEBUG")
     tests()

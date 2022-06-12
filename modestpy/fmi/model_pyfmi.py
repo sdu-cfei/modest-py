@@ -6,10 +6,11 @@ This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
 import logging
-from pyfmi import load_fmu
-from pyfmi.fmi import FMUException
+
 import numpy as np
 import pandas as pd
+from pyfmi import load_fmu
+from pyfmi.fmi import FMUException
 
 
 class Model(object):
@@ -47,7 +48,7 @@ class Model(object):
 
         self.res = None
 
-    def inputs_from_csv(self, csv, sep=',', exclude=list()):
+    def inputs_from_csv(self, csv, sep=",", exclude=list()):
         """
         Reads inputs from a CSV file (format of the standard input file
         in ModelManager). It is assumed that time is given in seconds.
@@ -56,8 +57,8 @@ class Model(object):
         :return: None
         """
         df = pd.read_csv(csv, sep=sep)
-        assert 'time' in df.columns, "'time' not present in csv..."
-        df = df.set_index('time')
+        assert "time" in df.columns, "'time' not present in csv..."
+        df = df.set_index("time")
         self.inputs_from_df(df, exclude)
 
     def inputs_from_df(self, df, exclude=list()):
@@ -74,10 +75,12 @@ class Model(object):
         :param exclude: list of strings, names of columns to be omitted
         :return:
         """
-        assert df.index.name == 'time', "Index name ('{}') different " \
-                                        "than 'time'! " \
-                                        "Are you sure you assigned index " \
-                                        "correctly?".format(df.index.name)
+        assert df.index.name == "time", (
+            "Index name ('{}') different "
+            "than 'time'! "
+            "Are you sure you assigned index "
+            "correctly?".format(df.index.name)
+        )
         self.timeline = df.index.values
         self.start = self.timeline[0]
         self.end = self.timeline[-1]
@@ -98,17 +101,17 @@ class Model(object):
             if name not in self.output_names:
                 self.output_names.append(name)
 
-    def parameters_from_csv(self, csv, sep=','):
+    def parameters_from_csv(self, csv, sep=","):
         df = pd.read_csv(csv, sep=sep)
         self.parameters_from_df(df)
 
     def parameters_from_df(self, df):
-        self.logger.debug(f'parameters_from_df = {df}')
+        self.logger.debug(f"parameters_from_df = {df}")
         if df is not None:
             df = df.copy()
             for col in df:
                 self.parameter_df[col] = df[col]
-        self.logger.debug(f'Updated parameters: {self.parameter_df}')
+        self.logger.debug(f"Updated parameters: {self.parameter_df}")
 
     def simulate(self, com_points=None, reset=True):
         """
@@ -123,8 +126,10 @@ class Model(object):
         """
 
         if com_points is None:
-            self.logger.warning('[fmi\\model] Warning! Default number '
-                                'of communication points assumed (500)')
+            self.logger.warning(
+                "[fmi\\model] Warning! Default number "
+                "of communication points assumed (500)"
+            )
             com_points = 500
 
         # IC
@@ -145,33 +150,34 @@ class Model(object):
         fmi_opts = self.model.simulate_options()
 
         # Prevents saving results to a file
-        fmi_opts['result_handling'] = 'memory'
-        fmi_opts['result_handler'] = 'ResultHandlerMemory'
+        fmi_opts["result_handling"] = "memory"
+        fmi_opts["result_handler"] = "ResultHandlerMemory"
 
         # No output <- works only with CVode solver
         # fmi_opts['CVode_options']['verbosity'] = 50
 
         # Options (provided by the user)
-        fmi_opts['ncp'] = com_points
+        fmi_opts["ncp"] = com_points
 
         if (self.opts is not None) and (type(self.opts) is dict):
-            self.logger.debug('User-defined FMI options found: {}'
-                              .format(self.opts))
+            self.logger.debug("User-defined FMI options found: {}".format(self.opts))
             for k in self.opts:
                 if type(self.opts[k]) is not dict:
                     fmi_opts[k] = self.opts[k]
-                    self.logger.debug("Setting FMI option: [{}] = {}"
-                                      .format(k, self.opts[k]))
+                    self.logger.debug(
+                        "Setting FMI option: [{}] = {}".format(k, self.opts[k])
+                    )
                 elif type(self.opts[k]) is dict:
                     for subkey in self.opts[k]:
                         # It works only for single nested sub-dictionaries
                         fmi_opts[k][subkey] = self.opts[k][subkey]
-                        self.logger.debug("Setting FMI option: [{}][{}] = {}"
-                                          .format(k, subkey,
-                                                  self.opts[k][subkey]))
+                        self.logger.debug(
+                            "Setting FMI option: [{}][{}] = {}".format(
+                                k, subkey, self.opts[k][subkey]
+                            )
+                        )
                 else:
-                    raise TypeError(
-                        "Wrong type of values in 'opts' dictionary")
+                    raise TypeError("Wrong type of values in 'opts' dictionary")
 
         # Save all options to log
         self.logger.debug("All FMI options: {}".format(fmi_opts))
@@ -180,30 +186,34 @@ class Model(object):
         tries = 0
         while tries < Model.TRIES:
             try:
-                assert (self.start is not None) and (self.end is not None), \
-                    'start and stop cannot be None'  # Shouldn't it be OR?
+                assert (self.start is not None) and (
+                    self.end is not None
+                ), "start and stop cannot be None"  # Shouldn't it be OR?
                 self.logger.debug("Starting simulation")
-                self.res = self.model.simulate(start_time=self.start,
-                                               final_time=self.end,
-                                               input=input_obj,
-                                               options=fmi_opts)
+                self.res = self.model.simulate(
+                    start_time=self.start,
+                    final_time=self.end,
+                    input=input_obj,
+                    options=fmi_opts,
+                )
                 break
             except FMUException as e:
                 tries += 1
-                self.logger.warning("Simulation failed, failure no. {}"
-                                    .format(tries))
+                self.logger.warning("Simulation failed, failure no. {}".format(tries))
                 self.logger.warning(type(e).__name__)
                 self.logger.warning(str(e))
                 if tries >= Model.TRIES:
-                    self.logger.error("Maximum number of failures "
-                                      "reached ({}). "
-                                      "Won't try again...".format(Model.TRIES))
+                    self.logger.error(
+                        "Maximum number of failures "
+                        "reached ({}). "
+                        "Won't try again...".format(Model.TRIES)
+                    )
                     raise e
 
         # Convert result to dataframe
         df = pd.DataFrame()
-        df['time'] = self.res['time']
-        df = df.set_index('time')
+        df["time"] = self.res["time"]
+        df = df.set_index("time")
         for var in self.output_names:
             df[var] = self.res[var]
 
@@ -214,9 +224,8 @@ class Model(object):
             except FMUException as e:
                 self.logger.warning(e.message)
                 self.logger.warning(
-                    "If you try to simulate an EnergyPlus FMU, "
-                    "use reset=False"
-                    )
+                    "If you try to simulate an EnergyPlus FMU, " "use reset=False"
+                )
 
         # Return
         return df
@@ -253,5 +262,5 @@ class Model(object):
 
     @staticmethod
     def _create_timeline(end, intervals):
-        t = np.linspace(0, end, intervals+1)
+        t = np.linspace(0, end, intervals + 1)
         return t

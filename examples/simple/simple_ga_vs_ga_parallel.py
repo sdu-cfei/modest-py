@@ -4,14 +4,16 @@ All rights reserved.
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
-import logging
 import json
+import logging
 import os
+
 import pandas as pd
+
 from modestpy import Estimation
 from modestpy.utilities.sysarch import get_sys_arch
 
-logging.basicConfig(level='INFO', filename='test.log', filemode='w')
+logging.basicConfig(level="INFO", filename="test.log", filemode="w")
 
 if __name__ == "__main__":
     """
@@ -22,26 +24,26 @@ if __name__ == "__main__":
     # DATA PREPARATION ==============================================
     # Resources
     platform = get_sys_arch()
-    assert platform, 'Unsupported platform type!'
-    fmu_file = 'Simple2R1C_ic_' + platform + '.fmu'
+    assert platform, "Unsupported platform type!"
+    fmu_file = "Simple2R1C_ic_" + platform + ".fmu"
 
-    fmu_path = os.path.join('examples', 'simple', 'resources', fmu_file)
-    inp_path = os.path.join('examples', 'simple', 'resources', 'inputs.csv')
-    ideal_path = os.path.join('examples', 'simple', 'resources', 'result.csv')
-    est_path = os.path.join('examples', 'simple', 'resources', 'est.json')
-    known_path = os.path.join('examples', 'simple', 'resources', 'known.json')
+    fmu_path = os.path.join("examples", "simple", "resources", fmu_file)
+    inp_path = os.path.join("examples", "simple", "resources", "inputs.csv")
+    ideal_path = os.path.join("examples", "simple", "resources", "result.csv")
+    est_path = os.path.join("examples", "simple", "resources", "est.json")
+    known_path = os.path.join("examples", "simple", "resources", "known.json")
 
     # Working directory
-    workdir = os.path.join('examples', 'simple', 'workdir')
+    workdir = os.path.join("examples", "simple", "workdir")
     if not os.path.exists(workdir):
         os.mkdir(workdir)
         assert os.path.exists(workdir), "Work directory does not exist"
 
     # Load inputs
-    inp = pd.read_csv(inp_path).set_index('time')
+    inp = pd.read_csv(inp_path).set_index("time")
 
     # Load measurements (ideal results)
-    ideal = pd.read_csv(ideal_path).set_index('time')
+    ideal = pd.read_csv(ideal_path).set_index("time")
 
     # Load definition of estimated parameters (name, initial value, bounds)
     with open(est_path) as f:
@@ -53,23 +55,42 @@ if __name__ == "__main__":
 
     # MODEL IDENTIFICATION ==========================================
     # Comparing parallel GA against GA using different population sizes
-    for method in ['MODESTGA', 'GA_LEGACY']:
+    for method in ["MODESTGA", "GA_LEGACY"]:
         for pop in [40, 60, 80]:
             case_workdir = os.path.join(workdir, f"{method}-{pop}")
             if not os.path.exists(case_workdir):
                 os.mkdir(case_workdir)
 
-            session = Estimation(case_workdir, fmu_path, inp, known, est, ideal,
-                                lp_n=1, lp_len=50000, lp_frame=(0, 50000),
-                                vp=(0, 50000), ic_param={'Tstart': 'T'},
-                                methods=((method,)),
-                                ga_opts={
-                                    'maxiter': 20, 'pop_size': pop,
-                                    'trm_size': 7, 'tol': 1e-3, 'lhs': True},
-                                modestga_opts={
-                                    'generations': 20, 'pop_size': pop, 'trm_size': 7,
-                                    'tol': 1e-3, 'workers': 2},
-                                ftype='RMSE',
-                                default_log=True, logfile='simple.log')
+            session = Estimation(
+                case_workdir,
+                fmu_path,
+                inp,
+                known,
+                est,
+                ideal,
+                lp_n=1,
+                lp_len=50000,
+                lp_frame=(0, 50000),
+                vp=(0, 50000),
+                ic_param={"Tstart": "T"},
+                methods=((method,)),
+                ga_opts={
+                    "maxiter": 20,
+                    "pop_size": pop,
+                    "trm_size": 7,
+                    "tol": 1e-3,
+                    "lhs": True,
+                },
+                modestga_opts={
+                    "generations": 20,
+                    "pop_size": pop,
+                    "trm_size": 7,
+                    "tol": 1e-3,
+                    "workers": 2,
+                },
+                ftype="RMSE",
+                default_log=True,
+                logfile="simple.log",
+            )
             estimates = session.estimate()
             err, res = session.validate()

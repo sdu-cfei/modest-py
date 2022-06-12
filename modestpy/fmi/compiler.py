@@ -15,7 +15,9 @@ from __future__ import print_function
 
 import os
 import shutil
+
 from modestpy.utilities.sysarch import get_sys_arch
+
 try:
     from pymodelica import compile_fmu
 except ImportError as e:
@@ -35,14 +37,9 @@ def mo_2_fmu(model_name, mo_path, fmu_path=None):
     # opts = {'nle_solver_min_tol': 1e-10}
     opts = {}
 
-    compile_fmu(model_name,
-                mo_path,
-                target='cs',
-                version='2.0',
-                compiler_options=opts)
+    compile_fmu(model_name, mo_path, target="cs", version="2.0", compiler_options=opts)
 
-    std_fmu_path = os.path.join(os.getcwd(), model_name.replace('.', '_') +
-                                '.fmu')
+    std_fmu_path = os.path.join(os.getcwd(), model_name.replace(".", "_") + ".fmu")
     if fmu_path is not None:
         print("Moving FMU to: {}".format(fmu_path))
         shutil.move(std_fmu_path, fmu_path)
@@ -63,10 +60,10 @@ if __name__ == "__main__":
     # model_name = "Simple2R1C"
 
     # FMU from tests
-    mo_path = os.path.join('.', 'tests', 'resources', 'simple2R1C',
-                           'Simple2R1C.mo')
-    fmu_path = os.path.join('.', 'tests', 'resources', 'simple2R1C',
-                            'Simple2R1C_{}.fmu'.format(platform))
+    mo_path = os.path.join(".", "tests", "resources", "simple2R1C", "Simple2R1C.mo")
+    fmu_path = os.path.join(
+        ".", "tests", "resources", "simple2R1C", "Simple2R1C_{}.fmu".format(platform)
+    )
     model_name = "Simple2R1C"
 
     # Compilation

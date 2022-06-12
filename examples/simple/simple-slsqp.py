@@ -6,11 +6,12 @@ See LICENSE file in the project root for license terms.
 """
 import json
 import os
-import pandas as pd
-from modestpy.utilities.sysarch import get_sys_arch
-from modestpy.estim.scipy.scipy import SCIPY
-import matplotlib.pyplot as plt
 
+import matplotlib.pyplot as plt
+import pandas as pd
+
+from modestpy.estim.scipy.scipy import SCIPY
+from modestpy.utilities.sysarch import get_sys_arch
 
 if __name__ == "__main__":
     """
@@ -21,28 +22,28 @@ if __name__ == "__main__":
     # DATA PREPARATION ==============================================
     # Resources
     platform = get_sys_arch()
-    assert platform, 'Unsupported platform type!'
-    fmu_file = 'Simple2R1C_ic_' + platform + '.fmu'
+    assert platform, "Unsupported platform type!"
+    fmu_file = "Simple2R1C_ic_" + platform + ".fmu"
 
-    fmu_path = os.path.join('examples', 'simple', 'resources', fmu_file)
-    inp_path = os.path.join('examples', 'simple', 'resources', 'inputs.csv')
-    ideal_path = os.path.join('examples', 'simple', 'resources', 'result.csv')
-    est_path = os.path.join('examples', 'simple', 'resources',
-                            'est_validate_hj.json')
-    known_path = os.path.join('examples', 'simple', 'resources',
-                              'known_validate_hj.json')
+    fmu_path = os.path.join("examples", "simple", "resources", fmu_file)
+    inp_path = os.path.join("examples", "simple", "resources", "inputs.csv")
+    ideal_path = os.path.join("examples", "simple", "resources", "result.csv")
+    est_path = os.path.join("examples", "simple", "resources", "est_validate_hj.json")
+    known_path = os.path.join(
+        "examples", "simple", "resources", "known_validate_hj.json"
+    )
 
     # Working directory
-    workdir = os.path.join('examples', 'simple', 'workdir')
+    workdir = os.path.join("examples", "simple", "workdir")
     if not os.path.exists(workdir):
         os.mkdir(workdir)
         assert os.path.exists(workdir), "Work directory does not exist"
 
     # Load inputs
-    inp = pd.read_csv(inp_path).set_index('time')
+    inp = pd.read_csv(inp_path).set_index("time")
 
     # Load measurements (ideal results)
-    ideal = pd.read_csv(ideal_path).set_index('time')
+    ideal = pd.read_csv(ideal_path).set_index("time")
 
     # Load definition of estimated parameters (name, initial value, bounds)
     with open(est_path) as f:
@@ -61,14 +62,14 @@ if __name__ == "__main__":
 
     # estimates = session.estimate()
     # err, res = session.validate()
-    scipy = SCIPY(fmu_path, inp, known, est, ideal, ftype='RMSE', solver='SLSQP')
+    scipy = SCIPY(fmu_path, inp, known, est, ideal, ftype="RMSE", solver="SLSQP")
 
     par = scipy.estimate()
     print(par)
 
     res = scipy.res
-    res['ideal'] = ideal['T']
+    res["ideal"] = ideal["T"]
     res.plot()
     plt.show()
 
-    print('ERROR={}'.format(scipy.best_err))
+    print("ERROR={}".format(scipy.best_err))

@@ -4,8 +4,9 @@ All rights reserved.
 This code is licensed under BSD 2-clause license.
 See LICENSE file in the project root for license terms.
 """
-import pandas as pd
 import copy
+
+import pandas as pd
 
 
 def make_param_file(est, known, path):

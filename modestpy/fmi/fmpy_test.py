@@ -1,10 +1,17 @@
 """Example of FMPy-based simulation."""
 import json
-from fmpy import simulate_fmu, dump, read_model_description, instantiate_fmu, extract
-from fmpy.util import read_csv, write_csv
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+from fmpy import dump
+from fmpy import extract
+from fmpy import instantiate_fmu
+from fmpy import read_model_description
+from fmpy import simulate_fmu
+from fmpy.util import read_csv
+from fmpy.util import write_csv
+
 from modestpy.utilities.sysarch import get_sys_arch
 
 
@@ -17,7 +24,7 @@ def df_to_struct_arr(df):
 
 def struct_arr_to_df(arr):
     """Converts a structured array to DataFrame."""
-    df = pd.DataFrame(arr).set_index('time')
+    df = pd.DataFrame(arr).set_index("time")
 
     return df
 
@@ -41,16 +48,16 @@ inp_df = pd.read_csv(input_path)
 inp_struct = df_to_struct_arr(inp_df)
 
 # Parameters
-with open(known_path, 'r') as f:
+with open(known_path, "r") as f:
     start_values = json.load(f)
 
 # Declare output names
-#output = []
+# output = []
 
 # Start and stop time
-start_time = inp_df['time'].iloc[0]
-stop_time = inp_df['time'].iloc[-1]
-output_interval = inp_df['time'].iloc[1] - inp_df['time'].iloc[0]
+start_time = inp_df["time"].iloc[0]
+stop_time = inp_df["time"].iloc[-1]
+output_interval = inp_df["time"].iloc[1] - inp_df["time"].iloc[0]
 
 # Reset the FMU instance instead of creating a new one
 fmu.reset()
@@ -64,7 +71,7 @@ result = simulate_fmu(
     input=inp_struct,
     output=None,
     output_interval=output_interval,
-    fmu_instance=fmu
+    fmu_instance=fmu,
 )
 
 # Free the FMU instance and free the shared library
