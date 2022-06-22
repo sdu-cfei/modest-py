@@ -33,7 +33,7 @@ Use Docker (as described below) if you want to run ModestPy on a tested platform
 Installation with pip (recommended)
 -----------------------------------
 
-It is now possible install ModestPy with a single command:
+It is now possible to install ModestPy with a single command:
 
 ::
 
